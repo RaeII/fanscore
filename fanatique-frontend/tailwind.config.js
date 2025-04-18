@@ -10,7 +10,13 @@ export default {
         primary: '#2a1b49',
         secondary: '#f24952',
         'background-dark': '#0d0117',
-        'background-light': '#fafafa'
+        'background-light': '#fafafa',
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        "muted-foreground": "hsl(var(--muted-foreground))",
       }
     },
   },

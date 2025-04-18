@@ -46,6 +46,97 @@ export function useWallet() {
   const validateRef = useRef(null);
   const renewTokenRef = useRef(null);
 
+  // Funções adicionais para verificar o token JWT e obter dados do usuário
+  const hasValidToken = useCallback(() => {
+    const savedToken = localStorage.getItem('auth_token');
+    return !!savedToken && verified;
+  }, [verified]);
+
+  const getUserData = useCallback(async () => {
+    if (!hasValidToken()) {
+      return null;
+    }
+
+    try {
+      const response = await api.get('/user');
+      if (response.data && response.data.success) {
+        return response.data.content;
+      }
+      return null;
+    } catch (error) {
+      console.error('Erro ao obter dados do usuário:', error);
+      
+      // Se o token expirou ou é inválido, limpa os dados de autenticação
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('wallet_address');
+        delete api.defaults.headers.common['Authorization'];
+        setToken(null);
+        setVerified(false);
+      }
+      
+      return null;
+    }
+  }, [hasValidToken]);
+
+  // Função para verificar o status de autenticação - Movida para antes do useEffect que a utiliza
+  const checkAuthStatus = useCallback(async () => {
+    if (!token) {
+      return { authenticated: false, message: 'Não autenticado' };
+    }
+
+    try {
+      // Chamar a rota protegida para verificar a autenticação
+      const response = await api.get('/wallet/me');
+      return { 
+        authenticated: true, 
+        wallet: response.data.content.wallet,
+        user_id: response.data.content.user_id
+      };
+    } catch (error) {
+      console.error('Erro ao verificar autenticação:', error);
+      
+      // Verificar se é um erro de token expirado
+      const isTokenExpiredError = error.response && 
+        error.response.status === 401 && 
+        error.response.data && 
+        (error.response.data.code === 'TOKEN_EXPIRED' || 
+         (error.response.data.message && error.response.data.message.includes('expirado')));
+      
+      // Se for um erro de token expirado, tenta renovar
+      if (isTokenExpiredError) {
+        // Tentar renovar o token
+        if (account && renewTokenRef.current && !refreshingToken) {
+          const tokenRenewed = await renewTokenRef.current();
+          if (tokenRenewed) {
+            // Se conseguiu renovar, informa que está autenticado
+            return { authenticated: true, message: 'Token renovado com sucesso' };
+          }
+        }
+      }
+      
+      // Para outros erros 401/403, limpa a sessão
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        // Limpar os dados da sessão apenas se não estiver tentando renovar o token
+        if (!refreshingToken) {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('wallet_address');
+          delete api.defaults.headers.common['Authorization'];
+          
+          // Resetar o estado
+          setToken(null);
+          setVerified(false);
+          if (account) {
+            // Manter conta conectada mas não autenticada
+            showError('Sessão expirada. Por favor, autentique-se novamente.');
+          }
+        }
+      }
+      
+      return { authenticated: false, message: 'Erro de autenticação' };
+    }
+  }, [token, account, refreshingToken]);
+
   // Verificar se a carteira e o token já estão disponíveis ao carregar
   useEffect(() => {
     const checkConnection = async () => {
@@ -75,7 +166,7 @@ export function useWallet() {
     };
 
     checkConnection();
-  }, []);
+  }, [checkAuthStatus]);
 
   // Função para verificar se a carteira está na rede correta
   const verificarRede = useCallback(async () => {
@@ -166,7 +257,7 @@ export function useWallet() {
       setSigning(true);
       
       // Mensagem para assinatura
-      const mensagem = `Validação de carteira no FanScore: ${walletAddress}`;
+      const mensagem = `Validação de carteira no Fanatique: ${walletAddress}`;
       
       // Solicita assinatura ao usuário
       showInfo('Por favor, assine a mensagem para entrar na plataforma');
@@ -241,7 +332,7 @@ export function useWallet() {
   validateRef.current = validateWalletInternal;
 
   // Função para conectar carteira
-  const connectWallet = useCallback(async () => {
+  const connectWallet = useCallback(async (forceValidation = false) => {
     try {
       setConnecting(true);
       
@@ -249,38 +340,95 @@ export function useWallet() {
       const redeCorreta = await verificarRede();
       if (!redeCorreta) {
         setConnecting(false);
-        return;
+        return false;
       }
       
-      const connector = wagmiConfig.connectors[0];
-      
-      const result = await connector.connect();
-      const walletAddress = result.accounts[0];
-      setAccount(walletAddress);
-      
-      // Inicia o processo de validação automaticamente
-      if (validateRef.current) {
-        await validateRef.current(walletAddress);
+      // Verifica se MetaMask está disponível
+      if (!window.ethereum) {
+        showError('MetaMask não detectada! Por favor, instale a extensão para continuar.');
+        setConnecting(false);
+        return false;
       }
-    } catch (err) {
-      console.error('Erro ao conectar carteira:', err);
-      showError('Falha ao conectar carteira');
+      
+      // Se já está conectado e tem token, apenas retorna, a menos que forceValidation seja true
+      if (account && verified && !forceValidation) {
+        setConnecting(false);
+        return true;
+      }
+      
+      try {
+        // Solicita as contas ao usuário
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
+        if (accounts.length === 0) {
+          showError('Nenhuma conta encontrada ou acesso negado');
+          setConnecting(false);
+          return false;
+        }
+        
+        // Define a conta conectada
+        const currentAccount = accounts[0];
+        setAccount(currentAccount);
+        
+        // Verifica token no localStorage e valida se for o mesmo endereço
+        const savedToken = localStorage.getItem('auth_token');
+        const savedWallet = localStorage.getItem('wallet_address');
+        
+        if (savedToken && savedWallet && 
+            savedWallet.toLowerCase() === currentAccount.toLowerCase() && 
+            !forceValidation) {
+          // Se o token já existe, configura o header do axios
+          api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+          setToken(savedToken);
+          setVerified(true);
+          return true;
+        } else {
+          // Se não tem token ou é outro endereço ou forceValidation=true, faz a validação
+          const validated = await validateRef.current(currentAccount);
+          return validated;
+        }
+      } catch (error) {
+        if (error.code === 4001) {
+          // Usuário rejeitou a conexão
+          showError('Você recusou a conexão com a carteira');
+        } else {
+          showError('Erro ao conectar com a carteira: ' + (error.message || 'Erro desconhecido'));
+        }
+        console.error('Erro ao conectar carteira:', error);
+        setConnecting(false);
+        return false;
+      }
+    } catch (error) {
+      console.error('Erro ao conectar carteira:', error);
+      showError('Erro ao conectar carteira: ' + (error.message || 'Erro desconhecido'));
+      setConnecting(false);
+      return false;
     } finally {
       setConnecting(false);
     }
-  }, [verificarRede]);
+  }, [account, verified, verificarRede]);
 
-  // Versão pública da função de validação (mantida para compatibilidade)
-  const validateWallet = useCallback(async () => {
-    if (!account) {
-      showError('Carteira não conectada!');
-      return false;
-    }
-    if (validateRef.current) {
-      return validateRef.current(account);
-    }
-    return false;
-  }, [account]);
+  // Verificar validade do token em intervalos regulares
+  useEffect(() => {
+    // Verificar a autenticação periodicamente (a cada 5 minutos)
+    const checkAuthStatus = async () => {
+      if (token && verified) {
+        const user = await getUserData();
+        if (!user) {
+          // Token inválido, desconectar
+          await disconnectRef.current();
+        }
+      }
+    };
+
+    // Iniciar verificação periódica
+    const interval = setInterval(checkAuthStatus, 5 * 60 * 1000); // 5 minutos
+    
+    // Verificar uma vez no início
+    checkAuthStatus();
+    
+    return () => clearInterval(interval);
+  }, [token, verified, getUserData]);
 
   // Função para renovar o token quando ele expirar
   const renewToken = useCallback(async () => {
@@ -371,64 +519,6 @@ export function useWallet() {
     };
   }, [account, refreshingToken]);
 
-  // Função para verificar o status de autenticação
-  const checkAuthStatus = useCallback(async () => {
-    if (!token) {
-      return { authenticated: false, message: 'Não autenticado' };
-    }
-
-    try {
-      // Chamar a rota protegida para verificar a autenticação
-      const response = await api.get('/wallet/me');
-      return { 
-        authenticated: true, 
-        wallet: response.data.content.wallet,
-        user_id: response.data.content.user_id
-      };
-    } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
-      
-      // Verificar se é um erro de token expirado
-      const isTokenExpiredError = error.response && 
-        error.response.status === 401 && 
-        error.response.data && 
-        (error.response.data.code === 'TOKEN_EXPIRED' || 
-         (error.response.data.message && error.response.data.message.includes('expirado')));
-      
-      // Se for um erro de token expirado, tenta renovar
-      if (isTokenExpiredError) {
-        // Tentar renovar o token
-        if (account && renewTokenRef.current && !refreshingToken) {
-          const tokenRenewed = await renewTokenRef.current();
-          if (tokenRenewed) {
-            // Se conseguiu renovar, informa que está autenticado
-            return { authenticated: true, message: 'Token renovado com sucesso' };
-          }
-        }
-      }
-      
-      // Para outros erros 401/403, limpa a sessão
-      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        // Limpar os dados da sessão apenas se não estiver tentando renovar o token
-        if (!refreshingToken) {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('wallet_address');
-          delete api.defaults.headers.common['Authorization'];
-          
-          // Resetar o estado
-          setToken(null);
-          setVerified(false);
-          if (account) {
-            // Manter conta conectada mas não autenticada
-            showError('Sessão expirada. Por favor, autentique-se novamente.');
-          }
-        }
-      }
-      
-      return { authenticated: false, message: 'Erro de autenticação' };
-    }
-  }, [token, account, refreshingToken]);
-
   return {
     account,
     connecting,
@@ -438,7 +528,8 @@ export function useWallet() {
     refreshingToken,
     connectWallet,
     disconnectWallet,
-    validateWallet,
+    hasValidToken,
+    getUserData,
     checkAuthStatus,
     renewToken
   };
