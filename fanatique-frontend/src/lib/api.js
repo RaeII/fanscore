@@ -14,9 +14,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     // Tratamento de erros aqui
-    console.error('Erro na requisição:', error);
+    if (error?.response?.data?.message) {
+      console.error('Erro na requisição:', error.response.data.message);
+    } else {
+      console.error('Erro na requisição:', error);
+    }
     return Promise.reject(error);
   }
 );
+
 
 export default api; 

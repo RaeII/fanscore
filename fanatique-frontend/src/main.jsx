@@ -8,9 +8,11 @@ import { wagmiConfig } from './contexts/wagmi'
 import './index.css'
 
 import { Layout } from './components/layout'
+import { AdminNav } from './components/AdminNav'
 import HomePage from './pages/home'
 import AppPage from './pages/app'
 import DashboardPage from './pages/dashboard'
+import AdminClubsPage from './pages/admin-clubs'
 import { ThemeProvider } from './components/theme-provider'
 import { WalletProvider } from './contexts/WalletContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -21,7 +23,12 @@ const queryClient = new QueryClient()
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: (
+      <>
+        <Layout />
+        <AdminNav />
+      </>
+    ),
     children: [
       {
         index: true,
@@ -54,6 +61,10 @@ const router = createBrowserRouter([
             <div className="container mx-auto px-4 py-16">Página de Clubes em breve...</div>
           </ProtectedRoute>
         )
+      },
+      {
+        path: 'admin/clubes',
+        element: <AdminClubsPage />
       },
       {
         path: 'pedidos',
