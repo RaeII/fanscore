@@ -190,6 +190,10 @@ export default function AppPage() {
         <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md">
           <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Cadastre-se no Fanatique</h1>
           
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            Você está conectado com uma carteira nova! Para continuar, digite seu nome de usuário e assine a mensagem de verificação.
+          </p>
+          
           <form onSubmit={handleRegister} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium text-primary/80 dark:text-white/80">
@@ -241,34 +245,61 @@ export default function AppPage() {
     );
   }
 
-  // Usuário com carteira conectada e já cadastrado, mas não logado
+  // Se chegou aqui, o usuário está com carteira conectada mas não cadastrada nem autenticada
+  // Em vez de mostrar apenas o spinner, vamos mostrar um botão de registro
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
       <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Processando Login</h1>
+        <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Carteira Nova Detectada</h1>
         
         <p className="text-gray-600 dark:text-gray-300 mb-6">
-          Sua carteira está conectada. Aguarde enquanto processamos seu login.
+          Detectamos que você está usando uma carteira ainda não cadastrada na plataforma. Para continuar, precisamos registrar seu perfil.
         </p>
         
-        <div className="flex flex-col gap-4 items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Solicitando assinatura...
-          </p>
+        <form onSubmit={handleRegister} className="space-y-6">
+          <div className="space-y-2">
+            <label htmlFor="username" className="text-sm font-medium text-primary/80 dark:text-white/80">
+              Nome de usuário
+            </label>
+            <Input
+              id="username"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              placeholder="Digite seu nome de usuário"
+              required
+              className="w-full"
+              autoFocus
+            />
+          </div>
           
-          <Button
-            variant="outline"
-            onClick={() => {
-              disconnectWallet();
-              setShowRegister(false);
-              navigate('/');
-            }}
-            className="mt-4 w-full"
-          >
-            Cancelar e Desconectar Carteira
-          </Button>
-        </div>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                disconnectWallet();
+                navigate('/');
+              }}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 bg-secondary text-white"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processando
+                </>
+              ) : (
+                'Cadastrar'
+              )}
+            </Button>
+          </div>
+        </form>
       </div>
     </div>
   );
