@@ -248,7 +248,7 @@ export function useWallet() {
   disconnectRef.current = disconnectWallet;
 
   // Função interna para assinar a mensagem e validar a carteira
-  const validateWalletInternal = async (walletAddress) => {
+  const validateWalletInternal = async (walletAddress, name = undefined) => {
     if (!walletAddress) {
       return false;
     }
@@ -272,10 +272,12 @@ export function useWallet() {
       });
       
       // Envia a assinatura para o backend para validação
+      // Se o nome for fornecido, também envia para criar novo usuário
       const response = await api.post('/wallet/signature', {
         address: walletAddress,
         message: mensagem,
-        signature
+        signature,
+        name
       });
       
       // Verifica se a validação foi bem-sucedida
@@ -519,6 +521,185 @@ export function useWallet() {
     };
   }, [account, refreshingToken]);
 
+  // Função para registrar e autenticar com assinatura em um único passo
+  const registerWithSignature = useCallback(async (userName) => {
+    if (!account) {
+      showError('Nenhuma carteira conectada');
+      return false;
+    }
+
+    if (!userName || userName.trim() === '') {
+      showError('Nome de usuário é obrigatório');
+      return false;
+    }
+
+    try {
+      // Validar com o nome de usuário
+      return await validateRef.current(account, userName);
+    } catch (error) {
+      console.error('Erro ao registrar com assinatura:', error);
+      showError('Erro ao registrar: ' + (error.message || 'Erro desconhecido'));
+      return false;
+    }
+  }, [account]);
+
+  // Função para verificar se a carteira já está cadastrada
+  const checkWalletExists = useCallback(async (walletAddress) => {
+    try {
+      // Se não for fornecido um endereço, usa a carteira conectada
+      const address = walletAddress || account;
+      
+      if (!address) {
+        return { success: false, exists: false, message: 'Nenhuma carteira conectada' };
+      }
+      
+      const response = await api.get(`/wallet/check/${address}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao verificar existência da carteira:', error);
+      return { 
+        success: false, 
+        exists: false, 
+        message: error.response?.data?.message || 'Erro ao verificar carteira' 
+      };
+    }
+  }, [account]);
+
+  // Função para apenas conectar a carteira, sem solicitar assinatura
+  const connectWalletOnly = useCallback(async () => {
+    try {
+      setConnecting(true);
+      
+      // Verifica e adiciona a rede se necessário
+      const redeCorreta = await verificarRede();
+      if (!redeCorreta) {
+        setConnecting(false);
+        return { success: false, message: 'Falha ao conectar à rede correta' };
+      }
+      
+      // Verifica se MetaMask está disponível
+      if (!window.ethereum) {
+        showError('MetaMask não detectada! Por favor, instale a extensão para continuar.');
+        setConnecting(false);
+        return { success: false, message: 'MetaMask não detectada' };
+      }
+      
+      try {
+        // Solicita as contas ao usuário
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
+        if (accounts.length === 0) {
+          showError('Nenhuma conta encontrada ou acesso negado');
+          setConnecting(false);
+          return { success: false, message: 'Nenhuma conta encontrada' };
+        }
+        
+        // Define a conta conectada
+        const currentAccount = accounts[0];
+        setAccount(currentAccount);
+        
+        // Verifica token no localStorage
+        const savedToken = localStorage.getItem('auth_token');
+        const savedWallet = localStorage.getItem('wallet_address');
+        
+        // Se já tem token válido para essa carteira, configura
+        if (savedToken && savedWallet && 
+            savedWallet.toLowerCase() === currentAccount.toLowerCase()) {
+          api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+          setToken(savedToken);
+          setVerified(true);
+          return { 
+            success: true, 
+            address: currentAccount, 
+            isAuthenticated: true 
+          };
+        }
+        
+        // Retorna sucesso, mas indicando que não está autenticado
+        return { 
+          success: true, 
+          address: currentAccount, 
+          isAuthenticated: false 
+        };
+      } catch (error) {
+        if (error.code === 4001) {
+          // Usuário rejeitou a conexão
+          showError('Você recusou a conexão com a carteira');
+        } else {
+          showError('Erro ao conectar com a carteira: ' + (error.message || 'Erro desconhecido'));
+        }
+        console.error('Erro ao conectar carteira:', error);
+        setConnecting(false);
+        return { success: false, message: 'Conexão rejeitada ou erro' };
+      }
+    } catch (error) {
+      console.error('Erro ao conectar carteira:', error);
+      showError('Erro ao conectar carteira: ' + (error.message || 'Erro desconhecido'));
+      setConnecting(false);
+      return { success: false, message: 'Erro desconhecido ao conectar' };
+    } finally {
+      setConnecting(false);
+    }
+  }, [verificarRede]);
+
+  // Função para solicitar assinatura para um endereço já conectado
+  const requestSignature = useCallback(async (walletAddress = null) => {
+    // Usa o endereço fornecido ou o endereço da carteira já conectada
+    const address = walletAddress || account;
+    
+    if (!address) {
+      showError('Nenhuma carteira conectada');
+      return false;
+    }
+    
+    try {
+      // Valida usando apenas assinatura (sem nome)
+      return await validateRef.current(address);
+    } catch (error) {
+      console.error('Erro ao solicitar assinatura:', error);
+      showError('Erro ao solicitar assinatura: ' + (error.message || 'Erro desconhecido'));
+      return false;
+    }
+  }, [account]);
+
+  // Função para conectar carteira e verificar registro em uma única operação
+  const connectAndCheckRegistration = useCallback(async () => {
+    try {
+      // Primeiro apenas conecta a carteira (sem solicitar assinatura)
+      const connectResult = await connectWalletOnly();
+      
+      if (!connectResult.success) {
+        return { success: false, message: connectResult.message || 'Falha ao conectar carteira' };
+      }
+      
+      // Se já está autenticado, retorna sucesso
+      if (connectResult.isAuthenticated) {
+        return { success: true, needsRegistration: false, isAuthenticated: true };
+      }
+      
+      // Verifica se a carteira já está cadastrada
+      const walletCheck = await checkWalletExists();
+      
+      if (!walletCheck.success) {
+        return { success: false, message: walletCheck.message || 'Erro ao verificar registro' };
+      }
+      
+      // Retorna o resultado da verificação
+      return { 
+        success: true, 
+        needsRegistration: !walletCheck.exists, 
+        isAuthenticated: false,
+        address: connectResult.address
+      };
+    } catch (error) {
+      console.error('Erro ao conectar e verificar registro:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Erro ao conectar e verificar registro'
+      };
+    }
+  }, [connectWalletOnly, checkWalletExists]);
+
   return {
     account,
     connecting,
@@ -531,6 +712,11 @@ export function useWallet() {
     hasValidToken,
     getUserData,
     checkAuthStatus,
-    renewToken
+    renewToken,
+    registerWithSignature,
+    checkWalletExists,
+    connectAndCheckRegistration,
+    connectWalletOnly,
+    requestSignature
   };
 } 

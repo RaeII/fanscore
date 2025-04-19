@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Ticket } from 'lucide-react'
 import { ThemeToggle } from './ui/theme-toggle'
 import { Button } from './ui/button'
@@ -6,6 +6,10 @@ import { cn } from '../lib/utils'
 
 export function Header({ className }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Verifica se está na página app ou em subpáginas do app
+  const isAppRoute = location.pathname.startsWith('/app') || location.pathname.startsWith('/dashboard');
 
   const handleAccessApp = () => {
     navigate('/app');
@@ -21,12 +25,14 @@ export function Header({ className }) {
         
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Button 
-              onClick={handleAccessApp}
-              className="bg-secondary text-white hover:bg-secondary/90"
-            >
-              Acessar App
-            </Button>
+            {!isAppRoute && (
+              <Button 
+                onClick={handleAccessApp}
+                className="bg-secondary text-white hover:bg-secondary/90"
+              >
+                Acessar App
+              </Button>
+            )}
             <ThemeToggle />
           </div>
         </div>

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWallet } from '../hooks/useWallet';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Loader2 } from 'lucide-react';
-import api from '../lib/api';
+import { Loader2, Wallet } from 'lucide-react';
 import { showError, showSuccess } from '../lib/toast';
+import { Cta11 } from '../components/ui/cta11';
 
 export default function AppPage() {
   const navigate = useNavigate();
@@ -13,17 +13,93 @@ export default function AppPage() {
     account,
     connecting,
     signing,
-    verified,
-    connectWallet,
     disconnectWallet,
     hasValidToken,
-    getUserData
+    getUserData,
+    registerWithSignature,
+    connectWalletOnly,
+    requestSignature,
+    checkWalletExists
   } = useWallet();
 
   const [loading, setLoading] = useState(true);
   const [showRegister, setShowRegister] = useState(false);
   const [userName, setUserName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [walletConnected, setWalletConnected] = useState(false);
+
+  // Função para verificar se o usuário está cadastrado
+  const checkIfUserRegistered = useCallback(async () => {
+    try {
+      setLoading(true);
+      if (!account) {
+        setLoading(false);
+        return;
+      }
+      
+      // Verifica se o usuário já está cadastrado
+      const walletCheck = await checkWalletExists();
+      
+      if (!walletCheck.success) {
+        showError(walletCheck.message || 'Erro ao verificar cadastro');
+        setLoading(false);
+        return;
+      }
+      
+      // Se o usuário não estiver cadastrado, exibe o formulário de registro
+      setShowRegister(!walletCheck.exists);
+      
+      // Se o usuário já estiver cadastrado, solicita a assinatura automaticamente
+      if (walletCheck.exists) {
+        const loggedIn = await requestSignature();
+        if (loggedIn) {
+          navigate('/dashboard');
+          return;
+        }
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error("Erro ao verificar cadastro:", error);
+      showError('Erro ao verificar se o usuário está cadastrado');
+      setLoading(false);
+    }
+  }, [account, checkWalletExists, requestSignature, navigate]);
+
+  // Função para apenas conectar a carteira
+  const handleConnectWallet = async () => {
+    try {
+      setLoading(true);
+      // Apenas conecta a carteira (sem solicitar assinatura)
+      const connectResult = await connectWalletOnly();
+      
+      if (!connectResult.success) {
+        showError(connectResult.message || 'Erro ao conectar carteira');
+        setLoading(false);
+        return;
+      }
+      
+      // Marca a carteira como conectada
+      setWalletConnected(true);
+      
+      // Se já está autenticado, redireciona para o dashboard
+      if (connectResult.isAuthenticated) {
+        const userData = await getUserData();
+        if (userData) {
+          navigate('/dashboard');
+          return;
+        }
+      }
+      
+      // Após conectar com sucesso, verifica se o usuário está cadastrado
+      // e solicita assinatura automaticamente se ele já estiver cadastrado
+      await checkIfUserRegistered();
+    } catch (error) {
+      console.error("Erro ao conectar carteira:", error);
+      showError('Erro ao conectar carteira');
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Verifica se a carteira está conectada
@@ -31,60 +107,35 @@ export default function AppPage() {
       try {
         setLoading(true);
         
-        // Se não há carteira conectada, solicitamos conexão
+        // Se não há carteira conectada, não faz nada
         if (!account) {
-          const connected = await connectWallet();
-          if (!connected) {
-            // Se o usuário recusou conexão, voltamos para a home
-            navigate('/');
+          setLoading(false);
+          setWalletConnected(false);
+          return;
+        }
+        
+        // Marca a carteira como conectada
+        setWalletConnected(true);
+        
+        // Se já tem token válido, redireciona para o dashboard
+        if (hasValidToken()) {
+          const userData = await getUserData();
+          if (userData) {
+            navigate('/dashboard');
             return;
           }
         }
         
-        // Verificamos se temos um JWT válido
-        if (hasValidToken()) {
-          // Se temos token, carregamos os dados do usuário
-          try {
-            const userData = await getUserData();
-            if (userData) {
-              // Usuário autenticado, redireciona para área logada
-              navigate('/dashboard');
-              return;
-            }
-          } catch (error) {
-            console.error("Erro ao carregar dados do usuário:", error);
-          }
-        }
-        
-        // Se não temos token ou falhou ao carregar dados do usuário,
-        // verificamos se o usuário já está cadastrado
-        try {
-          const response = await api.get(`/wallet/check/${account}`);
-          
-          if (response.data && response.data.exists) {
-            // Usuário já cadastrado, só precisa assinar a mensagem
-            await connectWallet(true); // true = forçar nova assinatura
-            if (verified) {
-              navigate('/dashboard');
-            }
-          } else {
-            // Usuário não cadastrado, mostramos formulário de registro
-            setShowRegister(true);
-          }
-        } catch (error) {
-          console.error("Erro ao verificar usuário:", error);
-          setShowRegister(true);
-        }
+        // Verifica se o usuário já está cadastrado
+        await checkIfUserRegistered();
       } catch (error) {
-        console.error("Erro geral:", error);
-        navigate('/');
-      } finally {
+        console.error("Erro ao verificar status da carteira:", error);
         setLoading(false);
       }
     }
     
     checkWalletStatus();
-  }, [account, connectWallet, getUserData, hasValidToken, navigate, verified]);
+  }, [account, hasValidToken, getUserData, navigate, checkIfUserRegistered]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -97,22 +148,12 @@ export default function AppPage() {
     setSubmitting(true);
     
     try {
-      // Registra o usuário e faz a assinatura
-      const response = await api.post('/user', {
-        name: userName,
-        wallet_address: account
-      });
+      // Registra o usuário e faz a assinatura em um único passo
+      const success = await registerWithSignature(userName);
       
-      if (response.data && response.data.success) {
+      if (success) {
         showSuccess('Cadastro realizado com sucesso!');
-        
-        // Força nova assinatura para login
-        await connectWallet(true);
-        if (verified) {
-          navigate('/dashboard');
-        }
-      } else {
-        showError(response.data.message || 'Erro ao cadastrar usuário');
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error("Erro ao cadastrar:", error);
@@ -122,6 +163,7 @@ export default function AppPage() {
     }
   };
 
+  // Mostra a tela de loading
   if (loading || connecting || signing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
@@ -133,6 +175,26 @@ export default function AppPage() {
     );
   }
 
+  // Se não tiver conta conectada, mostra a interface inicial para conectar carteira
+  if (!walletConnected || !account) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+        <Cta11 
+          heading="Bem-vindo ao Fanatique"
+          description="Conecte sua carteira Chiliz para entrar na plataforma e aproveitar uma experiência única nos estádios."
+          buttons={{
+            primary: {
+              text: "Conectar Carteira",
+              onClick: handleConnectWallet,
+              icon: <Wallet size={18} />
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Mostra o formulário de registro se o usuário não estiver cadastrado
   if (showRegister) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
@@ -151,6 +213,7 @@ export default function AppPage() {
                 placeholder="Digite seu nome de usuário"
                 required
                 className="w-full"
+                autoFocus
               />
             </div>
             
@@ -160,6 +223,8 @@ export default function AppPage() {
                 variant="outline"
                 onClick={() => {
                   disconnectWallet();
+                  setWalletConnected(false);
+                  setShowRegister(false);
                   navigate('/');
                 }}
                 disabled={submitting}
@@ -188,21 +253,35 @@ export default function AppPage() {
     );
   }
 
+  // Usuário com carteira conectada e já cadastrado, mas não logado
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
-      <div className="text-center">
-        <p className="text-xl text-primary/70 dark:text-white/70 mb-4">
-          Algo deu errado. Por favor, tente novamente.
+      <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md">
+        <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Processando Login</h1>
+        
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          Sua carteira está conectada. Aguarde enquanto processamos seu login.
         </p>
-        <Button
-          onClick={() => {
-            disconnectWallet();
-            navigate('/');
-          }}
-          className="bg-secondary text-white"
-        >
-          Voltar para o início
-        </Button>
+        
+        <div className="flex flex-col gap-4 items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Solicitando assinatura...
+          </p>
+          
+          <Button
+            variant="outline"
+            onClick={() => {
+              disconnectWallet();
+              setWalletConnected(false);
+              setShowRegister(false);
+              navigate('/');
+            }}
+            className="mt-4 w-full"
+          >
+            Cancelar e Desconectar Carteira
+          </Button>
+        </div>
       </div>
     </div>
   );

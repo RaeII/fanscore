@@ -24,8 +24,10 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         const response = await api.get('/user');
+
+        console.log({response})
         
-        if (response.data && response.data.success) {
+        if (response?.data && response?.data?.content?.id) {
           setUserData(response.data.content);
         } else {
           showError('Erro ao carregar dados do usuário');
