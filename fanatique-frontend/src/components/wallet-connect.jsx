@@ -1,17 +1,50 @@
 import { Button } from './ui/button'
 import { cn } from '../lib/utils'
 import { X } from 'lucide-react'
-import { useWallet } from '../hooks/useWallet'
+import { useNavigate } from 'react-router-dom'
+import { useWalletContext } from '../hooks/useWalletContext'
+import { useEffect } from 'react'
 
 export function WalletConnect({ className }) {
+  const navigate = useNavigate();
   const {
     account,
     connecting,
     signing,
     verified,
     connectWallet,
-    disconnectWallet
-  } = useWallet()
+    disconnectWallet,
+    isAuthenticated,
+    checkWalletExists,
+    requestSignature
+  } = useWalletContext();
+
+  // Efeito para verificar se o usuário já tem carteira conectada, está cadastrado, 
+  // mas não está autenticado (não tem token)
+  useEffect(() => {
+    const checkAndRequestSignature = async () => {
+      // Se temos conta conectada mas não estamos autenticados
+      if (account && !isAuthenticated && !connecting && !signing) {
+        // Verificar se a carteira já está cadastrada
+        const walletCheck = await checkWalletExists();
+        
+        if (walletCheck?.success && walletCheck?.exists) {
+          console.log('WalletConnect: Carteira conectada e cadastrada, solicitando assinatura');
+          // Solicitar assinatura automaticamente
+          await requestSignature();
+        }
+      }
+    };
+    
+    checkAndRequestSignature();
+  }, [account, isAuthenticated, connecting, signing, checkWalletExists, requestSignature]);
+
+  // Função para lidar com o clique no botão da carteira quando verificado
+  const handleWalletButtonClick = () => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  };
 
   if (account) {
     return (
@@ -22,6 +55,7 @@ export function WalletConnect({ className }) {
             "relative group pr-10 pl-10 pt-2 pb-2",
             verified ? "bg-primary text-white" : "bg-amber-500 text-white"
           )}
+          onClick={handleWalletButtonClick}
         >
           <span className="text-sm font-medium text-center">
             {account.slice(0, 6)}...{account.slice(-4)}
@@ -47,7 +81,6 @@ export function WalletConnect({ className }) {
         onClick={connectWallet}
         disabled={connecting || signing}
         className="bg-primary text-white"
-
       >
         {connecting ? 'Conectando...' : signing ? 'Validando...' : 'Conectar Carteira'}
       </Button>

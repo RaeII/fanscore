@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet } from '../hooks/useWallet';
+import { useWalletContext } from '../hooks/useWalletContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Loader2, Wallet } from 'lucide-react';
@@ -11,22 +11,31 @@ export default function AppPage() {
   const navigate = useNavigate();
   const {
     account,
-    connecting,
     signing,
     disconnectWallet,
-    hasValidToken,
     getUserData,
     registerWithSignature,
-    connectWalletOnly,
+    connectWallet,
     requestSignature,
-    checkWalletExists
-  } = useWallet();
+    checkWalletExists,
+    isAuthenticated,
+    isConnected
+  } = useWalletContext();
 
   const [loading, setLoading] = useState(true);
   const [showRegister, setShowRegister] = useState(false);
   const [userName, setUserName] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
+
+  // Verificar se o usuário já está autenticado e redirecionar para o dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('App: Usuário já autenticado pelo contexto, redirecionando para dashboard');
+      navigate('/dashboard');
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, navigate]);
 
   // Função para verificar se o usuário está cadastrado
   const checkIfUserRegistered = useCallback(async () => {
@@ -51,10 +60,22 @@ export default function AppPage() {
       
       // Se o usuário já estiver cadastrado, solicita a assinatura automaticamente
       if (walletCheck.exists) {
+        console.log('App: Usuário já cadastrado, solicitando assinatura');
+        
         const loggedIn = await requestSignature();
+        console.log('App: Resultado da assinatura:', loggedIn);
+        
         if (loggedIn) {
+          console.log('App: Login bem-sucedido, redirecionando para o dashboard');
+          
+          // Aguarda um pouco para garantir que os dados estejam persistidos
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Se chegamos aqui com sucesso, o contexto já deve ter atualizado o estado
           navigate('/dashboard');
           return;
+        } else {
+          console.log('App: Falha no login, permanecendo na tela atual');
         }
       }
       
@@ -70,20 +91,19 @@ export default function AppPage() {
   const handleConnectWallet = async () => {
     try {
       setLoading(true);
-      // Apenas conecta a carteira (sem solicitar assinatura)
-      const connectResult = await connectWalletOnly();
+      // Conectar a carteira
+      await connectWallet();
       
-      if (!connectResult.success) {
-        showError(connectResult.message || 'Erro ao conectar carteira');
+      if (!isConnected) {
+        showError('Erro ao conectar carteira');
         setLoading(false);
         return;
       }
       
-      // Marca a carteira como conectada
-      setWalletConnected(true);
-      
       // Se já está autenticado, redireciona para o dashboard
-      if (connectResult.isAuthenticated) {
+      if (isAuthenticated) {
+        console.log('Usuário já autenticado, redirecionando para dashboard');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Pequeno delay para garantir atualização de estados
         const userData = await getUserData();
         if (userData) {
           navigate('/dashboard');
@@ -101,42 +121,6 @@ export default function AppPage() {
     }
   };
 
-  useEffect(() => {
-    // Verifica se a carteira está conectada
-    async function checkWalletStatus() {
-      try {
-        setLoading(true);
-        
-        // Se não há carteira conectada, não faz nada
-        if (!account) {
-          setLoading(false);
-          setWalletConnected(false);
-          return;
-        }
-        
-        // Marca a carteira como conectada
-        setWalletConnected(true);
-        
-        // Se já tem token válido, redireciona para o dashboard
-        if (hasValidToken()) {
-          const userData = await getUserData();
-          if (userData) {
-            navigate('/dashboard');
-            return;
-          }
-        }
-        
-        // Verifica se o usuário já está cadastrado
-        await checkIfUserRegistered();
-      } catch (error) {
-        console.error("Erro ao verificar status da carteira:", error);
-        setLoading(false);
-      }
-    }
-    
-    checkWalletStatus();
-  }, [account, hasValidToken, getUserData, navigate, checkIfUserRegistered]);
-
   const handleRegister = async (e) => {
     e.preventDefault();
     
@@ -153,6 +137,11 @@ export default function AppPage() {
       
       if (success) {
         showSuccess('Cadastro realizado com sucesso!');
+        
+        // Aguarda um pouco para garantir persistência
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Navega para o dashboard
         navigate('/dashboard');
       }
     } catch (error) {
@@ -164,19 +153,19 @@ export default function AppPage() {
   };
 
   // Mostra a tela de loading
-  if (loading || connecting || signing) {
+  if (loading || signing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
         <Loader2 className="h-12 w-12 animate-spin text-secondary" />
         <p className="mt-4 text-xl text-primary/70 dark:text-white/70">
-          {loading ? 'Carregando...' : connecting ? 'Conectando à carteira...' : 'Validando assinatura...'}
+          {loading ? 'Carregando...' : signing ? 'Validando assinatura...' : ''}
         </p>
       </div>
     );
   }
 
   // Se não tiver conta conectada, mostra a interface inicial para conectar carteira
-  if (!walletConnected || !account) {
+  if (!isConnected || !account) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
         <Cta11 
@@ -223,7 +212,6 @@ export default function AppPage() {
                 variant="outline"
                 onClick={() => {
                   disconnectWallet();
-                  setWalletConnected(false);
                   setShowRegister(false);
                   navigate('/');
                 }}
@@ -273,7 +261,6 @@ export default function AppPage() {
             variant="outline"
             onClick={() => {
               disconnectWallet();
-              setWalletConnected(false);
               setShowRegister(false);
               navigate('/');
             }}

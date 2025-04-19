@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWallet } from '../hooks/useWallet';
+import { useWalletContext } from '../hooks/useWalletContext';
 import { Trophy, Star, Ticket, ShoppingBag, User, LogOut } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import api from '../lib/api';
@@ -8,34 +8,70 @@ import { showError } from '../lib/toast';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { account, disconnectWallet, hasValidToken } = useWallet();
+  const { 
+    account, 
+    disconnectWallet, 
+    clearAuthCredentials, 
+    isAuthenticated,
+    isConnected, 
+    connectWallet
+  } = useWalletContext();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Efeito para garantir que a carteira esteja conectada
   useEffect(() => {
-    // Verificar se o usuário está autenticado
-    if (!account || !hasValidToken()) {
+    const ensureWalletConnected = async () => {
+      // Se não temos uma conta mas temos autenticação, tente conectar a carteira
+      if (!isConnected && isAuthenticated) {
+        console.log('Dashboard: Usuário autenticado, mas carteira não está conectada. Reconectando...');
+        await connectWallet();
+      }
+    };
+
+    ensureWalletConnected();
+  }, [account, isAuthenticated, isConnected, connectWallet]);
+
+  useEffect(() => {
+    // Verificar se o usuário está autenticado usando o contexto
+    if (!isAuthenticated) {
+      console.log('Dashboard: Usuário não autenticado, redirecionando para /app');
       navigate('/app');
       return;
     }
 
+    console.log('Dashboard: Usuário autenticado via contexto, buscando dados');
+    
     // Carregar dados do usuário
     const fetchUserData = async () => {
       try {
         setLoading(true);
+        console.log('Dashboard: Chamando API para obter dados do usuário');
         const response = await api.get('/user');
 
-        console.log({response})
-        
+        console.log('Dashboard: Resposta da API:', response);
+
         if (response?.data && response?.data?.content?.id) {
+          console.log('Dashboard: Dados do usuário carregados com sucesso');
           setUserData(response.data.content);
         } else {
+          console.error('Dashboard: Erro nos dados retornados pela API', response?.data);
           showError('Erro ao carregar dados do usuário');
           navigate('/app');
         }
       } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-        showError('Não foi possível carregar seus dados. Por favor, tente novamente.');
+        console.error('Dashboard: Erro ao carregar usuário:', error);
+        
+        // Verifica se é erro de autenticação (401)
+        if (error.response && error.response.status === 401) {
+          console.error('Dashboard: Erro de autenticação (401)');
+          showError('Sessão expirada. Por favor, faça login novamente.');
+          clearAuthCredentials();
+        } else {
+          console.error('Dashboard: Outro tipo de erro', error.response?.status);
+          showError('Não foi possível carregar seus dados. Por favor, tente novamente.');
+        }
+        
         navigate('/app');
       } finally {
         setLoading(false);
@@ -43,11 +79,18 @@ export default function DashboardPage() {
     };
 
     fetchUserData();
-  }, [account, hasValidToken, navigate]);
+  }, [isAuthenticated, navigate, clearAuthCredentials]);
 
   const handleLogout = async () => {
+    // Usar a função do contexto para limpar credenciais
     await disconnectWallet();
     navigate('/');
+  };
+
+  // Função para formatar o endereço da carteira
+  const formatWalletAddress = (address) => {
+    if (!address) return 'Não conectada';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   if (loading) {
@@ -58,6 +101,7 @@ export default function DashboardPage() {
     );
   }
 
+  //CONTEÚDO PRINCIPAL DO DASHBOARD
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
       {/* Header do Dashboard */}
@@ -67,7 +111,7 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-2xl font-bold">Olá, {userData?.name || 'Torcedor'}</h1>
               <p className="text-white/80 text-sm mt-1">
-                Carteira: {account?.slice(0, 6)}...{account?.slice(-4)}
+                Carteira: {formatWalletAddress(account)}
               </p>
             </div>
             <Button 

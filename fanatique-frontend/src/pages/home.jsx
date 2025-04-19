@@ -2,6 +2,8 @@ import { Trophy, Star, Award, Users, Ticket, Coffee, Timer, CreditCard, Shopping
 import { WalletConnect } from '../components/wallet-connect'
 import { Button } from '../components/ui/button'
 import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useWalletContext } from '../hooks/useWalletContext'
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -9,6 +11,44 @@ export default function HomePage() {
   const handleGetStarted = () => {
     navigate('/app');
   };
+
+  const { 
+    isAuthenticated, 
+    isInitialized, 
+    account, 
+    checkWalletExists, 
+    requestSignature,
+    connecting,
+    signing
+  } = useWalletContext();
+
+  // Verificar se o usuário já está autenticado e redirecionar para dashboard
+  useEffect(() => {
+    if (isInitialized && isAuthenticated) {
+      console.log('Home: Usuário já autenticado, redirecionando para dashboard');
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, isInitialized, navigate]);
+
+  // Efeito para verificar se o usuário já tem carteira conectada, está cadastrado, 
+  // mas não está autenticado (não tem token)
+  useEffect(() => {
+    const checkAndRequestSignature = async () => {
+      // Se temos conta conectada mas não estamos autenticados
+      if (isInitialized && account && !isAuthenticated && !connecting && !signing) {
+        // Verificar se a carteira já está cadastrada
+        const walletCheck = await checkWalletExists();
+        
+        if (walletCheck?.success && walletCheck?.exists) {
+          console.log('Home: Carteira conectada e cadastrada, solicitando assinatura');
+          // Solicitar assinatura automaticamente
+          await requestSignature();
+        }
+      }
+    };
+    
+    checkAndRequestSignature();
+  }, [isInitialized, account, isAuthenticated, connecting, signing, checkWalletExists, requestSignature]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
