@@ -1,14 +1,51 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
-import { ChevronRight, Star, Calendar, MapPin, Loader2, ShoppingBag, Trophy, Ticket, ArrowLeft, Heart, UserPlus, UserCheck } from 'lucide-react';
+import { ChevronRight, Star, Calendar, MapPin, Loader2, ShoppingBag, Trophy, Ticket, ArrowLeft, Heart, UserPlus, UserCheck, CheckCircle, Clock, Lock } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { showError } from '../lib/toast';
 import clubApi from '../api/club';
+import { getAvailableQuestsForClub, completeQuest } from '../data/mock-data';
+
+// QuestStatusChip component
+const QuestStatusChip = ({ status }) => {
+  switch (status) {
+    case 'AVAILABLE':
+      return (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/80 text-white">
+          Available
+        </div>
+      );
+    case 'IN_PROGRESS':
+      return (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/80 text-white">
+          <Clock size={12} className="mr-1" />
+          In Progress
+        </div>
+      );
+    case 'COMPLETED':
+      return (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500/80 text-white">
+          <CheckCircle size={12} className="mr-1" />
+          Completed
+        </div>
+      );
+    case 'LOCKED':
+      return (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/80 text-white">
+          <Lock size={12} className="mr-1" />
+          Locked
+        </div>
+      );
+    default:
+      return null;
+  }
+};
 
 export default function HomeClubsPage() {
   const navigate = useNavigate();
   const { clubId } = useParams();
+  const location = useLocation();
   const { isAuthenticated, getUserData } = useWalletContext();
   const [loading, setLoading] = useState(true);
   const [userClubStats, setUserClubStats] = useState(null);
@@ -20,6 +57,18 @@ export default function HomeClubsPage() {
   const [heartClubLoading, setHeartClubLoading] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  
+  // Get the tab from URL query parameter or default to 'overview'
+  const queryParams = new URLSearchParams(location.search);
+  const tabParam = queryParams.get('tab');
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState(tabParam || 'overview');
+  
+  // Quests state
+  const [quests, setQuests] = useState([]);
+  const [questsLoading, setQuestsLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'available', 'inProgress', 'completed'
 
   // Check if user is authenticated and load data
   useEffect(() => {
@@ -43,6 +92,8 @@ export default function HomeClubsPage() {
           await checkLiveGame(clubId);
           // Check if user is following this club
           await checkIfFollowing(clubId);
+          // Fetch quests
+          await fetchQuests(clubId);
         } else {
           // Redirect to dashboard if no clubId is provided
           navigate('/dashboard');
@@ -273,6 +324,38 @@ export default function HomeClubsPage() {
     navigate('/dashboard');
   };
 
+  // Fetch quests
+  const fetchQuests = async (clubId) => {
+    try {
+      setQuestsLoading(true);
+      const clubQuests = getAvailableQuestsForClub(clubId);
+      setQuests(clubQuests);
+    } catch (error) {
+      console.error('Error fetching quests:', error);
+      setQuests([]);
+    } finally {
+      setQuestsLoading(false);
+    }
+  };
+  
+  // Handle quest completion
+  const handleCompleteQuest = (questId) => {
+    const completedQuest = completeQuest(clubId, questId);
+    if (completedQuest) {
+      // Update the quest in state
+      setQuests(quests.map(q => q.id === questId ? completedQuest : q));
+    }
+  };
+
+  // Filter quests by status
+  const filteredQuests = quests.filter(quest => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'available') return quest.status === 'AVAILABLE';
+    if (activeFilter === 'inProgress') return quest.status === 'IN_PROGRESS';
+    if (activeFilter === 'completed') return quest.status === 'COMPLETED';
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
@@ -418,9 +501,75 @@ export default function HomeClubsPage() {
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="container mx-auto px-4 mt-6 mb-2">
+        <div className="flex space-x-1 overflow-x-auto border-b border-gray-200 dark:border-gray-700">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className={`rounded-none border-b-2 px-4 ${
+              activeTab === 'overview'
+                ? 'border-secondary text-secondary font-semibold'
+                : 'border-transparent text-primary/70 dark:text-white/70'
+            }`}
+            onClick={() => {
+              setActiveTab('overview');
+              navigate(`/clubs/${clubId}`);
+            }}
+          >
+            Overview
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className={`rounded-none border-b-2 px-4 ${
+              activeTab === 'quests'
+                ? 'border-secondary text-secondary font-semibold'
+                : 'border-transparent text-primary/70 dark:text-white/70'
+            }`}
+            onClick={() => {
+              setActiveTab('quests');
+              navigate(`/clubs/${clubId}?tab=quests`);
+            }}
+          >
+            Quests
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className={`rounded-none border-b-2 px-4 ${
+              activeTab === 'events'
+                ? 'border-secondary text-secondary font-semibold'
+                : 'border-transparent text-primary/70 dark:text-white/70'
+            }`}
+            onClick={() => {
+              setActiveTab('events');
+              navigate(`/clubs/${clubId}?tab=events`);
+            }}
+          >
+            Events
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className={`rounded-none border-b-2 px-4 ${
+              activeTab === 'news'
+                ? 'border-secondary text-secondary font-semibold'
+                : 'border-transparent text-primary/70 dark:text-white/70'
+            }`}
+            onClick={() => {
+              setActiveTab('news');
+              navigate(`/clubs/${clubId}?tab=news`);
+            }}
+          >
+            News
+          </Button>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        {/* Live Game Banner */}
+      <div className="container mx-auto px-4 py-2 pb-20">
+        {/* Live Game Banner - Always show regardless of tab */}
         {liveGame && (
           <div className="bg-gradient-to-r from-primary to-secondary text-white rounded-lg p-4 mb-4 shadow-sm">
             <div className="flex items-center justify-between">
@@ -444,133 +593,414 @@ export default function HomeClubsPage() {
           </div>
         )}
 
-        {/* Upcoming Events */}
-        <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-primary dark:text-white">Upcoming Events</h2>
-            <Button variant="ghost" size="sm" className="text-secondary">
-              View All <ChevronRight size={16} className="ml-1" />
-            </Button>
-          </div>
-
-          {upcomingEvents.length > 0 ? (
-            <div className="space-y-3">
-              {upcomingEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm"
+        {/* Tab content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Upcoming Events */}
+            <section className="mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-primary dark:text-white">Upcoming Events</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-secondary"
+                  onClick={() => setActiveTab('events')}
                 >
-                  <h3 className="font-medium text-primary dark:text-white">{event.title}</h3>
-                  <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-2">
-                    <Calendar size={16} className="mr-1" />
-                    <span>{new Date(event.date).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-1">
-                    <MapPin size={16} className="mr-1" />
-                    <span>{event.location}</span>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="mt-3 w-full"
-                    onClick={() => navigate(`/events/${event.id}`)}
-                  >
-                    View Details
-                  </Button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
-              <p className="text-primary/70 dark:text-white/70">No upcoming events for this club</p>
-            </div>
-          )}
-        </section>
-
-        {/* Fan Activities */}
-        <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-primary dark:text-white">Fan Activities</h2>
-            <Button variant="ghost" size="sm" className="text-secondary">
-              View All <ChevronRight size={16} className="ml-1" />
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div
-              className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm flex flex-col items-center text-center"
-              onClick={() => navigate(`/quests?clubId=${selectedClub.id}`)}
-            >
-              <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-2">
-                <Star size={24} className="text-secondary" />
+                  View All <ChevronRight size={16} className="ml-1" />
+                </Button>
               </div>
-              <h3 className="font-medium text-primary dark:text-white">Quests</h3>
-              <p className="text-sm text-primary/70 dark:text-white/70 mt-1">Complete challenges and earn rewards</p>
-            </div>
 
-            <div
-              className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm flex flex-col items-center text-center"
-              onClick={() => navigate(`/pedidos?clubId=${selectedClub.id}`)}
-            >
-              <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-2">
-                <ShoppingBag size={24} className="text-secondary" />
-              </div>
-              <h3 className="font-medium text-primary dark:text-white">Stadium Orders</h3>
-              <p className="text-sm text-primary/70 dark:text-white/70 mt-1">Order food and drinks without waiting in line</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Club News */}
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-primary dark:text-white">Latest News</h2>
-            <Button variant="ghost" size="sm" className="text-secondary">
-              View All <ChevronRight size={16} className="ml-1" />
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {selectedClub?.news?.length > 0 ? (
-              selectedClub.news.map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-white dark:bg-[#150924] rounded-lg overflow-hidden shadow-sm"
-                >
-                  {item.image && (
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-40 object-cover"
-                    />
-                  )}
-                  <div className="p-4">
-                    <h3 className="font-medium text-primary dark:text-white">{item.title}</h3>
-                    <p className="text-sm text-primary/70 dark:text-white/70 mt-1 line-clamp-2">
-                      {item.summary}
-                    </p>
-                    <div className="flex justify-between items-center mt-3">
-                      <span className="text-xs text-primary/60 dark:text-white/60">
-                        {new Date(item.date).toLocaleDateString()}
-                      </span>
+              {upcomingEvents.length > 0 ? (
+                <div className="space-y-3">
+                  {upcomingEvents.slice(0, 2).map((event) => (
+                    <div
+                      key={event.id}
+                      className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm"
+                    >
+                      <h3 className="font-medium text-primary dark:text-white">{event.title}</h3>
+                      <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-2">
+                        <Calendar size={16} className="mr-1" />
+                        <span>{new Date(event.date).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-1">
+                        <MapPin size={16} className="mr-1" />
+                        <span>{event.location}</span>
+                      </div>
                       <Button
-                        variant="link"
+                        variant="secondary"
                         size="sm"
-                        className="p-0 h-auto text-secondary"
-                        onClick={() => navigate(`/news/${item.id}`)}
+                        className="mt-3 w-full"
+                        onClick={() => navigate(`/events/${event.id}`)}
                       >
-                        Read More
+                        View Details
                       </Button>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))
+              ) : (
+                <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
+                  <p className="text-primary/70 dark:text-white/70">No upcoming events for this club</p>
+                </div>
+              )}
+            </section>
+
+            {/* Fan Activities */}
+            <section className="mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-primary dark:text-white">Fan Activities</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div
+                  className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm flex flex-col items-center text-center cursor-pointer"
+                  onClick={() => {
+                    setActiveTab('quests');
+                    navigate(`/clubs/${clubId}?tab=quests`);
+                  }}
+                >
+                  <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-2">
+                    <Star size={24} className="text-secondary" />
+                  </div>
+                  <h3 className="font-medium text-primary dark:text-white">Quests</h3>
+                  <p className="text-sm text-primary/70 dark:text-white/70 mt-1">Complete challenges and earn rewards</p>
+                </div>
+
+                <div
+                  className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm flex flex-col items-center text-center cursor-pointer"
+                  onClick={() => navigate(`/pedidos?clubId=${selectedClub.id}`)}
+                >
+                  <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-2">
+                    <ShoppingBag size={24} className="text-secondary" />
+                  </div>
+                  <h3 className="font-medium text-primary dark:text-white">Stadium Orders</h3>
+                  <p className="text-sm text-primary/70 dark:text-white/70 mt-1">Order food and drinks without waiting in line</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Club News */}
+            <section>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-primary dark:text-white">Latest News</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-secondary"
+                  onClick={() => setActiveTab('news')}
+                >
+                  View All <ChevronRight size={16} className="ml-1" />
+                </Button>
+              </div>
+
+              <div className="space-y-3">
+                {selectedClub?.news?.length > 0 ? (
+                  selectedClub.news.slice(0, 2).map((item, index) => (
+                    <div
+                      key={index}
+                      className="bg-white dark:bg-[#150924] rounded-lg overflow-hidden shadow-sm"
+                    >
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-40 object-cover"
+                        />
+                      )}
+                      <div className="p-4">
+                        <h3 className="font-medium text-primary dark:text-white">{item.title}</h3>
+                        <p className="text-sm text-primary/70 dark:text-white/70 mt-1 line-clamp-2">
+                          {item.summary}
+                        </p>
+                        <div className="flex justify-between items-center mt-3">
+                          <span className="text-xs text-primary/60 dark:text-white/60">
+                            {new Date(item.date).toLocaleDateString()}
+                          </span>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 h-auto text-secondary"
+                            onClick={() => navigate(`/news/${item.id}`)}
+                          >
+                            Read More
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
+                    <p className="text-primary/70 dark:text-white/70">No news available for this club</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* Quests Tab */}
+        {activeTab === 'quests' && (
+          <div>
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-primary dark:text-white">Club Quests</h2>
+              <p className="text-primary/70 dark:text-white/70 mt-1">
+                Complete quests to earn points and unlock rewards for your club.
+              </p>
+            </div>
+
+            {/* Filter tabs */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <Button 
+                variant={activeFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('all')}
+                className={`
+                  rounded-full font-medium 
+                  ${activeFilter === 'all' 
+                    ? 'bg-primary text-white shadow-md' 
+                    : 'border-primary/20 dark:border-white/20 text-primary dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
+                `}
+              >
+                All
+              </Button>
+              <Button 
+                variant={activeFilter === 'available' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('available')}
+                className={`
+                  rounded-full font-medium
+                  ${activeFilter === 'available' 
+                    ? 'bg-blue-500 text-white shadow-md' 
+                    : 'border-primary/20 dark:border-white/20 text-primary dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
+                `}
+              >
+                Available
+              </Button>
+              <Button 
+                variant={activeFilter === 'inProgress' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('inProgress')}
+                className={`
+                  rounded-full font-medium
+                  ${activeFilter === 'inProgress' 
+                    ? 'bg-orange-500 text-white shadow-md' 
+                    : 'border-primary/20 dark:border-white/20 text-primary dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
+                `}
+              >
+                In Progress
+              </Button>
+              <Button 
+                variant={activeFilter === 'completed' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setActiveFilter('completed')}
+                className={`
+                  rounded-full font-medium
+                  ${activeFilter === 'completed' 
+                    ? 'bg-green-500 text-white shadow-md' 
+                    : 'border-primary/20 dark:border-white/20 text-primary dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
+                `}
+              >
+                Completed
+              </Button>
+            </div>
+
+            {questsLoading ? (
+              <div className="flex justify-center items-center my-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : filteredQuests.length === 0 ? (
+              <div className="text-center my-12">
+                <p className="text-lg text-primary/70 dark:text-white/70">No quests available in this category</p>
+              </div>
             ) : (
-              <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
-                <p className="text-primary/70 dark:text-white/70">No news available for this club</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredQuests.map((quest) => (
+                  <div 
+                    key={quest.id}
+                    className="relative flex flex-col h-[420px] w-full rounded-lg bg-white dark:bg-[#161622] p-6 tracking-tight overflow-hidden cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-[#1D1D2D] active:scale-[0.99] group"
+                  >
+                    {/* Quest image as background */}
+                    <div className="quest-image absolute inset-0">
+                      <img
+                        src={quest.image}
+                        alt={quest.name}
+                        className="h-full w-full object-cover transition-all duration-300 group-hover:scale-[1.02] group-hover:opacity-95"
+                      />
+                      {/* Full overlay gradient from bottom to top */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#161622] via-[#161622]/90 to-black/40"></div>
+                    </div>
+                    
+                    {/* Top section with status and points */}
+                    <div className="z-10 flex justify-between">
+                      <QuestStatusChip status={quest.status} />
+                      <div className="flex items-center px-2 py-1 rounded-full bg-black/50 text-white text-xs font-semibold">
+                        <Star size={14} className="text-yellow-400 mr-1.5" fill="#FFCC00" />
+                        {quest.points} pts
+                      </div>
+                    </div>
+                    
+                    {/* Main content */}
+                    <div className="z-10 flex flex-col justify-between mt-auto h-[45%]">
+                      <div className="flex flex-col mt-6">
+                        <h2 className="text-xl font-bold text-white line-clamp-2 mb-2">
+                          {quest.name}
+                        </h2>
+                        
+                        <p className="text-sm text-white/80 line-clamp-2 mb-6">
+                          {quest.description}
+                        </p>
+                      </div>
+                      
+                      {/* Bottom section */}
+                      <div className="flex flex-col gap-2 mt-auto">
+                        <div className="text-xs text-white/70">
+                          <span className="font-semibold text-white/90">Requirements:</span> {quest.requirements}
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          {/* Participant count */}
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm font-semibold text-white">
+                              {quest.status === 'COMPLETED' ? (
+                                <div className="flex items-center text-green-400">
+                                  <CheckCircle size={14} className="mr-1" />
+                                  <span>Completed</span>
+                                </div>
+                              ) : quest.progress ? (
+                                <div className="flex flex-col">
+                                  <span className="leading-none">{quest.progress.current}/{quest.progress.total}</span>
+                                  <span className="text-xs font-medium text-white/70">Progress</span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col">
+                                  <span className="leading-none">Available</span>
+                                  <span className="text-xs font-medium text-white/70">Status</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Complete button */}
+                          {quest.status === 'AVAILABLE' || quest.status === 'IN_PROGRESS' ? (
+                            <Button 
+                              variant="default"
+                              size="sm"
+                              className="whitespace-nowrap bg-primary hover:bg-primary/90 text-white px-4"
+                              onClick={() => handleCompleteQuest(quest.id)}
+                            >
+                              {quest.status === 'IN_PROGRESS' ? 'Update' : 'Complete'}
+                            </Button>
+                          ) : quest.status === 'COMPLETED' ? (
+                            <div className="text-xs font-medium text-white/70">
+                              {new Date(quest.completedAt).toLocaleDateString()}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-        </section>
+        )}
+
+        {/* Events Tab */}
+        {activeTab === 'events' && (
+          <div>
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-primary dark:text-white">All Events</h2>
+              <p className="text-primary/70 dark:text-white/70 mt-1">
+                View all upcoming events for {selectedClub?.name}.
+              </p>
+            </div>
+
+            {upcomingEvents.length > 0 ? (
+              <div className="space-y-3">
+                {upcomingEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm"
+                  >
+                    <h3 className="font-medium text-primary dark:text-white">{event.title}</h3>
+                    <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-2">
+                      <Calendar size={16} className="mr-1" />
+                      <span>{new Date(event.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-1">
+                      <MapPin size={16} className="mr-1" />
+                      <span>{event.location}</span>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="mt-3 w-full"
+                      onClick={() => navigate(`/events/${event.id}`)}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
+                <p className="text-primary/70 dark:text-white/70">No upcoming events for this club</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* News Tab */}
+        {activeTab === 'news' && (
+          <div>
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-primary dark:text-white">All News</h2>
+              <p className="text-primary/70 dark:text-white/70 mt-1">
+                Latest news and updates from {selectedClub?.name}.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {selectedClub?.news?.length > 0 ? (
+                selectedClub.news.map((item, index) => (
+                  <div
+                    key={index}
+                    className="bg-white dark:bg-[#150924] rounded-lg overflow-hidden shadow-sm"
+                  >
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-40 object-cover"
+                      />
+                    )}
+                    <div className="p-4">
+                      <h3 className="font-medium text-primary dark:text-white">{item.title}</h3>
+                      <p className="text-sm text-primary/70 dark:text-white/70 mt-1 line-clamp-3">
+                        {item.summary}
+                      </p>
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="text-xs text-primary/60 dark:text-white/60">
+                          {new Date(item.date).toLocaleDateString()}
+                        </span>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="p-0 h-auto text-secondary"
+                          onClick={() => navigate(`/news/${item.id}`)}
+                        >
+                          Read More
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
+                  <p className="text-primary/70 dark:text-white/70">No news available for this club</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
