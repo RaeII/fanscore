@@ -16,6 +16,7 @@ import AdminClubsPage from './pages/admin-clubs'
 import { ThemeProvider } from './components/theme-provider'
 import { WalletProvider } from './contexts/WalletContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminStadiumsPage from './pages/admin-stadiums'
 
 // Criar uma instância do QueryClient para o TanStack Query
 const queryClient = new QueryClient()
@@ -65,6 +66,10 @@ const router = createBrowserRouter([
       {
         path: 'admin/clubes',
         element: <AdminClubsPage />
+      },
+      {
+        path: 'admin/estadios',
+        element: <AdminStadiumsPage />
       },
       {
         path: 'pedidos',

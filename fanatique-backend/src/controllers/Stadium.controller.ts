@@ -16,6 +16,7 @@ class StadiumController extends Controller {
 
 	async create(req: Request, res: Response) {
 		try {
+			console.log(req.body);
 			const body: StadiumInsert = {
 				name: req.body.name,
 				image: req.body.image,
@@ -52,6 +53,7 @@ class StadiumController extends Controller {
 			return this.sendSuccessResponse(res, { content: { id: stadiumId }, message: getSuccessMessage('create', 'Estádio') });
 		} catch (err) {
 			await Database.rollback().catch(console.log);
+			console.log(err);
 			return await this.sendErrorMessage(res, err);
 		}
 	}

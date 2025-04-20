@@ -11,7 +11,7 @@ import logger from "./logger";
 import apiRouter from "@/routes";
 
 export default (app: Application) => {
-  app.use(json({ limit: '1mb' }));
+  app.use(json({ limit: '5mb' }));
 
   const options: cors.CorsOptions = {
     credentials: true,

@@ -9,8 +9,8 @@ router.post('', [
 	//jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
 		const controller = new Controller();
-
-		controller.create(req, res);
+		console.log(req.body);
+		await controller.create(req, res);
 	}
 ]);
 
