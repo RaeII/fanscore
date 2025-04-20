@@ -157,4 +157,101 @@ export interface EstablishmentUpdate {
   name?: string;
   segment?: string;
   image?: string;
+}
+
+// Product Types
+export interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  image: string;
+  value_real: string;
+  value_tokefan: string;
+  establishment: number;
+  register_date: string;
+  update_date: string | null;
+}
+
+export interface ProductBasicInfo {
+  id: number;
+  name: string;
+  description?: string;
+  image: string;
+  value_real: string;
+  value_tokefan: string;
+  establishment: number;
+}
+
+export interface ProductForFront {
+  id: number;
+  name: string;
+  description?: string;
+  image: string;
+  value_real: string;
+  value_tokefan: string;
+  establishment: number;
+}
+
+export interface ProductInsert {
+  name: string;
+  description?: string;
+  image: string;
+  value_real: string;
+  value_tokefan: string;
+  establishment: number;
+}
+
+export interface ProductUpdatePayload {
+  name?: string;
+  description?: string;
+  image?: string;
+  value_real?: string;
+  value_tokefan?: string;
+  establishment?: number;
+}
+
+export interface ProductUpdate {
+  name?: string;
+  description?: string;
+  image?: string;
+  value_real?: string;
+  value_tokefan?: string;
+  establishment?: number;
+}
+
+// EstablishmentStadium
+export interface EstablishmentStadium {
+	id: number;
+	establishment_id: number;
+	stadium_id: number;
+	register_date: string;
+	update_date: string | null;
+}
+
+export interface EstablishmentStadiumBasicInfo {
+	id: number;
+	establishment_id: number;
+	stadium_id: number;
+	establishment_name: string;
+	stadium_name: string;
+}
+
+export interface EstablishmentStadiumInsert {
+	establishment_id: number;
+	stadium_id: number;
+}
+
+export interface EstablishmentStadiumUpdate {
+	establishment_id?: number;
+	stadium_id?: number;
+}
+
+export interface EstablishmentStadiumForFront {
+	id: number;
+	establishment_id: number;
+	stadium_id: number;
+	establishment_name: string;
+	stadium_name: string;
+	register_date: string;
+	update_date: string | null;
 } 

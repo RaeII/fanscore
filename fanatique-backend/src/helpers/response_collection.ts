@@ -18,6 +18,7 @@ const errorCollection: ErrorCollection = {
   clubAlreadyExist: 'Nome de clube já existe',
   clubAlreadyHasStadium: 'Clube já possui um estádio',
   stadiumNotBelongsToHomeClub: 'Estádio não pertence ao clube mandante',
+  establishmentAlreadyInStadium: 'Este estabelecimento já está vinculado a este estádio',
 };
 
 const successCollection: SuccessCollection = {

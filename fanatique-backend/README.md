@@ -64,6 +64,12 @@ CREATE TABLE `match` (
   CONSTRAINT `fk_match_3` FOREIGN KEY (`stadium_id`) REFERENCES `stadium` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+Faça os arquivos em @fanatique-backend 
+
+
+Agora quero que crie uma pagina para cadastrar estabelecimentos como fez em @admin-clubs.jsx para cadastrar clubes, mas agora faça para cadastrar estabelecimentos e salvar esses dados: const body: EstablishmentInsert = { name: req.body.name, segment: req.body.segment, image: req.body.image };
+Utilize as rotas @establishment.routes.ts essa pagina
+
 
 
 

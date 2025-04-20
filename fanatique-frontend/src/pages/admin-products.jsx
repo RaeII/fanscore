@@ -3,42 +3,50 @@ import { toast } from 'react-hot-toast';
 import api from '../lib/api';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
-export default function AdminEstablishmentsPage() {
+export default function AdminProductsPage() {
+  const [products, setProducts] = useState([]);
   const [establishments, setEstablishments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    segment: '',
+    description: '',
+    value_real: '',
+    value_tokefan: '',
+    establishment: '',
     image: ''
   });
   const [previewImage, setPreviewImage] = useState('');
   const [editingId, setEditingId] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Segmentos disponíveis
-  const segments = [
-    "Hambúrgueria",
-    "Pizzaria",
-    "Hot Dog",
-    "Pipoca",
-  ];
-
   useEffect(() => {
+    loadProducts();
     loadEstablishments();
   }, []);
 
-  const loadEstablishments = async () => {
+  const loadProducts = async () => {
     try {
       setLoading(true);
+      const response = await api.get('/product');
+      setProducts(response.data.content || []);
+    } catch (error) {
+      console.error('Erro ao carregar produtos:', error);
+      toast.error('Erro ao carregar produtos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadEstablishments = async () => {
+    try {
       const response = await api.get('/establishment');
       setEstablishments(response.data.content || []);
     } catch (error) {
       console.error('Erro ao carregar estabelecimentos:', error);
       toast.error('Erro ao carregar estabelecimentos');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -50,10 +58,10 @@ export default function AdminEstablishmentsPage() {
     }));
   };
 
-  const handleSegmentChange = (value) => {
+  const handleEstablishmentChange = (value) => {
     setFormData((prev) => ({
       ...prev,
-      segment: value
+      establishment: value
     }));
   };
 
@@ -100,17 +108,27 @@ export default function AdminEstablishmentsPage() {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error('Nome do estabelecimento é obrigatório');
+      toast.error('Nome do produto é obrigatório');
       return;
     }
 
-    if (!formData.segment) {
-      toast.error('Segmento do estabelecimento é obrigatório');
+    if (!formData.value_real.trim()) {
+      toast.error('Valor em reais é obrigatório');
+      return;
+    }
+
+    if (!formData.value_tokefan.trim()) {
+      toast.error('Valor em tokefan é obrigatório');
+      return;
+    }
+
+    if (!formData.establishment) {
+      toast.error('Estabelecimento é obrigatório');
       return;
     }
 
     if (!formData.image && !editingId) {
-      toast.error('Imagem do estabelecimento é obrigatória');
+      toast.error('Imagem do produto é obrigatória');
       return;
     }
 
@@ -120,70 +138,76 @@ export default function AdminEstablishmentsPage() {
       // Dados a serem enviados
       const dataToSend = {
         name: formData.name,
-        segment: formData.segment,
+        description: formData.description,
+        value_real: formData.value_real,
+        value_tokefan: formData.value_tokefan,
+        establishment: Number(formData.establishment),
         ...(formData.image && { image: formData.image })
       };
 
       if (editingId) {
-        // Atualizar estabelecimento existente
-        await api.put(`/establishment/${editingId}`, dataToSend);
-        toast.success('Estabelecimento atualizado com sucesso!');
+        // Atualizar produto existente
+        await api.put(`/product/${editingId}`, dataToSend);
+        toast.success('Produto atualizado com sucesso!');
       } else {
-        // Criar novo estabelecimento
-        await api.post('/establishment', dataToSend);
-        toast.success('Estabelecimento cadastrado com sucesso!');
+        // Criar novo produto
+        await api.post('/product', dataToSend);
+        toast.success('Produto cadastrado com sucesso!');
       }
 
       // Resetar formulário
-      setFormData({ name: '', segment: '', image: '' });
+      setFormData({ name: '', description: '', value_real: '', value_tokefan: '', establishment: '', image: '' });
       setPreviewImage('');
       setEditingId(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
 
-      // Recarregar a lista de estabelecimentos
-      await loadEstablishments();
+      // Recarregar a lista de produtos
+      await loadProducts();
     } catch (error) {
-      console.error('Erro ao salvar estabelecimento:', error);
-      toast.error('Erro ao salvar estabelecimento');
+      console.error('Erro ao salvar produto:', error);
+      toast.error('Erro ao salvar produto');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = (establishment) => {
+  const handleEdit = (product) => {
     setFormData({
-      name: establishment.name,
-      segment: establishment.segment,
+      name: product.name,
+      description: product.description || '',
+      value_real: product.value_real,
+      value_tokefan: product.value_tokefan,
+      establishment: String(product.establishment),
       // Não incluímos a imagem aqui para evitar enviar a mesma imagem novamente
       image: '' 
     });
-    setPreviewImage(establishment.image);
-    setEditingId(establishment.id);
+    setPreviewImage(product.image);
+    setEditingId(product.id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Tem certeza que deseja excluir este estabelecimento?')) {
+    if (!window.confirm('Tem certeza que deseja excluir este produto?')) {
       return;
     }
 
     try {
       setLoading(true);
-      await api.delete(`/establishment/${id}`);
-      toast.success('Estabelecimento excluído com sucesso!');
-      await loadEstablishments();
+      await api.delete(`/product/${id}`);
+      toast.success('Produto excluído com sucesso!');
+      await loadProducts();
     } catch (error) {
-      console.error('Erro ao excluir estabelecimento:', error);
-      toast.error('Erro ao excluir estabelecimento');
+      console.error('Erro ao excluir produto:', error);
+      toast.error('Erro ao excluir produto');
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    setFormData({ name: '', segment: '', image: '' });
+    setFormData({ name: '', description: '', value_real: '', value_tokefan: '', establishment: '', image: '' });
     setPreviewImage('');
     setEditingId(null);
     if (fileInputRef.current) {
@@ -191,7 +215,13 @@ export default function AdminEstablishmentsPage() {
     }
   };
 
-  if (loading && !establishments.length) {
+  // Encontra o nome do estabelecimento pelo ID
+  const getEstablishmentName = (establishmentId) => {
+    const establishment = establishments.find(est => est.id === establishmentId);
+    return establishment ? establishment.name : 'Desconhecido';
+  };
+
+  if (loading && !products.length) {
     return (
       <div className="container mx-auto px-4 py-16 flex flex-col items-center justify-center">
         <div className="flex items-center justify-center mb-4">
@@ -200,7 +230,7 @@ export default function AdminEstablishmentsPage() {
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </div>
-        <p className="text-xl font-medium">Inicializando a página de administração...</p>
+        <p className="text-xl font-medium">Inicializando a página de administração de produtos...</p>
       </div>
     );
   }
@@ -208,7 +238,7 @@ export default function AdminEstablishmentsPage() {
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl">
       <h1 className="text-3xl font-bold mb-8 text-center">
-        {editingId ? 'Editar Estabelecimento' : 'Cadastrar Novo Estabelecimento'}
+        {editingId ? 'Editar Produto' : 'Cadastrar Novo Produto'}
       </h1>
 
       {/* Formulário */}
@@ -216,7 +246,7 @@ export default function AdminEstablishmentsPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="name" className="block text-sm font-medium mb-2">
-              Nome do Estabelecimento
+              Nome do Produto
             </label>
             <Input
               id="name"
@@ -224,24 +254,72 @@ export default function AdminEstablishmentsPage() {
               type="text"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Digite o nome do estabelecimento"
+              placeholder="Digite o nome do produto"
               className="w-full"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="segment" className="block text-sm font-medium mb-2">
-              Segmento
+            <label htmlFor="description" className="block text-sm font-medium mb-2">
+              Descrição do Produto
             </label>
-            <Select value={formData.segment} onValueChange={handleSegmentChange}>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Digite a descrição do produto"
+              className="w-full min-h-[100px]"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="value_real" className="block text-sm font-medium mb-2">
+                Valor em Reais (R$)
+              </label>
+              <Input
+                id="value_real"
+                name="value_real"
+                type="text"
+                value={formData.value_real}
+                onChange={handleChange}
+                placeholder="Ex: 10.50"
+                className="w-full"
+                required
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="value_tokefan" className="block text-sm font-medium mb-2">
+                Valor em Tokefan
+              </label>
+              <Input
+                id="value_tokefan"
+                name="value_tokefan"
+                type="text"
+                value={formData.value_tokefan}
+                onChange={handleChange}
+                placeholder="Ex: 5.00"
+                className="w-full"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="establishment" className="block text-sm font-medium mb-2">
+              Estabelecimento
+            </label>
+            <Select value={formData.establishment} onValueChange={handleEstablishmentChange}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o segmento" />
+                <SelectValue placeholder="Selecione o estabelecimento" />
               </SelectTrigger>
               <SelectContent>
-                {segments.map((segment) => (
-                  <SelectItem key={segment} value={segment}>
-                    {segment}
+                {establishments.map((establishment) => (
+                  <SelectItem key={establishment.id} value={String(establishment.id)}>
+                    {establishment.name} - {establishment.segment}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -249,12 +327,12 @@ export default function AdminEstablishmentsPage() {
           </div>
 
           <div>
-            <label htmlFor="establishmentImage" className="block text-sm font-medium mb-2">
-              Imagem do Estabelecimento
+            <label htmlFor="productImage" className="block text-sm font-medium mb-2">
+              Imagem do Produto
             </label>
             <input
-              id="establishmentImage"
-              name="establishmentImage"
+              id="productImage"
+              name="productImage"
               type="file"
               accept="image/*"
               onChange={handleImageChange}
@@ -317,27 +395,27 @@ export default function AdminEstablishmentsPage() {
         </form>
       </div>
 
-      {/* Lista de Estabelecimentos */}
-      <h2 className="text-2xl font-bold mb-4">Estabelecimentos Cadastrados</h2>
+      {/* Lista de Produtos */}
+      <h2 className="text-2xl font-bold mb-4">Produtos Cadastrados</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading && !establishments.length ? (
+        {loading && !products.length ? (
           <div className="col-span-full flex justify-center items-center py-12">
             <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </div>
-        ) : establishments.length === 0 ? (
+        ) : products.length === 0 ? (
           <div className="col-span-full text-center py-8 text-gray-500">
-            Nenhum estabelecimento cadastrado ainda.
+            Nenhum produto cadastrado ainda.
           </div>
         ) : (
-          establishments.map((establishment) => (
-            <div key={establishment.id} className="bg-card rounded-lg shadow overflow-hidden">
+          products.map((product) => (
+            <div key={product.id} className="bg-card rounded-lg shadow overflow-hidden">
               <div className="h-48 overflow-hidden">
                 <img 
-                  src={establishment.image} 
-                  alt={establishment.name} 
+                  src={product.image} 
+                  alt={product.name} 
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -346,20 +424,29 @@ export default function AdminEstablishmentsPage() {
                 />
               </div>
               <div className="p-4">
-                <h3 className="text-lg font-semibold">{establishment.name}</h3>
-                <p className="text-sm text-gray-500 mt-1">Segmento: {establishment.segment}</p>
+                <h3 className="text-lg font-semibold">{product.name}</h3>
+                {product.description && (
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">{product.description}</p>
+                )}
+                <p className="text-sm text-gray-500 mt-1">Estabelecimento: {getEstablishmentName(product.establishment)}</p>
+                <div className="mt-2 flex justify-between items-center">
+                  <div>
+                    <p className="text-sm font-medium">Valor: R$ {product.value_real}</p>
+                    <p className="text-sm font-medium">Tokefan: {product.value_tokefan}</p>
+                  </div>
+                </div>
                 <div className="mt-4 flex justify-end space-x-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleEdit(establishment)}
+                    onClick={() => handleEdit(product)}
                   >
                     Editar
                   </Button>
                   <Button 
                     variant="destructive" 
                     size="sm" 
-                    onClick={() => handleDelete(establishment.id)}
+                    onClick={() => handleDelete(product.id)}
                   >
                     Excluir
                   </Button>

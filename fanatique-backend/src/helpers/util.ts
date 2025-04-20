@@ -1,7 +1,12 @@
 export function createBindParams(data: Record<string, any>): string {
 	if (!data || Object.keys(data).length === 0) return '';
 	
-	const params = Object.keys(data).map(key => `${key} = ?`).join(', ');
+	// Filtra valores undefined
+	const filteredData = Object.fromEntries(
+		Object.entries(data).filter(([_, value]) => value !== undefined)
+	);
+	
+	const params = Object.keys(filteredData).map(key => `${key} = ?`).join(', ');
 	return params;
 }
 
