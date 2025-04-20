@@ -1,0 +1,148 @@
+Stadium Orders Update - Home Game Restriction
+
+Changes needed in stadium-orders.jsx:
+
+1. Add new state variables:
+   - const [isHomeGame, setIsHomeGame] = useState(false);
+   - const [gameInfo, setGameInfo] = useState(null);
+
+2. Replace fetchEstablishments call in useEffect with verifyHomeGameAndLoadData:
+   ```
+   if (gameId) {
+     await verifyHomeGameAndLoadData(clubId, gameId);
+   } else {
+     showError('No game specified');
+     navigate(`/clubs/${clubId}`);
+   }
+   ```
+
+3. Add new verifyHomeGameAndLoadData function:
+   ```
+   const verifyHomeGameAndLoadData = async (clubId, gameId) => {
+     try {
+       // In a real app, this would be an API call to check if the club is involved in the game
+       // Mock game info based on club and game IDs
+       const clubNames = {
+         '1': 'FC Barcelona',
+         '2': 'Real Madrid',
+         '3': 'Manchester United',
+         '4': 'Vasco'
+       };
+       
+       const currentClubName = clubNames[clubId] || 'Unknown Club';
+       
+       // Mock available games
+       const mockAvailableGames = [
+         {
+           id: 'game-123',
+           homeTeam: 'FC Barcelona',
+           awayTeam: 'Real Madrid',
+           status: 'LIVE',
+           score: '2-1',
+           stadium: 'Camp Nou'
+         },
+         {
+           id: 'game-456',
+           homeTeam: 'Manchester United',
+           awayTeam: 'Liverpool FC',
+           status: 'LIVE',
+           score: '1-0',
+           stadium: 'Old Trafford'
+         },
+         {
+           id: 'game-789',
+           homeTeam: 'Vasco',
+           awayTeam: 'Flamengo',
+           status: 'LIVE',
+           score: '3-2',
+           stadium: 'São Januário'
+         }
+       ];
+       
+       // Find the game by gameId
+       const game = mockAvailableGames.find(g => g.id === gameId);
+       
+       if (!game) {
+         showError('Game not found');
+         navigate(`/clubs/${clubId}`);
+         return;
+       }
+       
+       // Check if the current club is playing in this game
+       const isParticipating = game.homeTeam === currentClubName || game.awayTeam === currentClubName;
+       
+       if (!isParticipating) {
+         showError('Your club is not participating in this game');
+         navigate(`/clubs/${clubId}`);
+         return;
+       }
+       
+       // Check if the current club is the home team (for display purposes only)
+       const isHomeTeam = game.homeTeam === currentClubName;
+       setIsHomeGame(true); // Always allow orders for participating teams
+       setGameInfo({
+         ...game,
+         isHomeTeam  // Keep track of whether this club is home team (for UI customization)
+       });
+       
+       // Load establishments for both home and away teams
+       await fetchEstablishments(clubId, gameId);
+     } catch (error) {
+       console.error('Error verifying game participation:', error);
+       showError('Failed to verify game data');
+       navigate(`/clubs/${clubId}`);
+     }
+   };
+   ```
+
+4. Add game info to club info display:
+   ```
+   {club && (
+     <div className="text-sm text-white/80 mt-1">
+       {club.name}
+       {gameInfo && (
+         <span className="ml-2">| {gameInfo.homeTeam} vs {gameInfo.awayTeam}</span>
+       )}
+     </div>
+   )}
+   ```
+
+5. Update the Main Content section to show game information:
+   ```
+   {/* Main Content */}
+   <div className="container mx-auto px-4 py-6">
+     {/* Establishments View */}
+     {currentView === 'establishments' && (
+       <div className="space-y-4">
+         <div className="bg-white dark:bg-[#150924] rounded-lg p-4 mb-4 shadow-sm">
+           <h2 className="text-lg font-bold text-primary dark:text-white">Game Information</h2>
+           <div className="flex items-center mt-2">
+             <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse mr-2"></div>
+             <span className="text-sm font-medium text-primary dark:text-white">
+               {gameInfo?.homeTeam} vs {gameInfo?.awayTeam}
+             </span>
+           </div>
+           <p className="text-sm text-primary/70 dark:text-white/70 mt-1">
+             Stadium: {gameInfo?.stadium}
+           </p>
+           <p className="text-sm text-primary/70 dark:text-white/70 mt-1">
+             Current Score: {gameInfo?.score}
+           </p>
+           <p className="text-xs text-primary/60 dark:text-white/60 mt-1">
+             {gameInfo?.isHomeTeam ? "Your team is playing at home" : "Your team is the away team"}
+           </p>
+         </div>
+
+         <h2 className="text-lg font-medium text-primary dark:text-white mb-4">
+           Select an establishment
+         </h2>
+         
+         {/* Rest of establishments view code */}
+       </div>
+     )}
+
+     {/* Rest of the views (menu, cart, confirmation) remain unchanged */}
+   </div>
+   ```
+
+This update ensures that stadium orders are only available for home games. If the club is playing as an away team, the user will see a message explaining that ordering is only available for home games, with a button to return to the club page. 

@@ -1,0 +1,263 @@
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { getAvailableQuestsForClub, completeQuest } from '../data/mock-data';
+import { Button } from '../components/ui/button';
+import { Star, CheckCircle, Clock, Lock } from 'lucide-react';
+
+const QuestStatusChip = ({ status }) => {
+  switch (status) {
+    case 'AVAILABLE':
+      return (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/80 text-white">
+          Available
+        </div>
+      );
+    case 'IN_PROGRESS':
+      return (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/80 text-white">
+          <Clock size={12} className="mr-1" />
+          In Progress
+        </div>
+      );
+    case 'COMPLETED':
+      return (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500/80 text-white">
+          <CheckCircle size={12} className="mr-1" />
+          Completed
+        </div>
+      );
+    case 'LOCKED':
+      return (
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/80 text-white">
+          <Lock size={12} className="mr-1" />
+          Locked
+        </div>
+      );
+    default:
+      return null;
+  }
+};
+
+export default function Quests() {
+  const { clubId = '1' } = useParams(); // Default to club ID 1 if not provided
+  const [quests, setQuests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'available', 'inProgress', 'completed'
+
+  useEffect(() => {
+    // Fetch quests for the current club
+    const fetchQuests = () => {
+      setLoading(true);
+      // In a real app, this would be an API call
+      const clubQuests = getAvailableQuestsForClub(clubId);
+      setQuests(clubQuests);
+      setLoading(false);
+    };
+
+    fetchQuests();
+  }, [clubId]);
+
+  const handleCompleteQuest = (questId) => {
+    const completedQuest = completeQuest(clubId, questId);
+    if (completedQuest) {
+      // Update the quest in state
+      setQuests(quests.map(q => q.id === questId ? completedQuest : q));
+    }
+  };
+
+  const filteredQuests = quests.filter(quest => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'available') return quest.status === 'AVAILABLE';
+    if (activeFilter === 'inProgress') return quest.status === 'IN_PROGRESS';
+    if (activeFilter === 'completed') return quest.status === 'COMPLETED';
+    return true;
+  });
+
+  return (
+    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+      <div className="container mx-auto px-4 py-6">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold text-primary dark:text-white">Club Quests</h1>
+          </div>
+          <p className="text-primary/70 dark:text-white/70 mt-1">
+            Complete quests to earn points and unlock rewards for your club.
+          </p>
+        </div>
+
+        {/* Filter tabs */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Button 
+            variant={activeFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('all')}
+            className={`
+              rounded-full font-medium 
+              ${activeFilter === 'all' 
+                ? 'bg-primary text-white shadow-md' 
+                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
+            `}
+          >
+            All
+          </Button>
+          <Button 
+            variant={activeFilter === 'available' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('available')}
+            className={`
+              rounded-full font-medium
+              ${activeFilter === 'available' 
+                ? 'bg-blue-500 text-white shadow-md' 
+                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
+            `}
+          >
+            Available
+          </Button>
+          <Button 
+            variant={activeFilter === 'inProgress' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('inProgress')}
+            className={`
+              rounded-full font-medium
+              ${activeFilter === 'inProgress' 
+                ? 'bg-orange-500 text-white shadow-md' 
+                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
+            `}
+          >
+            In Progress
+          </Button>
+          <Button 
+            variant={activeFilter === 'completed' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('completed')}
+            className={`
+              rounded-full font-medium
+              ${activeFilter === 'completed' 
+                ? 'bg-green-500 text-white shadow-md' 
+                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
+            `}
+          >
+            Completed
+          </Button>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center my-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : filteredQuests.length === 0 ? (
+          <div className="text-center my-12">
+            <p className="text-lg text-primary/70 dark:text-white/70">No quests available in this category</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredQuests.map((quest) => (
+              <div 
+                key={quest.id}
+                className="relative flex flex-col h-[420px] w-full rounded-lg bg-white dark:bg-[#161622] p-6 tracking-tight overflow-hidden cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-[#1D1D2D] active:scale-[0.99] group"
+              >
+                {/* Quest image as background */}
+                <div className="quest-image absolute inset-0">
+                  <img
+                    src={quest.image}
+                    alt={quest.name}
+                    className="h-full w-full object-cover transition-all duration-300 group-hover:scale-[1.02] group-hover:opacity-95"
+                  />
+                  {/* Full overlay gradient from bottom to top */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#161622] via-[#161622]/90 to-black/40"></div>
+                </div>
+                
+                {/* Top section with status and points */}
+                <div className="z-10 flex justify-between">
+                  <QuestStatusChip status={quest.status} />
+                  <div className="flex items-center px-2 py-1 rounded-full bg-black/50 text-white text-xs font-semibold">
+                    <Star size={14} className="text-yellow-400 mr-1.5" fill="#FFCC00" />
+                    {quest.points} pts
+                  </div>
+                </div>
+                
+                {/* Main content */}
+                <div className="z-10 flex flex-col justify-between mt-auto h-[45%]">
+                  <div className="flex flex-col mt-6">
+                    <h2 className="text-xl font-bold text-white line-clamp-2 mb-2">
+                      {quest.name}
+                    </h2>
+                    
+                    <p className="text-sm text-white/80 line-clamp-2 mb-6">
+                      {quest.description}
+                    </p>
+                    
+                    {/* Progress indicators
+                    <div className="flex h-1.5 gap-1.5">
+                      {quest.progress ? (
+                        <div className="w-full bg-gray-200 dark:bg-[#2A2A3C] rounded-full h-1.5">
+                          <div 
+                            className="bg-secondary h-1.5 rounded-full" 
+                            style={{ width: `${(quest.progress.current / quest.progress.total) * 100}%` }}
+                          ></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="h-full min-w-0 grow rounded-full bg-white/10 dark:bg-white/10"></div>
+                          <div className="h-full min-w-0 grow rounded-full bg-white/10 dark:bg-white/10"></div>
+                          <div className="h-full min-w-0 grow rounded-full bg-white/10 dark:bg-white/10"></div>
+                        </>
+                      )}
+                    </div> */}
+                  </div>
+                  
+                  {/* Bottom section */}
+                  <div className="flex flex-col gap-2 mt-auto">
+                    <div className="text-xs text-white/70">
+                      <span className="font-semibold text-white/90">Requirements:</span> {quest.requirements}
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      {/* Participant count */}
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-semibold text-white">
+                          {quest.status === 'COMPLETED' ? (
+                            <div className="flex items-center text-green-400">
+                              <CheckCircle size={14} className="mr-1" />
+                              <span>Completed</span>
+                            </div>
+                          ) : quest.progress ? (
+                            <div className="flex flex-col">
+                              <span className="leading-none">{quest.progress.current}/{quest.progress.total}</span>
+                              <span className="text-xs font-medium text-white/70">Progress</span>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col">
+                              <span className="leading-none">Available</span>
+                              <span className="text-xs font-medium text-white/70">Status</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Complete button */}
+                      {quest.status === 'AVAILABLE' || quest.status === 'IN_PROGRESS' ? (
+                        <Button 
+                          variant="default"
+                          size="sm"
+                          className="whitespace-nowrap bg-primary hover:bg-primary/90 text-white px-4"
+                          onClick={() => handleCompleteQuest(quest.id)}
+                        >
+                          {quest.status === 'IN_PROGRESS' ? 'Update' : 'Complete'}
+                        </Button>
+                      ) : quest.status === 'COMPLETED' ? (
+                        <div className="text-xs font-medium text-white/70">
+                          {new Date(quest.completedAt).toLocaleDateString()}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

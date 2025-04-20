@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
-import { Trophy, Star, Ticket, ShoppingBag, User, LogOut } from 'lucide-react';
+import { Trophy, Star, Ticket, ShoppingBag, User, Volleyball as Football, LogOut } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import api from '../lib/api';
-import { showError } from '../lib/toast';
+import clubApi from '../api/club';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -16,8 +15,9 @@ export default function DashboardPage() {
     isConnected, 
     connectWallet
   } = useWalletContext();
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [clubs, setClubs] = useState([]);
+  const [liveGameClubs, setLiveGameClubs] = useState([]);
 
   // Efeito para garantir que a carteira esteja conectada
   useEffect(() => {
@@ -41,56 +41,68 @@ export default function DashboardPage() {
     }
 
     console.log('Dashboard: Usuário autenticado via contexto, buscando dados');
-    
-    // Carregar dados do usuário
-    const fetchUserData = async () => {
+    const fetchClubs = async () => {
       try {
         setLoading(true);
-        console.log('Dashboard: Chamando API para obter dados do usuário');
-        const response = await api.get('/user');
-
-        console.log('Dashboard: Resposta da API:', response);
-
-        if (response?.data && response?.data?.content?.id) {
-          console.log('Dashboard: Dados do usuário carregados com sucesso');
-          setUserData(response.data.content);
-        } else {
-          console.error('Dashboard: Erro nos dados retornados pela API', response?.data);
-          showError('Erro ao carregar dados do usuário');
-          navigate('/app');
-        }
+        const clubs = await clubApi.getClubs();
+        setClubs(clubs);
+        
+        // Mock data for clubs with live games - in a real app this would come from an API
+        // This simulates a club ID to club name mapping
+        const clubNames = {
+          '1': 'FC Barcelona',
+          '2': 'Real Madrid',
+          '3': 'Manchester United',
+          '4': 'Vasco'
+        };
+        
+        // Check which clubs have live games
+        const mockAvailableGames = [
+          {
+            id: 'game-123',
+            homeTeam: 'FC Barcelona',
+            awayTeam: 'Real Madrid',
+            status: 'LIVE',
+          },
+          {
+            id: 'game-456',
+            homeTeam: 'Manchester United',
+            awayTeam: 'Liverpool FC',
+            status: 'LIVE',
+          },
+          {
+            id: 'game-789',
+            homeTeam: 'Vasco',
+            awayTeam: 'Flamengo',
+            status: 'LIVE',
+          }
+        ];
+        
+        // Find clubs that have live games
+        const liveClubIds = clubs.filter(club => {
+          const clubName = clubNames[club.id];
+          return mockAvailableGames.some(game => 
+            game.homeTeam === clubName || game.awayTeam === clubName
+          );
+        }).map(club => club.id);
+        
+        setLiveGameClubs(liveClubIds);
       } catch (error) {
-        console.error('Dashboard: Erro ao carregar usuário:', error);
-        
-        // Verifica se é erro de autenticação (401)
-        if (error.response && error.response.status === 401) {
-          console.error('Dashboard: Erro de autenticação (401)');
-          showError('Sessão expirada. Por favor, faça login novamente.');
-          clearAuthCredentials();
-        } else {
-          console.error('Dashboard: Outro tipo de erro', error.response?.status);
-          showError('Não foi possível carregar seus dados. Por favor, tente novamente.');
-        }
-        
-        navigate('/app');
+        console.error('Erro ao buscar clubes:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    fetchClubs();
   }, [isAuthenticated, navigate, clearAuthCredentials]);
 
-  const handleLogout = async () => {
-    // Usar a função do contexto para limpar credenciais
-    await disconnectWallet();
-    navigate('/');
+  const handleSelectClub = (clubId) => {
+    navigate(`/clubs/${clubId}`);
   };
 
-  // Função para formatar o endereço da carteira
-  const formatWalletAddress = (address) => {
-    if (!address) return 'Não conectada';
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  const isClubLive = (clubId) => {
+    return liveGameClubs.includes(clubId);
   };
 
   if (loading) {
@@ -100,64 +112,123 @@ export default function DashboardPage() {
       </div>
     );
   }
-
+  console.log('clubs', clubs);
   //CONTEÚDO PRINCIPAL DO DASHBOARD
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
-      {/* Header do Dashboard */}
-      <div className="bg-primary text-white py-6">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold">Olá, {userData?.name || 'Torcedor'}</h1>
-              <p className="text-white/80 text-sm mt-1">
-                Carteira: {formatWalletAddress(account)}
-              </p>
-            </div>
-            <Button 
-              variant="outline"
-              className="text-white border-white hover:bg-white/10"
-              onClick={handleLogout}
-            >
-              <LogOut size={16} className="mr-2" />
-              Sair
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Conteúdo principal */}
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <StatCard 
-            icon={<Trophy size={24} className="text-secondary" />}
-            title="Pontos"
-            value="0"
-            label="pontos acumulados"
-          />
-          <StatCard 
-            icon={<Star size={24} className="text-secondary" />}
-            title="Quests"
-            value="0"
-            label="completadas"
-          />
-          <StatCard 
-            icon={<ShoppingBag size={24} className="text-secondary" />}
-            title="Pedidos"
-            value="0"
-            label="realizados"
-          />
-          <StatCard 
-            icon={<Ticket size={24} className="text-secondary" />}
-            title="Ingressos"
-            value="0"
-            label="comprados"
-          />
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-primary dark:text-white">Escolha um Clube</h1>
+          <Button 
+            variant="outline"
+            className="text-primary border-primary hover:bg-primary/10 dark:text-white dark:border-white dark:hover:bg-white/10"
+            onClick={() => disconnectWallet()}
+          >
+            <LogOut size={16} className="mr-2" />
+            Sair
+          </Button>
         </div>
 
-        <h2 className="text-2xl font-bold text-primary dark:text-white mb-6">Ações Rápidas</h2>
+        <p className="text-primary/70 dark:text-white/70 mb-5">
+          Selecione um clube para ver detalhes, eventos, notícias e muito mais.
+        </p>
+
+        {/* Horizontal scrollable clubs */}
+        <div className="overflow-x-auto pb-4 mb-8">
+          <div className="flex space-x-4 min-w-max">
+            {clubs.length > 0 ? (
+              clubs.map(club => (
+                <div 
+                  key={club.id} 
+                  className="flex flex-col items-center cursor-pointer"
+                  onClick={() => handleSelectClub(club.id)}
+                >
+                  <div className="relative w-20 h-20">
+                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 border-2 border-transparent hover:border-secondary">
+                      {club.image ? (
+                        <img 
+                          src={club.image} 
+                          alt={club.name} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-primary/5 dark:bg-primary/20 text-primary/50 dark:text-white/50">
+                          <Football size={30} />
+                        </div>
+                      )}
+                    </div>
+                    {isClubLive(club.id) && (
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center animate-pulse shadow-md">
+                        <div className="h-2 w-2 rounded-full bg-white mr-1"></div>
+                        LIVE
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-primary dark:text-white text-center w-24 truncate mt-2">
+                    {club.name}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="w-full py-8 text-center">
+                <Football size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
+                <p className="text-primary/70 dark:text-white/70">
+                  Nenhum clube disponível
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Featured Clubs
+        <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Clubes em Destaque</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {clubs.slice(0, 3).map(club => (
+            <div 
+              key={club.id} 
+              className="bg-white dark:bg-[#150924] rounded-lg overflow-hidden shadow-sm cursor-pointer hover:shadow-md"
+              onClick={() => handleSelectClub(club.id)}
+            >
+              <div className="h-32 bg-gray-200 dark:bg-gray-700 relative">
+                {club.image ? (
+                  <img 
+                    src={club.image} 
+                    alt={club.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-primary/30 dark:text-white/30">
+                    <Football size={36} />
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <h3 className="text-lg font-bold text-primary dark:text-white">{club.name}</h3>
+                <div className="flex items-center mt-1">
+                  <Star size={14} className="text-yellow-400 mr-1" />
+                  <span className="text-xs text-primary/70 dark:text-white/70">{club.fanCount || 0} fãs</span>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="w-full mt-3"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectClub(club.id);
+                  }}
+                >
+                  Ver Detalhes
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div> */}
+
+        <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Ações Rápidas</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ActionCard 
             icon={<ShoppingBag size={36} className="text-secondary" />}
             title="Fazer Pedido"

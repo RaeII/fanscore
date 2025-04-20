@@ -19,6 +19,11 @@ import { ThemeProvider } from './components/theme-provider'
 import { WalletProvider } from './contexts/WalletContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminStadiumsPage from './pages/admin-stadiums'
+import HomeClubsPage from './pages/home-clubs'
+import StadiumOrdersPage from './pages/stadium-orders'
+import OrderDetailsPage from './pages/order-details'
+import OrdersHistoryPage from './pages/orders-history'
+import Quests from './pages/quests'
 
 // Criar uma instância do QueryClient para o TanStack Query
 const queryClient = new QueryClient()
@@ -50,18 +55,50 @@ const router = createBrowserRouter([
         )
       },
       {
-        path: 'quests',
+        path: 'clubs/:clubId/quests',
         element: (
           <ProtectedRoute>
-            <div className="container mx-auto px-4 py-16">Página de Quests em breve...</div>
+            <Quests />
           </ProtectedRoute>
         )
       },
       {
-        path: 'clubes',
+        path: 'clubs',
         element: (
           <ProtectedRoute>
-            <div className="container mx-auto px-4 py-16">Página de Clubes em breve...</div>
+            <HomeClubsPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'clubs/:clubId',
+        element: (
+          <ProtectedRoute>
+            <HomeClubsPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'stadium-orders/:clubId/:gameId',
+        element: (
+          <ProtectedRoute>
+            <StadiumOrdersPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'orders/:orderId',
+        element: (
+          <ProtectedRoute>
+            <OrderDetailsPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'orders',
+        element: (
+          <ProtectedRoute>
+            <OrdersHistoryPage />
           </ProtectedRoute>
         )
       },
