@@ -12,5 +12,11 @@ export const AdminNav = () => (
     >
       Admin Estádios
     </a>
+    <a 
+      href="/admin/estabelecimentos" 
+      className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md shadow-lg text-sm"
+    >
+      Admin Estabelecimentos
+    </a>
   </div>
 ); 

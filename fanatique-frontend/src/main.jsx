@@ -13,6 +13,7 @@ import HomePage from './pages/home'
 import AppPage from './pages/app'
 import DashboardPage from './pages/dashboard'
 import AdminClubsPage from './pages/admin-clubs'
+import AdminEstablishmentsPage from './pages/admin-establishments'
 import { ThemeProvider } from './components/theme-provider'
 import { WalletProvider } from './contexts/WalletContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -70,6 +71,10 @@ const router = createBrowserRouter([
       {
         path: 'admin/estadios',
         element: <AdminStadiumsPage />
+      },
+      {
+        path: 'admin/estabelecimentos',
+        element: <AdminEstablishmentsPage />
       },
       {
         path: 'pedidos',

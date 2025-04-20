@@ -70,4 +70,91 @@ export interface StadiumUpdate {
   image?: string;
   city?: string;
   state?: string;
+}
+
+// Match types
+export interface Match {
+  id: number;
+  home_club_id: number;
+  away_club_id: number;
+  stadium_id: number;
+  is_started: number;
+  match_date: Date;
+  register_date: Date;
+  update_date: Date;
+}
+
+export interface MatchBasicInfo {
+  id: number;
+  home_club_id: number;
+  away_club_id: number;
+  stadium_id: number;
+  is_started: number;
+  match_date: Date;
+  home_club_name: string;
+  away_club_name: string;
+  stadium_name: string;
+}
+
+export interface MatchForFront extends MatchBasicInfo {}
+
+export interface MatchInsert {
+  home_club_id: number;
+  away_club_id: number;
+  stadium_id: number;
+  match_date: Date;
+  is_started: number;
+}
+
+export interface MatchUpdatePayload {
+  home_club_id?: number;
+  away_club_id?: number;
+  stadium_id?: number;
+  match_date?: Date;
+  is_started?: number;
+}
+
+export interface MatchUpdate {
+  home_club_id?: number;
+  away_club_id?: number;
+  stadium_id?: number;
+  match_date?: Date;
+  is_started?: number;
+}
+
+// Establishment types
+export interface Establishment {
+  id: number;
+  name: string;
+  segment: string;
+  image: string;
+  register_date: Date;
+  update_date: Date | null;
+}
+
+export interface EstablishmentBasicInfo {
+  id: number;
+  name: string;
+  segment: string;
+  image: string;
+}
+
+export interface EstablishmentForFront extends EstablishmentBasicInfo {}
+
+export interface EstablishmentInsert {
+  name: string;
+  segment: string;
+  image: string;
+}
+
+export interface EstablishmentUpdatePayload {
+  name?: string;
+  segment?: string;
+  image?: string;
+}
+
+export interface EstablishmentUpdate {
+  name?: string;
+  segment?: string;
+  image?: string;
 } 

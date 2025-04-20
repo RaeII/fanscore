@@ -17,6 +17,7 @@ const errorCollection: ErrorCollection = {
   walletNotFound: 'Carteira não encontrada.',
   clubAlreadyExist: 'Nome de clube já existe',
   clubAlreadyHasStadium: 'Clube já possui um estádio',
+  stadiumNotBelongsToHomeClub: 'Estádio não pertence ao clube mandante',
 };
 
 const successCollection: SuccessCollection = {
