@@ -5,7 +5,9 @@ import { ChevronRight, Star, Calendar, MapPin, Loader2, ShoppingBag, Trophy, Tic
 import { Button } from '../components/ui/button';
 import { showError } from '../lib/toast';
 import clubApi from '../api/club';
+import userClubApi from '../api/user_club';
 import { getAvailableQuestsForClub, completeQuest } from '../data/mock-data';
+import { useUserContext } from '../hooks/useUserContext';
 
 // QuestStatusChip component
 const QuestStatusChip = ({ status }) => {
@@ -57,7 +59,8 @@ export default function HomeClubsPage() {
   const [heartClubLoading, setHeartClubLoading] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
-  
+  const { isUserHeartClub, hasUserHeartClub, isFollowingClub, updateUserClubsData } = useUserContext();
+
   // Get the tab from URL query parameter or default to 'overview'
   const queryParams = new URLSearchParams(location.search);
   const tabParam = queryParams.get('tab');
@@ -115,8 +118,7 @@ export default function HomeClubsPage() {
     try {
       // In a real app, this would be an API call to check if user is following this club
       // For demo purposes, we'll mock this with local storage
-      const followedClubs = JSON.parse(localStorage.getItem('followedClubs') || '[]');
-      setIsFollowing(followedClubs.includes(clubId));
+      setIsFollowing(isFollowingClub(clubId));
     } catch (error) {
       console.error('Error checking following status:', error);
       setIsFollowing(false);
@@ -129,21 +131,18 @@ export default function HomeClubsPage() {
       
       // In a real app, this would be an API call to follow/unfollow the club
       // For demo purposes, we'll use local storage
-      const followedClubs = JSON.parse(localStorage.getItem('followedClubs') || '[]');
-      
       if (isFollowing) {
         // Unfollow this club
-        const updatedFollowedClubs = followedClubs.filter(id => id !== clubId);
-        localStorage.setItem('followedClubs', JSON.stringify(updatedFollowedClubs));
+        await userClubApi.removeClubAssociation(clubId);
         setIsFollowing(false);
         // showSuccess(`You are no longer following ${selectedClub.name}`);
       } else {
         // Follow this club
-        followedClubs.push(clubId);
-        localStorage.setItem('followedClubs', JSON.stringify(followedClubs));
+        await userClubApi.addClubAssociation(clubId, 2);
         setIsFollowing(true);
         // showSuccess(`You are now following ${selectedClub.name}`);
       }
+      updateUserClubsData();
     } catch (error) {
       console.error('Error toggling follow:', error);
       showError('Failed to update follow status');
@@ -278,9 +277,8 @@ export default function HomeClubsPage() {
     try {
       // In a real app, this would be an API call to check if this is the user's heart club
       // For demo purposes, we'll mock this with local storage
-      const heartClubId = localStorage.getItem('heartClubId');
-      setIsHeartClub(heartClubId === clubId);
-      setHasHeartClub(heartClubId !== null);
+      setIsHeartClub(isUserHeartClub(clubId));
+      setHasHeartClub(hasUserHeartClub(clubId));
     } catch (error) {
       console.error('Error checking heart club status:', error);
       setIsHeartClub(false);
@@ -293,25 +291,28 @@ export default function HomeClubsPage() {
       
       // In a real app, this would be an API call to set/unset the heart club
       // For demo purposes, we'll use local storage
-      const heartClubId = localStorage.getItem('heartClubId');
+      const hasHeartClub = hasUserHeartClub();
       
       if (isHeartClub) {
         // Remove this club as heart club
-        localStorage.removeItem('heartClubId');
+        await userClubApi.removeClubAssociation(clubId);
         setIsHeartClub(false);
         setHasHeartClub(false);
+        // localStorage.removeItem('heartClubId');
         // showSuccess(`${selectedClub.name} is no longer your heart club`);
       } else {
         // Check if user already has a heart club
-        if (heartClubId && heartClubId !== clubId) {
+        if (hasHeartClub) {
           showError('You already have a heart club. You can only have one heart club at a time.');
         } else {
           // Set this club as heart club
-          localStorage.setItem('heartClubId', clubId);
+          await userClubApi.addClubAssociation(clubId, 1);
+          // localStorage.setItem('heartClubId', clubId);
           setIsHeartClub(true);
           // showSuccess(`${selectedClub.name} is now your heart club!`);
         }
       }
+      updateUserClubsData();
     } catch (error) {
       console.error('Error toggling heart club:', error);
       showError('Failed to update heart club status');

@@ -15,6 +15,7 @@ import AdminEstablishmentsPage from './pages/admin-establishments'
 import AdminProductsPage from './pages/admin-products'
 import { ThemeProvider } from './components/theme-provider'
 import { WalletProvider } from './contexts/WalletContext'
+import { UserProvider } from './contexts/UserContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminStadiumsPage from './pages/admin-stadiums'
 import HomeClubsPage from './pages/home-clubs'
@@ -141,32 +142,35 @@ createRoot(document.getElementById('root')).render(
     <ThemeProvider defaultTheme="dark" storageKey="fanatique-theme">
       <QueryClientProvider client={queryClient}>
         <WalletProvider>
-          <RouterProvider router={router} />
-          <Toaster 
-              position="top-right"
-              gutter={20}
-              containerStyle={{
-                top: 80,
-                right: 20,
-              }}
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
+          <UserProvider>
+            <RouterProvider router={router} />
+            <Toaster 
+                position="top-right"
+                gutter={20}
+                containerStyle={{
+                  top: 80,
+                  right: 20,
+                }}
+                toastOptions={{
+                  duration: 4000,
                   style: {
-                    background: '#1D7D40',
+                    background: '#363636',
+                    color: '#fff',
                   },
-                },
-                error: {
-                  style: {
-                    background: '#D92D20',
+                  success: {
+                    style: {
+                      background: '#363636',
+                      color: '#fff',
+                    },
+                    success: {
+                      style: {
+                        background: '#1D7D40',
+                      },
+                    },
                   },
-                },
-              }}
-            />
+                }}
+              />
+          </UserProvider>
         </WalletProvider>
       </QueryClientProvider>
     </ThemeProvider>
