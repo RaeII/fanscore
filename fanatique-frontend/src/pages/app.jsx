@@ -13,7 +13,6 @@ export default function AppPage() {
     account,
     signing,
     disconnectWallet,
-    getUserData,
     registerWithSignature,
     connectWallet,
     requestSignature,
@@ -26,21 +25,14 @@ export default function AppPage() {
   const [showRegister, setShowRegister] = useState(false);
   const [userName, setUserName] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  // Verificar se o usuário já está autenticado e redirecionar para o dashboard
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log('App: Usuário já autenticado pelo contexto, redirecionando para dashboard');
-      navigate('/dashboard');
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated, navigate]);
+  const [loginCancelled, setLoginCancelled] = useState(false);
 
   // Função para verificar se o usuário está cadastrado
   const checkIfUserRegistered = useCallback(async () => {
     try {
       setLoading(true);
+      setLoginCancelled(false);
+      
       if (!account) {
         setLoading(false);
         return;
@@ -54,6 +46,8 @@ export default function AppPage() {
         setLoading(false);
         return;
       }
+      
+      console.log('Verificação de cadastro:', walletCheck);
       
       // Se o usuário não estiver cadastrado, exibe o formulário de registro
       setShowRegister(!walletCheck.exists);
@@ -75,7 +69,8 @@ export default function AppPage() {
           navigate('/dashboard');
           return;
         } else {
-          console.log('App: Falha no login, permanecendo na tela atual');
+          console.log('App: Falha no login, exibindo botão para tentar novamente');
+          setLoginCancelled(true);
         }
       }
       
@@ -87,15 +82,34 @@ export default function AppPage() {
     }
   }, [account, checkWalletExists, requestSignature, navigate]);
 
+  // Verificar se o usuário já está autenticado e redirecionar para o dashboard
+  useEffect(() => {
+    (async () => {
+      if (isAuthenticated) {
+        console.log('App: Usuário já autenticado pelo contexto, redirecionando para dashboard');
+        navigate('/dashboard');
+        return;
+      }
+      
+      // Se já está conectado mas não autenticado, verifica registro
+      if (isConnected && account) {
+        await checkIfUserRegistered();
+      } else {
+        setLoading(false);
+      }
+    })();
+  }, [isAuthenticated, isConnected, account, navigate, checkIfUserRegistered]);
+
   // Função para apenas conectar a carteira
   const handleConnectWallet = async () => {
     try {
       setLoading(true);
-      // Conectar a carteira
-      await connectWallet();
+      setLoginCancelled(false);
       
-      if (!isConnected) {
-        showError('Erro ao conectar carteira');
+      // Conectar a carteira
+      const connected = await connectWallet();
+      
+      if (!connected || !isConnected) {
         setLoading(false);
         return;
       }
@@ -103,16 +117,11 @@ export default function AppPage() {
       // Se já está autenticado, redireciona para o dashboard
       if (isAuthenticated) {
         console.log('Usuário já autenticado, redirecionando para dashboard');
-        await new Promise(resolve => setTimeout(resolve, 500)); // Pequeno delay para garantir atualização de estados
-        const userData = await getUserData();
-        if (userData) {
-          navigate('/dashboard');
-          return;
-        }
+        navigate('/dashboard');
+        return;
       }
       
       // Após conectar com sucesso, verifica se o usuário está cadastrado
-      // e solicita assinatura automaticamente se ele já estiver cadastrado
       await checkIfUserRegistered();
     } catch (error) {
       console.error("Erro ao conectar carteira:", error);
@@ -143,6 +152,9 @@ export default function AppPage() {
         
         // Navega para o dashboard
         navigate('/dashboard');
+      } else {
+        // Se não teve sucesso, provavelmente o usuário cancelou a assinatura
+        setLoginCancelled(true);
       }
     } catch (error) {
       console.error("Erro ao cadastrar:", error);
@@ -169,7 +181,7 @@ export default function AppPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
         <Cta11 
-          heading="Bem-vindo ao Fanatique"
+          heading={loginCancelled ? "Login Canceladoooo" : "Bem-vindo ao Fanatique"}
           description="Conecte sua carteira Chiliz para entrar na plataforma e aproveitar uma experiência única nos estádios."
           buttons={{
             primary: {
@@ -179,6 +191,41 @@ export default function AppPage() {
             }
           }}
         />
+      </div>
+    );
+  }
+
+  // Se o login foi cancelado mas a carteira continua conectada
+  if (loginCancelled) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+        <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md">
+          <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Login Canceladoooo</h1>
+          
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            Você precisa assinar a mensagem para entrar na plataforma.
+          </p>
+          
+          <div className="space-y-4">
+            <Button 
+              onClick={checkIfUserRegistered} 
+              className="w-full bg-secondary text-white"
+            >
+              Tentar Novamente
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => {
+                disconnectWallet();
+                setLoginCancelled(false);
+              }}
+              className="w-full"
+            >
+              Desconectar Carteira
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -217,7 +264,6 @@ export default function AppPage() {
                 onClick={() => {
                   disconnectWallet();
                   setShowRegister(false);
-                  navigate('/');
                 }}
                 disabled={submitting}
                 className="flex-1"
@@ -245,61 +291,17 @@ export default function AppPage() {
     );
   }
 
-  // Se chegou aqui, o usuário está com carteira conectada mas não cadastrada nem autenticada
-  // Em vez de mostrar apenas o spinner, vamos mostrar um botão de registro
+  // Exibe tela para usuários não cadastrados
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
-      <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Carteira Nova Detectada</h1>
-        
-        <p className="text-gray-600 dark:text-gray-300 mb-6">
-          Detectamos que você está usando uma carteira ainda não cadastrada na plataforma. Para continuar, precisamos registrar seu perfil.
-        </p>
-        
-        <form onSubmit={handleRegister} className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="username" className="text-sm font-medium text-primary/80 dark:text-white/80">
-              Nome de usuário
-            </label>
-            <Input
-              id="username"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="Digite seu nome de usuário"
-              required
-              className="w-full"
-              autoFocus
-            />
-          </div>
-          
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                disconnectWallet();
-                navigate('/');
-              }}
-              className="flex-1"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 bg-secondary text-white"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processando
-                </>
-              ) : (
-                'Cadastrar'
-              )}
-            </Button>
-          </div>
-        </form>
+      <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md text-center">
+        <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Verificando cadastro...</h1>
+        <Button
+          onClick={checkIfUserRegistered}
+          className="bg-secondary text-white"
+        >
+          Continuar
+        </Button>
       </div>
     </div>
   );

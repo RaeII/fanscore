@@ -1,84 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
-import { metaMask } from 'wagmi/connectors';
 import api from '../lib/api';
 import { showError, showSuccess, showInfo } from '../lib/toast';
 import { WalletContext } from './WalletContextDef';
 
 // Provider que envolverá a aplicação
 export function WalletProvider({ children }) {
-  const { address, isConnected } = useAccount();
-  const { connectAsync } = useConnect();
-  const { disconnectAsync } = useDisconnect();
-  const { signMessageAsync } = useSignMessage();
-  
-  // Estado local para armazenar informações de autenticação
+  // Estados para gerenciar a carteira
+  const [address, setAddress] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [token, setToken] = useState(null);
   const [signing, setSigning] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   
-  // Verifica o estado de autenticação e restaura se necessário
-  useEffect(() => {
-    const checkAuth = async () => {
-      // Verifica se há dados armazenados
-      const savedToken = localStorage.getItem('auth_token');
-      const savedWallet = localStorage.getItem('wallet_address');
-      
-      if (savedToken && savedWallet) {
-        // Configura o token no cabeçalho da API
-        api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-        setToken(savedToken);
-        setIsAuthenticated(true);
-        
-        console.log('WalletContext: Autenticação restaurada do localStorage');
-      } else {
-        setIsAuthenticated(false);
-        console.log('WalletContext: Sem dados de autenticação no localStorage');
-      }
-      
-      setIsInitialized(true);
-    };
-    
-    checkAuth();
+  // Verifica se o MetaMask está disponível
+  const checkIfMetaMaskAvailable = useCallback(() => {
+    return window.ethereum && window.ethereum.isMetaMask;
   }, []);
-  
-  // Atualiza o estado com base nas mudanças da carteira
-  useEffect(() => {
-    if (isConnected && address) {
-      console.log('WalletContext: Carteira conectada -', address);
-      
-      // Verifica se tem token salvo para esta carteira
-      const savedToken = localStorage.getItem('auth_token');
-      const savedWallet = localStorage.getItem('wallet_address');
-      
-      if (savedToken && savedWallet && savedWallet.toLowerCase() === address.toLowerCase()) {
-        // Configura o token na API
-        api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-        setToken(savedToken);
-        setIsAuthenticated(true);
-        console.log('WalletContext: Token restaurado para a carteira conectada');
-      }
-    } else if (!isConnected) {
-      console.log('WalletContext: Carteira desconectada');
-    }
-  }, [address, isConnected]);
-  
-  // Função para conectar a carteira
-  const connectWallet = useCallback(async () => {
-    try {
-      await connectAsync({ connector: metaMask() });
-      return true;
-    } catch (err) {
-      console.error('Erro ao conectar carteira:', err);
-      if (err.code === 4001) {
-        showError('Você recusou a conexão com a carteira');
-      } else {
-        showError('Erro ao conectar com a carteira: ' + (err.message || 'Erro desconhecido'));
-      }
-      return false;
-    }
-  }, [connectAsync]);
   
   // Limpa as credenciais
   const clearAuthCredentials = useCallback(() => {
@@ -96,18 +35,126 @@ export function WalletProvider({ children }) {
     }
   }, []);
   
+  // Função para lidar com a mudança de contas no MetaMask
+  const handleAccountsChanged = useCallback((accounts) => {
+    if (accounts.length === 0) {
+      // Usuário desconectou conta
+      clearAuthCredentials();
+      setIsConnected(false);
+      setAddress(null);
+    } else if (accounts[0] !== address) {
+      // Usuário trocou de conta
+      clearAuthCredentials();
+      setAddress(accounts[0]);
+      setIsConnected(true);
+    }
+  }, [address, clearAuthCredentials]);
+  
+  // Função para lidar com a desconexão do MetaMask
+  const handleDisconnect = useCallback(() => {
+    clearAuthCredentials();
+    setIsConnected(false);
+    setAddress(null);
+  }, [clearAuthCredentials]);
+  
+  // Verifica o estado de autenticação e restaura se necessário
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Verifica se há dados armazenados
+      const savedToken = localStorage.getItem('auth_token');
+      const savedWallet = localStorage.getItem('wallet_address');
+      
+      if (savedToken && savedWallet) {
+        // Configura o token no cabeçalho da API
+        api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+        setToken(savedToken);
+        setAddress(savedWallet);
+        setIsAuthenticated(true);
+        setIsConnected(true);
+        
+        console.log('WalletContext: Autenticação restaurada do localStorage');
+      } else {
+        setIsAuthenticated(false);
+        console.log('WalletContext: Sem dados de autenticação no localStorage');
+      }
+      
+      setIsInitialized(true);
+    };
+    
+    checkAuth();
+    
+    // Adicionar listeners para eventos do MetaMask
+    if (checkIfMetaMaskAvailable()) {
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', () => window.location.reload());
+      window.ethereum.on('disconnect', handleDisconnect);
+    }
+    
+    return () => {
+      // Remover listeners ao desmontar o componente
+      if (checkIfMetaMaskAvailable()) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', () => {});
+        window.ethereum.removeListener('disconnect', handleDisconnect);
+      }
+    };
+  }, [checkIfMetaMaskAvailable, handleAccountsChanged, handleDisconnect]);
+  
+  // Função para conectar a carteira
+  const connectWallet = useCallback(async () => {
+    if (!checkIfMetaMaskAvailable()) {
+      showError('MetaMask não está instalado. Por favor, instale a extensão MetaMask para continuar.');
+      return false;
+    }
+    
+    try {
+      setConnecting(true);
+      
+      // Solicita acesso às contas do MetaMask
+      const accounts = await window.ethereum.request({ 
+        method: 'eth_requestAccounts' 
+      });
+      
+      if (accounts && accounts.length > 0) {
+        setAddress(accounts[0]);
+        setIsConnected(true);
+        return true;
+      } else {
+        showError('Nenhuma conta encontrada. Por favor, verifique o MetaMask.');
+        return false;
+      }
+    } catch (err) {
+      console.error('Erro ao conectar carteira:', err);
+      
+      if (err.code === 4001) {
+        // Usuário recusou a conexão
+        showError('Você recusou a conexão com a carteira');
+      } else {
+        showError('Erro ao conectar com a carteira: ' + (err.message || 'Erro desconhecido'));
+      }
+      
+      return false;
+    } finally {
+      setConnecting(false);
+    }
+  }, [checkIfMetaMaskAvailable]);
+  
   // Função para desconectar a carteira
   const disconnectWallet = useCallback(async () => {
     try {
-      await disconnectAsync();
+      // No caso da MetaMask, não é possível desconectar programaticamente
+      // Apenas limpamos nossa autenticação interna
       clearAuthCredentials();
+      setIsConnected(false);
+      setAddress(null);
       return true;
     } catch (err) {
       console.error('Erro ao desconectar carteira:', err);
-      showError('Falha ao desconectar a carteira.');
+      // Mesmo com erro, tenta limpar credenciais
+      clearAuthCredentials();
       return false;
     }
-  }, [disconnectAsync, clearAuthCredentials]);
+  }, [clearAuthCredentials]);
   
   // Função para armazenar credenciais
   const setAuthCredentials = useCallback((newToken, walletAddress) => {
@@ -134,10 +181,15 @@ export function WalletProvider({ children }) {
     return false;
   }, []);
   
-  // Função para assinar mensagem e autenticar
+  // Função para assinar mensagem
   const requestSignature = useCallback(async (name = undefined) => {
     if (!address) {
       showError('Conecte primeiro sua carteira');
+      return false;
+    }
+    
+    if (!checkIfMetaMaskAvailable()) {
+      showError('MetaMask não está instalado');
       return false;
     }
     
@@ -150,8 +202,30 @@ export function WalletProvider({ children }) {
       // Solicita assinatura ao usuário
       showInfo('Por favor, assine a mensagem para entrar na plataforma');
       
-      // Solicita assinatura usando wagmi
-      const signature = await signMessageAsync({ message: mensagem });
+      // Solicita assinatura usando MetaMask diretamente
+      let signature;
+      try {
+        signature = await window.ethereum.request({
+          method: 'personal_sign',
+          params: [mensagem, address]
+        });
+      } catch (signError) {
+        console.error('Erro específico na assinatura:', signError);
+        
+        // Cancelamento pelo usuário
+        if (signError.code === 4001) {
+          showError('Assinatura cancelada pelo usuário. É necessário assinar para entrar na plataforma.');
+        } else {
+          showError('Falha ao solicitar assinatura. Tente novamente mais tarde.');
+        }
+        
+        return false;
+      } finally {
+        // Se chegou aqui com erro, já define signing como false
+        if (!signature) {
+          setSigning(false);
+        }
+      }
       
       // Envia a assinatura para o backend para validação
       const response = await api.post('/wallet/signature', {
@@ -188,7 +262,7 @@ export function WalletProvider({ children }) {
     } finally {
       setSigning(false);
     }
-  }, [address, signMessageAsync, setAuthCredentials]);
+  }, [address, setAuthCredentials, checkIfMetaMaskAvailable]);
   
   // Registrar com assinatura
   const registerWithSignature = useCallback(async (userName) => {
@@ -252,9 +326,9 @@ export function WalletProvider({ children }) {
   const connectAndCheckRegistration = useCallback(async () => {
     try {
       // Primeiro apenas conecta a carteira
-      await connectWallet();
+      const connected = await connectWallet();
       
-      if (!address) {
+      if (!connected || !address) {
         return { success: false, message: 'Falha ao conectar carteira' };
       }
       
@@ -293,6 +367,7 @@ export function WalletProvider({ children }) {
     isInitialized,
     token,
     signing,
+    connecting,
     connectWallet,
     disconnectWallet,
     requestSignature,

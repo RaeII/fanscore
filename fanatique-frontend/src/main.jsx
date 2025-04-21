@@ -2,9 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { WagmiConfig } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { wagmiConfig } from './contexts/wagmi'
 import './index.css'
 
 import { Layout } from './components/layout'
@@ -142,10 +140,9 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider defaultTheme="dark" storageKey="fanatique-theme">
       <QueryClientProvider client={queryClient}>
-        <WagmiConfig config={wagmiConfig}>
-          <WalletProvider>
-            <RouterProvider router={router} />
-            <Toaster 
+        <WalletProvider>
+          <RouterProvider router={router} />
+          <Toaster 
               position="top-right"
               gutter={20}
               containerStyle={{
@@ -170,8 +167,7 @@ createRoot(document.getElementById('root')).render(
                 },
               }}
             />
-          </WalletProvider>
-        </WagmiConfig>
+        </WalletProvider>
       </QueryClientProvider>
     </ThemeProvider>
   </StrictMode>,

@@ -1,0 +1,9 @@
+1 - Verifica se o usuário está conectado com a carteira (Se ele cancelar mostre a mensagem "Login cancelado" se não siga o fluxo)
+
+2 - Com a carteira conectado, verifique se ele é um usuário cadastrado
+(Sim - peça a assinatura para efetuar o login)
+(Não - mostre o input de coletar o nome já pronto e depois de forncedio peça a assinatura e salve a jwt e carregue para a dashboard)
+
+3 - Se usuário já tiver carteira conectado com cadastro mas sem jwt, peça a assinatura, mas se ele concelar, mostre o botão de login novamente do inicio
+
+4 - Se o usuário já estiver com a carteira conectado e não tiver jwt cadastrado peça a assinatura, para o login, confirmando carregue para a dashboard

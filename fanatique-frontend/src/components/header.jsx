@@ -4,43 +4,16 @@ import { ThemeToggle } from './ui/theme-toggle'
 import { Button } from './ui/button'
 import { cn } from '../lib/utils'
 import { useWalletContext } from '../hooks/useWalletContext'
-import { useEffect } from 'react'
 
 export function Header({ className }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { 
     isAuthenticated, 
-    account, 
-    checkWalletExists, 
-    requestSignature,
-    connecting,
-    signing,
-    isInitialized
   } = useWalletContext();
   
   // Verifica se está na página app ou em subpáginas do app
   const isAppRoute = location.pathname.startsWith('/app') || location.pathname.startsWith('/dashboard');
-
-  // Efeito para verificar se o usuário já tem carteira conectada, está cadastrado, 
-  // mas não está autenticado (não tem token)
-  useEffect(() => {
-    const checkAndRequestSignature = async () => {
-      // Se temos conta conectada mas não estamos autenticados
-      if (isInitialized && account && !isAuthenticated && !connecting && !signing) {
-        // Verificar se a carteira já está cadastrada
-        const walletCheck = await checkWalletExists();
-        
-        if (walletCheck?.success && walletCheck?.exists) {
-          console.log('Header: Carteira conectada e cadastrada, solicitando assinatura');
-          // Solicitar assinatura automaticamente
-          await requestSignature();
-        }
-      }
-    };
-    
-    checkAndRequestSignature();
-  }, [isInitialized, account, isAuthenticated, connecting, signing, checkWalletExists, requestSignature]);
 
   const handleAccessApp = () => {
     // Se o usuário estiver autenticado, redireciona para dashboard, caso contrário para app
