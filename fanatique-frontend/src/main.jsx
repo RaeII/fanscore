@@ -23,6 +23,7 @@ import StadiumOrdersPage from './pages/stadium-orders'
 import OrderDetailsPage from './pages/order-details'
 import OrdersHistoryPage from './pages/orders-history'
 import Quests from './pages/quests'
+import ProfilePage from './pages/profile'
 
 // Criar uma instância do QueryClient para o TanStack Query
 const queryClient = new QueryClient()
@@ -129,7 +130,7 @@ const router = createBrowserRouter([
         path: 'perfil',
         element: (
           <ProtectedRoute>
-            <div className="container mx-auto px-4 py-16">Página de Perfil em breve...</div>
+            <ProfilePage />
           </ProtectedRoute>
         )
       }
