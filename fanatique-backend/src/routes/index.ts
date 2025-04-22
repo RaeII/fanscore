@@ -9,6 +9,7 @@ import match from './match.routes'
 import establishment from './establishment.routes'
 import product from './product.routes'
 import establishmentStadium from './establishmentStadium.routes'
+import order from './order.routes'
 
 const apiRouter = Router();
 
@@ -21,5 +22,6 @@ apiRouter.use("/match", match);
 apiRouter.use("/establishment", establishment);
 apiRouter.use("/product", product);
 apiRouter.use("/establishment-stadium", establishmentStadium);
+apiRouter.use("/order", order);
 
 export default apiRouter;

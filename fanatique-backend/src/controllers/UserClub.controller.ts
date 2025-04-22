@@ -45,7 +45,7 @@ class UserClubController extends Controller {
             
             return this.sendSuccessResponse(res, { content: userClubs });
         } catch (err) {
-            this.sendErrorMessage(res, err);
+            return await this.sendErrorMessage(res, err);
         }
     }
 
@@ -56,7 +56,7 @@ class UserClubController extends Controller {
             const userClubs = await this.service.fetchAllByUserId(userId);
             return this.sendSuccessResponse(res, { content: userClubs });
         } catch (err) {
-            this.sendErrorMessage(res, err);
+           return await this.sendErrorMessage(res, err);
         }
     }
 
@@ -85,12 +85,12 @@ class UserClubController extends Controller {
     async delete(req: Request, res: Response) {
         try {
             const userId: number = Number(res.locals.jwt.user_id);
-            const userClubId: number = Number(req.params.id);
+            const clubId: number = Number(req.params.id);
 
-            if (!userClubId) throw Error(getErrorMessage('missingField', 'ID do clube do usuário'));
+            if (!clubId) throw Error(getErrorMessage('missingField', 'ID do clube'));
 
             await Database.startTransaction();
-            await this.service.remove(userClubId, userId);
+            await this.service.remove(clubId, userId);
             await Database.commit();
             
             return this.sendSuccessResponse(res, { message: getSuccessMessage('delete', 'Clube do usuário') });

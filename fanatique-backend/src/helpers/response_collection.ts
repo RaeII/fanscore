@@ -11,6 +11,8 @@ const errorCollection: ErrorCollection = {
   missingData: (data) => `Dado ${data} não fornecido`,
   registryNotFound: (entity) => `${entity} não encontrado`,
   invalidField: (field) => `Campo ${field} inválido`,
+  notFound: (field) => `Registro não encontrado: ${field}`,
+  alreadyExists: (field) => `Registro já existe: ${field}`,
   userAlreadyExist: 'Usuário já existe',
   emailAlreadyExist: 'E-mail já utilizado',
   noValidDataFound: 'Nenhum dado válido encontrado para atualização',

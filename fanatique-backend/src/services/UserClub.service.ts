@@ -1,12 +1,21 @@
 import { getErrorMessage } from '@/helpers/response_collection';
 import UserClubDatabase from '@/database/UserClub.database';
+import MatchService from './Match.service';
+import StadiumService from './Stadium.service';
+import ClubService from './Club.service';
 import { UserClub, UserClubInsert, UserClubUpdate } from '../types';
 
 class UserClubService {
     private database: UserClubDatabase;
+    private matchService: MatchService;
+    private stadiumService: StadiumService;
+    private clubService: ClubService;
 
     constructor() {
-        this.database = new UserClubDatabase(); 
+        this.database = new UserClubDatabase();
+        this.matchService = new MatchService();
+        this.stadiumService = new StadiumService();
+        this.clubService = new ClubService();
     }
 
     async create(data: UserClubInsert): Promise<number> {
@@ -28,7 +37,55 @@ class UserClubService {
         }
 
         const result: any = await this.database.create(data);
+        
+        // Se for clube favorito, criar uma partida demonstrativa
+        if (data.club_type_id === 1) {
+            await this.createDemoMatchForFavoriteClub(data.club_id);
+        }
+        
         return result[0].insertId;
+    }
+
+    // Função para criar uma partida demonstrativa para o clube favorito
+    private async createDemoMatchForFavoriteClub(clubId: number): Promise<void> {
+
+        console.log('clubId  createDemoMatchForFavoriteClub', clubId);
+        // Verificar se o clube já tem partidas
+        const matches = await this.matchService.fetchByClubId(clubId);
+        if (matches && matches.length > 0) {
+            // Clube já tem partidas, não precisamos criar uma nova
+            return;
+        }
+        
+        // Buscar estádio do clube
+        const stadium = await this.stadiumService.fetchByClubId(clubId);
+        if (!stadium) {
+            // Clube não tem estádio, não podemos criar a partida
+            return;
+        }
+        
+        // Buscar outro clube aleatório para ser o visitante
+        const allClubs = await this.clubService.fetchAll();
+        const otherClubs = allClubs.filter(club => club.id !== clubId);
+        
+        if (otherClubs.length === 0) {
+            // Não há outros clubes disponíveis
+            return;
+        }
+        
+        // Selecionar um clube aleatório como visitante
+        const randomIndex = Math.floor(Math.random() * otherClubs.length);
+        const awayClub = otherClubs[randomIndex];
+        
+        // Criar a partida com data e hora atual
+        await this.matchService.create({
+            home_club_id: clubId,
+            away_club_id: awayClub.id,
+            stadium_id: stadium.id,
+            match_date: new Date(),
+            is_started: 1 // Definir como partida já iniciada
+        });
+            
     }
 
     async fetchByUserId(userId: number): Promise<UserClub[]> {
@@ -48,9 +105,12 @@ class UserClubService {
         if (!userId) throw Error(getErrorMessage('missingField', 'ID do usuário'));
         
         const toUpdate: UserClubUpdate = {};
+        let createDemoMatch = false;
+        let clubId: number | undefined;
         
         if (data.club_id !== undefined) {
             toUpdate.club_id = data.club_id;
+            clubId = data.club_id;
         }
         
         if (data.club_type_id !== undefined) {
@@ -67,6 +127,8 @@ class UserClubService {
                 if (favoriteClub && favoriteClub.id !== userClubId) {
                     throw Error(getErrorMessage('alreadyExists', 'Clube favorito para este usuário'));
                 }
+                
+                createDemoMatch = true;
             }
             
             toUpdate.club_type_id = data.club_type_id;
@@ -83,19 +145,27 @@ class UserClubService {
         }
 
         await this.database.update(toUpdate, userClubId);
+        
+        // Se estiver atualizando para clube favorito, criar partida demonstrativa
+        if (createDemoMatch) {
+            // Usa o clubId atualizado ou o existente no userClub
+            const finalClubId = clubId || userClub.club_id;
+            await this.createDemoMatchForFavoriteClub(finalClubId);
+        }
     }
 
-    async remove(userClubId: number, userId: number): Promise<void> {
-        if (!userClubId) throw Error(getErrorMessage('missingField', 'ID do clube do usuário'));
+    async remove(clubId: number, userId: number): Promise<void> {
+        if (!clubId) throw Error(getErrorMessage('missingField', 'ID do clube'));
         if (!userId) throw Error(getErrorMessage('missingField', 'ID do usuário'));
 
         // Verificar se o userClubId pertence ao usuário
-        const userClub = await this.database.fetchById(userClubId);
+        const userClub = await this.database.fetchByUserClub(userId, clubId);
+        
         if (!userClub || userClub.user_id !== userId) {
             throw Error(getErrorMessage('notFound', 'Clube do usuário'));
         }
 
-        await this.database.delete(userClubId);
+        await this.database.delete(userClub.id);
     }
 }
 

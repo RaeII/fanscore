@@ -17,6 +17,12 @@ class UserClubDatabase extends Database {
         return rows[0]?.length > 0 ? rows[0][0] as UserClub : null;
     }
 
+    async fetchByUserClub(userId: number, clubId: number): Promise<UserClub | null> {
+        const rows: any = await this.query('SELECT * FROM user_club WHERE user_id = ? AND club_id = ?;', [userId, clubId]);
+
+        return rows[0]?.length > 0 ? rows[0][0] as UserClub : null;
+    }
+
     async fetchByUserId(userId: number): Promise<UserClub[]> {
         const rows: any = await this.query('SELECT * FROM user_club WHERE user_id = ?;', [userId]);
 

@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 
-import Controller from '@/controllers/EstablishmentStadium.controller';
+import Controller from '@/controllers/Order.controller';
 import jwtMiddleware from '@/middlewares/jwt.middleware';
 
 const router = express.Router();
@@ -21,6 +21,14 @@ router.get('/:id', [
 	}
 ]);
 
+router.get('/user/list', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+		await controller.fetchByUser(req, res);
+	}
+]);
+
 router.get('', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
@@ -29,19 +37,19 @@ router.get('', [
 	}
 ]);
 
-router.get('/stadium/:stadium_id', [
-	jwtMiddleware.validJWTNeeded,
-	async (req: Request, res: Response): Promise<void> => {
-		const controller = new Controller();
-		await controller.fetchByStadium(req, res);
-	}
-]);
-
-router.get('/establishment/:establishment_id', [
+router.get('/establishment/:establishmentId', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
 		const controller = new Controller();
 		await controller.fetchByEstablishment(req, res);
+	}
+]);
+
+router.get('/match/:matchId', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+		await controller.fetchByMatch(req, res);
 	}
 ]);
 
@@ -50,14 +58,6 @@ router.put('/:id', [
 	async (req: Request, res: Response): Promise<void> => {
 		const controller = new Controller();
 		await controller.update(req, res);
-	}
-]);
-
-router.delete('/:id', [
-	jwtMiddleware.validJWTNeeded,
-	async (req: Request, res: Response): Promise<void> => {
-		const controller = new Controller();
-		await controller.delete(req, res);
 	}
 ]);
 

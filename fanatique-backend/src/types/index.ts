@@ -254,4 +254,100 @@ export interface EstablishmentStadiumForFront {
 	stadium_name: string;
 	register_date: string;
 	update_date: string | null;
+}
+
+// Order Types
+export interface Order {
+  id: number;
+  establishment_id: number;
+  user_id: number;
+  match_id: number;
+  status: number;
+  total_real: number;
+  total_fantoken: number;
+  date_register: Date;
+}
+
+export interface OrderBasicInfo {
+  id: number;
+  establishment_id: number;
+  user_id: number;
+  match_id: number;
+  status: number;
+  total_real: number;
+  total_fantoken: number;
+}
+
+export interface OrderForFront {
+  id: number;
+  establishment_id: number;
+  establishment_name: string;
+  user_id: number;
+  match_id: number;
+  stadium_name: string;
+  status: number;
+  status_name: string;
+  total_real: number;
+  total_fantoken: number;
+  date_register: Date;
+  products: ProductOrderForFront[];
+}
+
+export interface OrderInsert {
+  establishment_id: number;
+  user_id: number;
+  match_id: number;
+  status_id: number | null;
+  total_real: number;
+  total_fantoken: number;
+  products: ProductOrderInsert[];
+}
+
+export interface OrderUpdatePayload {
+  status?: number;
+}
+
+export interface OrderUpdate {
+  status?: number;
+}
+
+// ProductOrder Types
+export interface ProductOrder {
+  id: number;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+}
+
+export interface ProductOrderBasicInfo {
+  id: number;
+  order_id: number;
+  product_id: number;
+  quantity: number;
+}
+
+export interface ProductOrderForFront {
+  id: number;
+  order_id: number;
+  product_id: number;
+  product_name: string;
+  product_image: string;
+  value_real: string;
+  value_tokefan: string;
+  quantity: number;
+  subtotal_real: number;
+  subtotal_tokefan: number;
+}
+
+export interface ProductOrderInsert {
+  product_id: number;
+  quantity: number;
+}
+
+export interface ProductOrderUpdatePayload {
+  quantity?: number;
+}
+
+export interface ProductOrderUpdate {
+  quantity?: number;
 } 

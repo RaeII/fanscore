@@ -46,23 +46,7 @@ inputElement.addEventListener('change', async (event) => {
 Agora quero que crie os arquivos para um CRUD para adicionar partidas com  clubes já cadastrados utilize o mesmo padrão dos arquivo: @stadium.routes.ts @Stadium.controller.ts @Stadium.service.ts @Stadium.database.ts 
 Se for criar um erro personalizado verifique se tem em @response_collection.ts se não tiver crie ou use o que já existe
 Lembrando que o estadio da partida sempre será "home_club_id":
-CREATE TABLE `match` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `home_club_id` int NOT NULL,
-  `away_club_id` int NOT NULL,
-  `stadium_id` int NOT NULL,
-  `is_started` tinyint NOT NULL DEFAULT '0',
-  `match_date` datetime NOT NULL,
-  `register_date` datetime NOT NULL,
-  `update_date` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `fk_match_1_idx` (`home_club_id`),
-  KEY `fk_match_2_idx` (`away_club_id`),
-  KEY `fk_match_3_idx` (`stadium_id`),
-  CONSTRAINT `fk_match_1` FOREIGN KEY (`home_club_id`) REFERENCES `club` (`id`),
-  CONSTRAINT `fk_match_2` FOREIGN KEY (`away_club_id`) REFERENCES `club` (`id`),
-  CONSTRAINT `fk_match_3` FOREIGN KEY (`stadium_id`) REFERENCES `stadium` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 Faça os arquivos em @fanatique-backend 
 
