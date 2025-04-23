@@ -126,6 +126,8 @@ export default function StadiumOrdersPage() {
         navigate(`/clubs/${clubId}`);
         return;
       }
+      console.log('game', game);
+      console.log('currentClubName', currentClubName);
       // Check if the current club is playing in this game
       const isParticipating = game.home_club_name === currentClubName || game.away_club_name === currentClubName;
       
