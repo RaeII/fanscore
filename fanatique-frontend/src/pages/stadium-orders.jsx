@@ -239,7 +239,7 @@ export default function StadiumOrdersPage() {
   const handlePlaceOrder = async () => {
     try {
       setPlacingOrder(true);
-      
+      console.log('selectedEstablishment', cart);
       const orderData = {
         match_id: gameId,
         establishment_id: selectedEstablishment.establishment_id,
@@ -248,7 +248,7 @@ export default function StadiumOrdersPage() {
           quantity: item.quantity
         })),
         total_real: cart.reduce((total, item) => total + (item.value_real * item.quantity), 0),
-        total_fantoken: cart.reduce((total, item) => total + (item.value_tokenfan * item.quantity), 0)
+        total_fantoken: cart.reduce((total, item) => total + (item.value_tokefan * item.quantity), 0)
       };
       
       const orderResult = await orderApi.placeOrder(orderData);
@@ -633,8 +633,8 @@ export default function StadiumOrdersPage() {
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="font-medium text-primary dark:text-white">Order #{order.orderNumber}</h3>
-                      <p className="text-sm text-primary/70 dark:text-white/70">{order.establishmentName}</p>
+                      <h3 className="font-medium text-primary dark:text-white">Order #{order.id}</h3>
+                      <p className="text-sm text-primary/70 dark:text-white/70">{order?.establishment_name}</p>
                     </div>
                     <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)} bg-opacity-10`}>
                       {order.status}
@@ -642,10 +642,10 @@ export default function StadiumOrdersPage() {
                   </div>
                   
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {order.items.map((item, idx) => (
+                    {order.products.map((item, idx) => (
                       <div key={idx} className="py-2 flex justify-between">
                         <span className="text-primary/80 dark:text-white/80">
-                          {item.quantity}x {item.name}
+                          {item.quantity}x {item.product_name}
                         </span>
                         <span className="text-primary/80 dark:text-white/80">
                           R$ {(item.value_real * item.quantity).toFixed(2)}
@@ -658,12 +658,12 @@ export default function StadiumOrdersPage() {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-primary/70 dark:text-white/70 text-sm">Total</p>
-                        <p className="font-bold text-primary dark:text-white">R$ {order.totalAmount.toFixed(2)}</p>
+                        <p className="font-bold text-primary dark:text-white">R$ {order.total_real.toFixed(2)}</p>
                       </div>
                       
                       <div className="text-right">
                         <p className="text-primary/70 dark:text-white/70 text-sm">Pickup Location</p>
-                        <p className="font-medium text-primary dark:text-white">{order.pickupLocation || 'Counter #' + order.id}</p>
+                        <p className="font-medium text-primary dark:text-white">{order?.pickup_location || 'no pickup location'}</p>
                       </div>
                     </div>
                     
@@ -671,7 +671,7 @@ export default function StadiumOrdersPage() {
                     {order.status === 'PROCESSING' && (
                       <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md text-sm">
                         <p className="text-blue-700 dark:text-blue-300">
-                          Estimated ready in {order.estimatedTime || '10-15 minutes'}
+                          Estimated ready in {order?.estimated_time || 'no estimated time'}
                         </p>
                       </div>
                     )}

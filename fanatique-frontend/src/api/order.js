@@ -1,7 +1,7 @@
 import api from '../lib/api';
 
 const getOrder = async (orderId) => {
-  const response = await api.get(`/orders/${orderId}`);
+  const response = await api.get(`/order/${orderId}`);
   return response.data?.content || null;
 };
 
@@ -12,9 +12,8 @@ const getMatchOrders = async (gameId) => {
 
 // Place an order
 const placeOrder = async (orderData) => {
-  console.log('Placing order with data:', orderData);
-  const response = await api.post(`/orders`, orderData);
-  const orderId = response.content.id;
+  const response = await api.post(`/order`, orderData);
+  const orderId = response.data.content.id;
 
   return getOrder(orderId);
 };

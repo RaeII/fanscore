@@ -208,7 +208,7 @@ export default function OrderDetailsPage() {
               <h2 className="text-lg font-medium text-primary dark:text-white mb-4">Items</h2>
               
               <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                {order.items?.map((item, index) => (
+                {order.products?.map((item, index) => (
                   <div key={index} className="py-3 flex justify-between items-center">
                     <div className="flex items-center">
                       <div className="mr-3">
@@ -217,7 +217,7 @@ export default function OrderDetailsPage() {
                         </span>
                       </div>
                       <div>
-                        <h4 className="text-primary dark:text-white">{item.name}</h4>
+                        <h4 className="text-primary dark:text-white">{item.product_name}</h4>
                         {item.options && (
                           <p className="text-xs text-primary/60 dark:text-white/60 mt-1">
                             {item.options}
@@ -227,7 +227,7 @@ export default function OrderDetailsPage() {
                     </div>
                     
                     <span className="font-medium text-primary dark:text-white">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ${(item.value_real * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -236,7 +236,7 @@ export default function OrderDetailsPage() {
               <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-primary/70 dark:text-white/70">Subtotal</span>
-                  <span className="text-primary dark:text-white">${order.subtotal?.toFixed(2) || order.totalAmount?.toFixed(2)}</span>
+                  <span className="text-primary dark:text-white">${order.total_real?.toFixed(2)}</span>
                 </div>
                 
                 {order.tax > 0 && (
@@ -248,7 +248,7 @@ export default function OrderDetailsPage() {
                 
                 <div className="flex justify-between items-center font-bold">
                   <span className="text-primary dark:text-white">Total</span>
-                  <span className="text-primary dark:text-white">${order.totalAmount?.toFixed(2)}</span>
+                  <span className="text-primary dark:text-white">${order.total_real?.toFixed(2)}</span>
                 </div>
               </div>
             </div>
