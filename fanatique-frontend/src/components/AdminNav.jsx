@@ -26,5 +26,11 @@ export const AdminNav = () => (
     >
       Admin Produtos
     </Link>
+    <Link 
+      to="/admin/quests" 
+      className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md shadow-lg text-sm"
+    >
+      Admin Quests
+    </Link>
   </div>
 ); 

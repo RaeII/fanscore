@@ -13,6 +13,7 @@ import DashboardPage from './pages/dashboard'
 import AdminClubsPage from './pages/admin-clubs'
 import AdminEstablishmentsPage from './pages/admin-establishments'
 import AdminProductsPage from './pages/admin-products'
+import AdminQuestsPage from './pages/admin-quests'
 import { ThemeProvider } from './components/theme-provider'
 import { WalletProvider } from './contexts/WalletContext'
 import { UserProvider } from './contexts/UserContext'
@@ -116,6 +117,10 @@ const router = createBrowserRouter([
       {
         path: 'admin/produtos',
         element: <AdminProductsPage />
+      },
+      {
+        path: 'admin/quests',
+        element: <AdminQuestsPage />
       },
       {
         path: 'pedidos',

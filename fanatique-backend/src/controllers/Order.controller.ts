@@ -94,7 +94,7 @@ class OrderController extends Controller {
 		try {
 			const matchId: number = Number(req.params.matchId);
 			
-			const orders = await this.service.fetchByMatch(matchId);
+			const orders = await this.service.fetchByMatchWithProducts(matchId);
 			return this.sendSuccessResponse(res, { content: orders });
 		} catch (err) {
 			return await this.sendErrorMessage(res, err);

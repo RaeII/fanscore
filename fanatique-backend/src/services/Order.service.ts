@@ -86,7 +86,7 @@ class OrderService {
 			establishment_id: data.establishment_id,
 			user_id: data.user_id,
 			match_id: data.match_id,
-			status: data.status_id || 1, // Status padrão: Aguardando pagamento
+			status_id: data.status_id || 1, // Status padrão: Aguardando pagamento
 			total_real: calculatedTotalReal, // Usar o valor calculado para garantir precisão
 			total_fantoken: calculatedTotalFantoken // Usar o valor calculado para garantir precisão
 		};
@@ -136,6 +136,24 @@ class OrderService {
 		if (!matchId) throw Error(getErrorMessage('missingField', 'Id do jogo'));
 
 		return await this.database.fetchByMatch(matchId);
+	}
+
+	async fetchByMatchWithProducts(matchId: number): Promise<Array<any>> {
+		if (!matchId) throw Error(getErrorMessage('missingField', 'Id do jogo'));
+
+		// Buscar os pedidos da partida
+		const orders = await this.database.fetchByMatch(matchId);
+		
+		// Para cada pedido, buscar os produtos
+		const ordersWithProducts = await Promise.all(orders.map(async (order) => {
+			const products = await this.productOrderDatabase.fetchByOrderId(order.id);
+			return {
+				...order,
+				products
+			};
+		}));
+		
+		return ordersWithProducts;
 	}
 
 	async fetchForFront(id: number): Promise<OrderForFront | null> {
