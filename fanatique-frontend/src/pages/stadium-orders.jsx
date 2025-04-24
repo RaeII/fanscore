@@ -232,7 +232,7 @@ export default function StadiumOrdersPage() {
     } else if (currentView === 'activeOrders') {
       setCurrentView('establishments');
     } else {
-      navigate(`/clubs/${clubId}`);
+      navigate(`/game/${clubId}/${gameId}`);
     }
   };
 

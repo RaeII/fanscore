@@ -228,11 +228,6 @@ export const quests = {
   ]
 };
 
-// Helper functions to work with quests
-export const getAvailableQuestsForClub = (clubId) => {
-  return quests[clubId] || [];
-};
-
 export const completeQuest = (clubId, questId) => {
   const clubQuests = quests[clubId];
   if (!clubQuests) return null;

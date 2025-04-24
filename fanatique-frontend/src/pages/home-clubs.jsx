@@ -325,7 +325,7 @@ export default function HomeClubsPage() {
       </div>
     );
   }
-  console.log('selectedClub', selectedClub);
+  console.log('liveGame', liveGame);
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
       {/* Club Header */}
@@ -530,8 +530,20 @@ export default function HomeClubsPage() {
       <div className="container mx-auto px-4 py-2 pb-20">
         {/* Live Game Banner - Always show regardless of tab */}
         {liveGame && (
-          <div className="bg-gradient-to-r from-primary to-secondary text-white rounded-lg p-4 mb-4 shadow-sm">
-            <div className="flex items-center justify-between">
+          <div className="relative bg-gradient-to-r from-primary to-secondary text-white rounded-lg p-4 mb-4 shadow-sm overflow-hidden">
+            {/* Stadium image background */}
+            {liveGame?.stadium?.image && (
+              <div className="absolute inset-0">
+                <img 
+                  src={liveGame?.stadium?.image} 
+                  alt={liveGame.stadium.name} 
+                  className="w-full h-full object-cover"
+                />
+                {/* Gradient overlay to ensure text readability */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-secondary/90"></div>
+              </div>
+            )}
+            <div className="flex items-center justify-between relative z-10">
               <div>
                 <div className="flex items-center">
                   <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse mr-2"></div>
@@ -539,15 +551,25 @@ export default function HomeClubsPage() {
                 </div>
                 <h3 className="font-medium mt-1">{liveGame.home_club_name} vs {liveGame.away_club_name}</h3>
                 <p className="text-sm mt-1">Score: 0 - 0</p>
-                <p className="text-xs mt-1">Stadium: {liveGame.stadium_name}</p>
+                <p className="text-xs mt-1">Stadium: {liveGame.stadium.name}</p>
               </div>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate(`/stadium-orders/${clubId}/${liveGame.id}`, { state: { club: selectedClub } })}
-              >
-                Order Food & Drinks
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/game/${clubId}/${liveGame.id}`, { state: { club: selectedClub } })}
+                >
+                  View Game
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/10 hover:bg-white/20 text-white"
+                  onClick={() => navigate(`/stadium-orders/${clubId}/${liveGame.id}`, { state: { club: selectedClub } })}
+                >
+                  Order Food & Drinks
+                </Button>
+              </div>
             </div>
           </div>
         )}

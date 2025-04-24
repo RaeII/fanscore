@@ -23,6 +23,7 @@ import StadiumOrdersPage from './pages/stadium-orders'
 import OrderDetailsPage from './pages/order-details'
 import OrdersHistoryPage from './pages/orders-history'
 import Quests from './pages/quests'
+import GamePage from './pages/game'
 
 // Criar uma instância do QueryClient para o TanStack Query
 const queryClient = new QueryClient()
@@ -74,6 +75,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <HomeClubsPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'game/:clubId/:gameId',
+        element: (
+          <ProtectedRoute>
+            <GamePage />
           </ProtectedRoute>
         )
       },

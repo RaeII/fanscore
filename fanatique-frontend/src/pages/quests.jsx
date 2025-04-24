@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getAvailableQuestsForClub, completeQuest } from '../data/mock-data';
+import { completeQuest } from '../data/mock-data';
 import { Button } from '../components/ui/button';
 import { Star, CheckCircle, Clock, Lock } from 'lucide-react';
+import questApi from '../api/quest';
 
 const QuestStatusChip = ({ status }) => {
   switch (status) {
@@ -38,7 +39,12 @@ const QuestStatusChip = ({ status }) => {
   }
 };
 
-export default function Quests() {
+export const QuestScope = {
+  GENERAL: 'geral',
+  MATCH: 'match',
+};
+
+export default function Quests({ questScope }) {
   const { clubId = '1' } = useParams(); // Default to club ID 1 if not provided
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,13 +55,13 @@ export default function Quests() {
     const fetchQuests = () => {
       setLoading(true);
       // In a real app, this would be an API call
-      const clubQuests = getAvailableQuestsForClub(clubId);
+      const clubQuests = questApi.getQuestsByScope(questScope);
       setQuests(clubQuests);
       setLoading(false);
     };
 
     fetchQuests();
-  }, [clubId]);
+  }, [questScope]);
 
   const handleCompleteQuest = (questId) => {
     const completedQuest = completeQuest(clubId, questId);
