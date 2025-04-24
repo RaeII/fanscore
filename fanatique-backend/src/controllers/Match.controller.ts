@@ -59,6 +59,11 @@ class MatchController extends Controller {
 
 			const match: MatchForFront | null = await this.service.fetchForFront(matchId);
 			if (!match) throw Error(getErrorMessage('registryNotFound', 'Partida'));
+			
+			// Verificar se as informações do estádio estão presentes
+			if (!match.stadium) {
+				throw Error(getErrorMessage('registryNotFound', 'Informações do estádio para esta partida'));
+			}
 
 			return this.sendSuccessResponse(res, { content: match });
 		} catch (err) {

@@ -30,7 +30,9 @@ class OrderService {
 		if (!data.user_id) throw Error(getErrorMessage('missingField', 'Usuário'));
 		if (!data.match_id) throw Error(getErrorMessage('missingField', 'Jogo'));
 		if (!data.products || data.products.length === 0) throw Error(getErrorMessage('missingField', 'Produtos do pedido'));
-		
+		if (!data.total_real) throw Error(getErrorMessage('missingField', 'Total em reais'));
+		if (!data.total_fantoken) throw Error(getErrorMessage('missingField', 'Total em fantoken'));
+
 		// Verificar se o estabelecimento existe
 		const establishment = await this.establishmentService.fetch(data.establishment_id);
 		if (!establishment) throw Error(getErrorMessage('registryNotFound', 'Estabelecimento'));
@@ -173,14 +175,14 @@ class OrderService {
 		const toUpdate: OrderUpdate = {};
 		
 		// Apenas o status pode ser atualizado
-		if (data?.status !== undefined) {
+		if (data?.status_id !== undefined) {
 			// Verificar se o status existe
-			const statusExists = await this.database.checkStatusExists(data.status);
+			const statusExists = await this.database.checkStatusExists(data.status_id);
 			if (!statusExists) {
 				throw Error('Status de pedido inválido');
 			}
 			
-			toUpdate.status = data.status;
+			toUpdate.status_id = data.status_id;
 		}
 
 		if (Object.keys(toUpdate).length === 0) throw Error(getErrorMessage('noValidDataFound'));

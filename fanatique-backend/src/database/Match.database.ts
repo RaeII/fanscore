@@ -22,14 +22,44 @@ class MatchDatabase extends Database {
 				m.match_date,
 				hc.name as home_club_name,
 				ac.name as away_club_name,
-				s.name as stadium_name
+				s.name as stadium_name,
+				s.id as stadium_id,
+				s.name as stadium_name,
+				s.image as stadium_image,
+				s.city as stadium_city,
+				s.state as stadium_state,
+				s.club_id as stadium_club_id
 			FROM \`match\` m
 			LEFT JOIN club hc ON m.home_club_id = hc.id
 			LEFT JOIN club ac ON m.away_club_id = ac.id
 			LEFT JOIN stadium s ON m.stadium_id = s.id
 			WHERE m.id = ?;`, [id]);
 
-		return rows[0]?.length > 0 ? rows[0][0] as MatchForFront : null;
+		if (rows[0]?.length > 0) {
+			const matchData = rows[0][0];
+			// Formatar o resultado para incluir o objeto stadium
+			return {
+				id: matchData.id,
+				home_club_id: matchData.home_club_id,
+				away_club_id: matchData.away_club_id,
+				stadium_id: matchData.stadium_id,
+				is_started: matchData.is_started,
+				match_date: matchData.match_date,
+				home_club_name: matchData.home_club_name,
+				away_club_name: matchData.away_club_name,
+				stadium_name: matchData.stadium_name,
+				stadium: {
+					id: matchData.stadium_id,
+					name: matchData.stadium_name,
+					image: matchData.stadium_image,
+					city: matchData.stadium_city,
+					state: matchData.stadium_state,
+					club_id: matchData.stadium_club_id
+				}
+			};
+		}
+		
+		return null;
 	}
 
 	async fetch(id: number): Promise<Match | null> {

@@ -63,7 +63,14 @@ class MatchService {
 	async fetchForFront(id: number): Promise<MatchForFront | null> {
 		if (!id) throw Error(getErrorMessage('missingField', 'Id da partida'));
 
-		return await this.database.fetchForFront(id);
+		const match = await this.database.fetchForFront(id);
+		
+		// Validação adicional para garantir que o estádio esteja presente
+		if (match && !match.stadium) {
+			throw Error(getErrorMessage('registryNotFound', 'Informações do estádio'));
+		}
+		
+		return match;
 	}
 
 	async fetchByClubId(clubId: number): Promise<Array<MatchBasicInfo>> {

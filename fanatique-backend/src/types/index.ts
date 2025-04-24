@@ -97,7 +97,18 @@ export interface MatchBasicInfo {
   stadium_name: string;
 }
 
-export interface MatchForFront extends MatchBasicInfo {}
+export interface MatchForFront {
+  id: number;
+  home_club_id: number;
+  away_club_id: number;
+  stadium_id: number;
+  is_started: number;
+  match_date: Date;
+  home_club_name: string;
+  away_club_name: string;
+  stadium_name: string;
+  stadium: StadiumForFront;
+}
 
 export interface MatchInsert {
   home_club_id: number;
@@ -263,7 +274,7 @@ export interface Order {
   establishment_id: number;
   user_id: number;
   match_id: number;
-  status: number;
+  status_id: number;
   total_real: number;
   total_fantoken: number;
   date_register: Date;
@@ -272,9 +283,11 @@ export interface Order {
 export interface OrderBasicInfo {
   id: number;
   establishment_id: number;
+  establishment_name: string;
   user_id: number;
   match_id: number;
-  status: number;
+  status_id: number;
+  status_name: string;
   total_real: number;
   total_fantoken: number;
 }
@@ -305,11 +318,11 @@ export interface OrderInsert {
 }
 
 export interface OrderUpdatePayload {
-  status?: number;
+  status_id?: number;
 }
 
 export interface OrderUpdate {
-  status?: number;
+  status_id?: number;
 }
 
 // ProductOrder Types

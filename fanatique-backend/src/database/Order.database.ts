@@ -43,12 +43,16 @@ class OrderDatabase extends Database {
 			SELECT
 				o.id,
 				o.establishment_id,
+				e.name as establishment_name,
 				o.user_id,
 				o.match_id,
 				o.status_id,
+				os.name as status_name,
 				o.total_real,
 				o.total_fantoken
 			FROM \`order\` o
+			LEFT JOIN establishment e ON o.establishment_id = e.id
+			LEFT JOIN order_status os ON o.status_id = os.id
 			ORDER BY o.date_register DESC;`, []);
 
 		return rows[0];
@@ -59,12 +63,16 @@ class OrderDatabase extends Database {
 			SELECT
 				o.id,
 				o.establishment_id,
+				e.name as establishment_name,
 				o.user_id,
 				o.match_id,
 				o.status_id,
+				os.name as status_name,
 				o.total_real,
 				o.total_fantoken
 			FROM \`order\` o
+			LEFT JOIN establishment e ON o.establishment_id = e.id
+			LEFT JOIN order_status os ON o.status_id = os.id
 			WHERE o.user_id = ?
 			ORDER BY o.date_register DESC;`, [userId]);
 
@@ -76,12 +84,16 @@ class OrderDatabase extends Database {
 			SELECT
 				o.id,
 				o.establishment_id,
+				e.name as establishment_name,
 				o.user_id,
 				o.match_id,
 				o.status_id,
+				os.name as status_name,
 				o.total_real,
 				o.total_fantoken
 			FROM \`order\` o
+			LEFT JOIN establishment e ON o.establishment_id = e.id
+			LEFT JOIN order_status os ON o.status_id = os.id
 			WHERE o.establishment_id = ?
 			ORDER BY o.date_register DESC;`, [establishmentId]);
 
@@ -93,12 +105,16 @@ class OrderDatabase extends Database {
 			SELECT
 				o.id,
 				o.establishment_id,
+				e.name as establishment_name,
 				o.user_id,
 				o.match_id,
 				o.status_id,
+				os.name as status_name,
 				o.total_real,
 				o.total_fantoken
 			FROM \`order\` o
+			LEFT JOIN establishment e ON o.establishment_id = e.id
+			LEFT JOIN order_status os ON o.status_id = os.id
 			WHERE o.match_id = ?
 			ORDER BY o.date_register DESC;`, [matchId]);
 

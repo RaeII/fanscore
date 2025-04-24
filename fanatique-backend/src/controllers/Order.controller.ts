@@ -104,7 +104,7 @@ class OrderController extends Controller {
 	async update(req: Request, res: Response) {
 		try {
 			const body: OrderUpdatePayload = {
-				status: req.body.status
+				status_id: req.body.status_id
 			};
 			const orderId: number = Number(req.params.id);
 

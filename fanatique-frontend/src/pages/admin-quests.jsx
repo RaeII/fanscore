@@ -19,6 +19,7 @@ export default function AdminQuestsPage() {
     scope: '',
     image: ''
   });
+  
   const [previewImage, setPreviewImage] = useState('');
   const [editingId, setEditingId] = useState(null);
   const fileInputRef = useRef(null);
