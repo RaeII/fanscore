@@ -6,7 +6,6 @@ import { Button } from '../components/ui/button';
 import { showError } from '../lib/toast';
 import clubApi from '../api/club';
 import userClubApi from '../api/user_club';
-import { completeQuest } from '../data/mock-data';
 import { useUserContext } from '../hooks/useUserContext';
 import matchApi from '../api/match';
 
@@ -65,13 +64,9 @@ export default function HomeClubsPage() {
   // Get the tab from URL query parameter or default to 'overview'
   const queryParams = new URLSearchParams(location.search);
   const tabParam = queryParams.get('tab');
-  
+
   // Tab state
   const [activeTab, setActiveTab] = useState(tabParam || 'overview');
-  
-  // Quests state
-  const [quests, setQuests] = useState([]);
-  const [questsLoading, setQuestsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'available', 'inProgress', 'completed'
 
   // Check if user is authenticated and load data
@@ -96,8 +91,6 @@ export default function HomeClubsPage() {
           await checkLiveGame(clubId);
           // Check if user is following this club
           await checkIfFollowing(clubId);
-          // Fetch quests
-          await fetchQuests(clubId);
         } else {
           // Redirect to dashboard if no clubId is provided
           navigate('/dashboard');
@@ -281,39 +274,7 @@ export default function HomeClubsPage() {
 
   const handleBackToDashboard = () => {
     navigate('/dashboard');
-  };
-
-  // Fetch quests
-  const fetchQuests = async (clubId) => {
-    try {
-      setQuestsLoading(true);
-      // const clubQuests = getAvailableQuestsForClub(clubId);
-      // setQuests(clubQuests);
-    } catch (error) {
-      console.error('Error fetching quests:', error);
-      setQuests([]);
-    } finally {
-      setQuestsLoading(false);
-    }
-  };
-  
-  // Handle quest completion
-  const handleCompleteQuest = (questId) => {
-    const completedQuest = completeQuest(clubId, questId);
-    if (completedQuest) {
-      // Update the quest in state
-      setQuests(quests.map(q => q.id === questId ? completedQuest : q));
-    }
-  };
-
-  // Filter quests by status
-  const filteredQuests = quests.filter(quest => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'available') return quest.status === 'AVAILABLE';
-    if (activeFilter === 'inProgress') return quest.status === 'IN_PROGRESS';
-    if (activeFilter === 'completed') return quest.status === 'COMPLETED';
-    return true;
-  });
+  }
 
   if (loading) {
     return (
@@ -482,21 +443,6 @@ export default function HomeClubsPage() {
             variant="ghost" 
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
-              activeTab === 'quests'
-                ? 'border-secondary text-secondary font-semibold'
-                : 'border-transparent text-primary/70 dark:text-white/70'
-            }`}
-            onClick={() => {
-              setActiveTab('quests');
-              navigate(`/clubs/${clubId}?tab=quests`);
-            }}
-          >
-            Quests
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`rounded-none border-b-2 px-4 ${
               activeTab === 'events'
                 ? 'border-secondary text-secondary font-semibold'
                 : 'border-transparent text-primary/70 dark:text-white/70'
@@ -549,7 +495,7 @@ export default function HomeClubsPage() {
                   <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse mr-2"></div>
                   <span className="text-xs font-medium uppercase">Live Now</span>
                 </div>
-                <h3 className="font-medium mt-1">{liveGame.home_club_name} vs {liveGame.away_club_name}</h3>
+                <h3 className="font-medium mt-1">{liveGame.home_club.name} vs {liveGame.away_club.name}</h3>
                 <p className="text-sm mt-1">Score: 0 - 0</p>
                 <p className="text-xs mt-1">Stadium: {liveGame.stadium.name}</p>
               </div>
@@ -782,105 +728,6 @@ export default function HomeClubsPage() {
                 Completed
               </Button>
             </div>
-
-            {questsLoading ? (
-              <div className="flex justify-center items-center my-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : filteredQuests.length === 0 ? (
-              <div className="text-center my-12">
-                <p className="text-lg text-primary/70 dark:text-white/70">No quests available in this category</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredQuests.map((quest) => (
-                  <div 
-                    key={quest.id}
-                    className="relative flex flex-col h-[420px] w-full rounded-lg bg-white dark:bg-[#161622] p-6 tracking-tight overflow-hidden cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-[#1D1D2D] active:scale-[0.99] group"
-                  >
-                    {/* Quest image as background */}
-                    <div className="quest-image absolute inset-0">
-                      <img
-                        src={quest.image}
-                        alt={quest.name}
-                        className="h-full w-full object-cover transition-all duration-300 group-hover:scale-[1.02] group-hover:opacity-95"
-                      />
-                      {/* Full overlay gradient from bottom to top */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#161622] via-[#161622]/90 to-black/40"></div>
-                    </div>
-                    
-                    {/* Top section with status and points */}
-                    <div className="z-10 flex justify-between">
-                      <QuestStatusChip status={quest.status} />
-                      <div className="flex items-center px-2 py-1 rounded-full bg-black/50 text-white text-xs font-semibold">
-                        <Star size={14} className="text-yellow-400 mr-1.5" fill="#FFCC00" />
-                        {quest.points} pts
-                      </div>
-                    </div>
-                    
-                    {/* Main content */}
-                    <div className="z-10 flex flex-col justify-between mt-auto h-[45%]">
-                      <div className="flex flex-col mt-6">
-                        <h2 className="text-xl font-bold text-white line-clamp-2 mb-2">
-                          {quest.name}
-                        </h2>
-                        
-                        <p className="text-sm text-white/80 line-clamp-2 mb-6">
-                          {quest.description}
-                        </p>
-                      </div>
-                      
-                      {/* Bottom section */}
-                      <div className="flex flex-col gap-2 mt-auto">
-                        <div className="text-xs text-white/70">
-                          <span className="font-semibold text-white/90">Requirements:</span> {quest.requirements}
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          {/* Participant count */}
-                          <div className="flex items-center gap-2">
-                            <div className="text-sm font-semibold text-white">
-                              {quest.status === 'COMPLETED' ? (
-                                <div className="flex items-center text-green-400">
-                                  <CheckCircle size={14} className="mr-1" />
-                                  <span>Completed</span>
-                                </div>
-                              ) : quest.progress ? (
-                                <div className="flex flex-col">
-                                  <span className="leading-none">{quest.progress.current}/{quest.progress.total}</span>
-                                  <span className="text-xs font-medium text-white/70">Progress</span>
-                                </div>
-                              ) : (
-                                <div className="flex flex-col">
-                                  <span className="leading-none">Available</span>
-                                  <span className="text-xs font-medium text-white/70">Status</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {/* Complete button */}
-                          {quest.status === 'AVAILABLE' || quest.status === 'IN_PROGRESS' ? (
-                            <Button 
-                              variant="default"
-                              size="sm"
-                              className="whitespace-nowrap bg-primary hover:bg-primary/90 text-white px-4"
-                              onClick={() => handleCompleteQuest(quest.id)}
-                            >
-                              {quest.status === 'IN_PROGRESS' ? 'Update' : 'Complete'}
-                            </Button>
-                          ) : quest.status === 'COMPLETED' ? (
-                            <div className="text-xs font-medium text-white/70">
-                              {new Date(quest.completedAt).toLocaleDateString()}
-                            </div>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 

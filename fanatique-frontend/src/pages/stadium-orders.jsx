@@ -298,7 +298,7 @@ export default function StadiumOrdersPage() {
       </div>
     );
   }
-  console.log('activeOrders', activeOrders);
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
       {/* Header */}

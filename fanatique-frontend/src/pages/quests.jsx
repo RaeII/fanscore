@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { completeQuest } from '../data/mock-data';
 import { Button } from '../components/ui/button';
-import { Star, CheckCircle, Clock, Lock } from 'lucide-react';
+import { Star, CheckCircle, Clock, Lock, Loader2 } from 'lucide-react';
 import questApi from '../api/quest';
+import QuestScope from '../enum/QuestScope';
 
 const QuestStatusChip = ({ status }) => {
   switch (status) {
@@ -39,23 +38,18 @@ const QuestStatusChip = ({ status }) => {
   }
 };
 
-export const QuestScope = {
-  GENERAL: 'geral',
-  MATCH: 'match',
-};
-
-export default function Quests({ questScope }) {
-  const { clubId = '1' } = useParams(); // Default to club ID 1 if not provided
+export default function Quests({ questScope, gameId = null }) {
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'available', 'inProgress', 'completed'
+  const [loadingQuests, setLoadingQuests] = useState({});
 
   useEffect(() => {
     // Fetch quests for the current club
-    const fetchQuests = () => {
+    const fetchQuests = async () => {
       setLoading(true);
       // In a real app, this would be an API call
-      const clubQuests = questApi.getQuestsByScope(questScope);
+      const clubQuests = await questApi.getQuestsByScope(questScope);
       setQuests(clubQuests);
       setLoading(false);
     };
@@ -63,19 +57,40 @@ export default function Quests({ questScope }) {
     fetchQuests();
   }, [questScope]);
 
-  const handleCompleteQuest = (questId) => {
-    const completedQuest = completeQuest(clubId, questId);
-    if (completedQuest) {
-      // Update the quest in state
-      setQuests(quests.map(q => q.id === questId ? completedQuest : q));
+  const handleCompleteQuest = async (questId, e) => {
+    e.stopPropagation(); // Prevent triggering the card click
+
+    // Set loading state for this specific quest
+    setLoadingQuests(prev => ({ ...prev, [questId]: true }));
+    
+    try {
+      const completedQuest = await questApi.completeQuest(questId, gameId);
+      console.log('completedQuest', completedQuest);
+      
+      const updatedQuests = quests.map(quest => {
+        if (quest.id === questId) {
+          quest.status = 1;
+        }
+        return quest;
+      });
+
+      if (completedQuest) {
+        // Update the quest in state
+        setQuests(updatedQuests);
+      }
+    } catch (error) {
+      console.error('Error completing quest:', error);
+    } finally {
+      // Clear loading state for this specific quest
+      setLoadingQuests(prev => ({ ...prev, [questId]: false }));
     }
   };
 
   const filteredQuests = quests.filter(quest => {
     if (activeFilter === 'all') return true;
-    if (activeFilter === 'available') return quest.status === 'AVAILABLE';
-    if (activeFilter === 'inProgress') return quest.status === 'IN_PROGRESS';
-    if (activeFilter === 'completed') return quest.status === 'COMPLETED';
+    if (activeFilter === 'available') return quest.status === 0;
+    if (activeFilter === 'inProgress') return quest.status === 2;
+    if (activeFilter === 'completed') return quest.status === 1;
     return true;
   });
 
@@ -84,7 +99,7 @@ export default function Quests({ questScope }) {
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-primary dark:text-white">Club Quests</h1>
+            <h1 className="text-2xl font-bold text-primary dark:text-white">{questScope === QuestScope.GENERAL ? 'General' : 'Club'} Quests</h1>
           </div>
           <p className="text-primary/70 dark:text-white/70 mt-1">
             Complete quests to earn points and unlock rewards for your club.
@@ -178,7 +193,7 @@ export default function Quests({ questScope }) {
                   <QuestStatusChip status={quest.status} />
                   <div className="flex items-center px-2 py-1 rounded-full bg-black/50 text-white text-xs font-semibold">
                     <Star size={14} className="text-yellow-400 mr-1.5" fill="#FFCC00" />
-                    {quest.points} pts
+                    {quest.point_value} pts
                   </div>
                 </div>
                 
@@ -214,15 +229,15 @@ export default function Quests({ questScope }) {
                   
                   {/* Bottom section */}
                   <div className="flex flex-col gap-2 mt-auto">
-                    <div className="text-xs text-white/70">
+                    {/* <div className="text-xs text-white/70">
                       <span className="font-semibold text-white/90">Requirements:</span> {quest.requirements}
-                    </div>
+                    </div> */}
                     
                     <div className="flex items-center justify-between">
                       {/* Participant count */}
                       <div className="flex items-center gap-2">
                         <div className="text-sm font-semibold text-white">
-                          {quest.status === 'COMPLETED' ? (
+                          {quest.status === 1 ? (
                             <div className="flex items-center text-green-400">
                               <CheckCircle size={14} className="mr-1" />
                               <span>Completed</span>
@@ -242,16 +257,24 @@ export default function Quests({ questScope }) {
                       </div>
                       
                       {/* Complete button */}
-                      {quest.status === 'AVAILABLE' || quest.status === 'IN_PROGRESS' ? (
+                      {quest.status === 0 ? (
                         <Button 
                           variant="default"
                           size="sm"
                           className="whitespace-nowrap bg-primary hover:bg-primary/90 text-white px-4"
-                          onClick={() => handleCompleteQuest(quest.id)}
+                          onClick={(e) => handleCompleteQuest(quest.id, e)}
+                          disabled={loadingQuests[quest.id]}
                         >
-                          {quest.status === 'IN_PROGRESS' ? 'Update' : 'Complete'}
+                          {loadingQuests[quest.id] ? (
+                            <>
+                              <Loader2 size={14} className="mr-1 animate-spin" />
+                              Loading
+                            </>
+                          ) : (
+                            quest.status === 3 ? 'Update' : 'Complete'
+                          )}
                         </Button>
-                      ) : quest.status === 'COMPLETED' ? (
+                      ) : quest.status === 1 ? (
                         <div className="text-xs font-medium text-white/70">
                           {new Date(quest.completedAt).toLocaleDateString()}
                         </div>

@@ -4,6 +4,8 @@ import { useWalletContext } from '../hooks/useWalletContext';
 import { Trophy, Star, Ticket, ShoppingBag, User, Volleyball as Football, LogOut } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import clubApi from '../api/club';
+import QuestScope from '../enum/QuestScope';
+import Quests from './quests';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -112,7 +114,7 @@ export default function DashboardPage() {
       </div>
     );
   }
-  console.log('clubs', clubs);
+
   //CONTEÚDO PRINCIPAL DO DASHBOARD
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
@@ -225,7 +227,7 @@ export default function DashboardPage() {
             </div>
           ))}
         </div> */}
-
+        <Quests questScope={QuestScope.GENERAL} />
         <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Ações Rápidas</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
