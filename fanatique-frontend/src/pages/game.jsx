@@ -21,7 +21,7 @@ import { Button } from '../components/ui/button';
 import { showError } from '../lib/toast';
 import clubApi from '../api/club';
 import matchApi from '../api/match';
-import { getAvailableQuestsForClub, completeQuest } from '../data/mock-data';
+import { completeQuest } from '../data/mock-data';
 
 // QuestStatusChip component
 const QuestStatusChip = ({ status }) => {
@@ -179,8 +179,8 @@ export default function GamePage() {
   const fetchQuests = async (clubId) => {
     try {
       setQuestsLoading(true);
-      const clubQuests = getAvailableQuestsForClub(clubId);
-      setQuests(clubQuests);
+      // const clubQuests = getAvailableQuestsForClub(clubId);
+      // setQuests(clubQuests);
     } catch (error) {
       console.error('Error fetching quests:', error);
       setQuests([]);

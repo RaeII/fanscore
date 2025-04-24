@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { showError } from '../lib/toast';
 import clubApi from '../api/club';
 import userClubApi from '../api/user_club';
-import { getAvailableQuestsForClub, completeQuest } from '../data/mock-data';
+import { completeQuest } from '../data/mock-data';
 import { useUserContext } from '../hooks/useUserContext';
 import matchApi from '../api/match';
 
@@ -287,8 +287,8 @@ export default function HomeClubsPage() {
   const fetchQuests = async (clubId) => {
     try {
       setQuestsLoading(true);
-      const clubQuests = getAvailableQuestsForClub(clubId);
-      setQuests(clubQuests);
+      // const clubQuests = getAvailableQuestsForClub(clubId);
+      // setQuests(clubQuests);
     } catch (error) {
       console.error('Error fetching quests:', error);
       setQuests([]);
