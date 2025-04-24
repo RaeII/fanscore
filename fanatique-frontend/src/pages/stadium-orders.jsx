@@ -18,12 +18,16 @@ import { Button } from '../components/ui/button';
 import { showError, showSuccess } from '../lib/toast';
 import orderApi from '../api/order';
 import clubApi from '../api/club';
+import matchApi from '../api/match';
+import establishmentApi from '../api/establishment';
+import { useLocation } from 'react-router-dom';
+import establishmentProductApi from '../api/establishment_product';
 
 export default function StadiumOrdersPage() {
   const navigate = useNavigate();
   const { clubId, gameId } = useParams();
   const { isAuthenticated, getUserData } = useWalletContext();
-  
+  const { state } = useLocation();
   // UI States
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState('establishments'); // 'establishments', 'menu', 'cart', 'confirmation', 'activeOrders'
@@ -34,10 +38,9 @@ export default function StadiumOrdersPage() {
   const [selectedEstablishment, setSelectedEstablishment] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [cart, setCart] = useState([]);
-  const [club, setClub] = useState(null);
+  const [club, setClub] = useState(state?.club);
   const [order, setOrder] = useState(null);
   const [gameInfo, setGameInfo] = useState(null);
-  const [isHomeGame, setIsHomeGame] = useState(null);
   const [activeOrders, setActiveOrders] = useState([]);
   
   // Check if user is authenticated and load data
@@ -55,25 +58,24 @@ export default function StadiumOrdersPage() {
         // Get user data - we call this to verify authentication
         await getUserData();
         
-        if (clubId) {
+        if (clubId && !club) {
           // Load club data
           const clubData = await clubApi.getClubById(clubId);
           if (clubData) {
             setClub(clubData);
           }
-          
-          // Load game info
-          if (gameId) {
-            await verifyHomeGameAndLoadData(clubId, gameId);
-            await fetchActiveOrders();
-          } else {
-            showError('No game specified');
-            navigate(`/clubs/${clubId}`);
-          }
-        } else {
+        } else if (!clubId && !club) {
           // Redirect to dashboard if no clubId is provided
           navigate('/dashboard');
           return;
+        }
+        // Load game info
+        if (gameId) {
+          await verifyHomeGameAndLoadData(clubId, gameId);
+          await fetchActiveOrders();
+        } else {
+          showError('No game specified');
+          navigate(`/clubs/${clubId}`);
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -116,55 +118,18 @@ export default function StadiumOrdersPage() {
 
   const verifyHomeGameAndLoadData = async (clubId, gameId) => {
     try {
-      // Mock game info based on club and game IDs
-      const clubNames = {
-        '1': 'FC Barcelona',
-        '2': 'Real Madrid',
-        '3': 'Manchester United',
-        '4': 'Liverpool FC'
-      };
-      
-      const currentClubName = clubNames[clubId] || 'Unknown Club';
-      
-      // Mock available games
-      const mockAvailableGames = [
-        {
-          id: 'game-123',
-          homeTeam: 'FC Barcelona',
-          awayTeam: 'Real Madrid',
-          status: 'LIVE',
-          score: '2-1',
-          stadium: 'Camp Nou'
-        },
-        {
-          id: 'game-456',
-          homeTeam: 'Manchester United',
-          awayTeam: 'Liverpool FC',
-          status: 'LIVE',
-          score: '1-0',
-          stadium: 'Old Trafford'
-        },
-        {
-          id: 'game-789',
-          homeTeam: 'Vasco',
-          awayTeam: 'Flamengo',
-          status: 'LIVE',
-          score: '3-2',
-          stadium: 'São Januário'
-        }
-      ];
-      
-      // Find the game by gameId
-      const game = mockAvailableGames.find(g => g.id === gameId);
-      
+      const currentClubName = club.name;
+      const game = await matchApi.getMatchById(gameId);
+
       if (!game) {
         showError('Game not found');
         navigate(`/clubs/${clubId}`);
         return;
       }
-      
+      console.log('game', game);
+      console.log('currentClubName', currentClubName);
       // Check if the current club is playing in this game
-      const isParticipating = game.homeTeam === currentClubName || game.awayTeam === currentClubName;
+      const isParticipating = game.home_club_name === currentClubName || game.away_club_name === currentClubName;
       
       if (!isParticipating) {
         showError('Your club is not participating in this game');
@@ -173,16 +138,16 @@ export default function StadiumOrdersPage() {
       }
       
       // Check if the current club is the home team (for display purposes)
-      const isHomeTeam = game.homeTeam === currentClubName;
-      setIsHomeGame(isHomeTeam); 
+      const isHomeTeam = game.home_club_id === club.id;
       
       setGameInfo({
         ...game,
-        isHomeTeam  // Keep track of whether this club is home team (for UI customization)
+        is_home_team: isHomeTeam  // Keep track of whether this club is home team (for UI customization)
       });
       
       // Load establishments for any participating team
-      await fetchEstablishments(clubId, gameId);
+      const establishments = await establishmentApi.getEstablishmentByStadiumId(game.stadium_id);
+      setEstablishments(establishments);
     } catch (error) {
       console.error('Error verifying game participation:', error);
       showError('Failed to verify game data');
@@ -190,20 +155,11 @@ export default function StadiumOrdersPage() {
     }
   };
 
-  const fetchEstablishments = async (clubId, gameId) => {
-    try {
-      const data = await orderApi.getEstablishments(clubId, gameId);
-      setEstablishments(data);
-    } catch (error) {
-      console.error('Error fetching establishments:', error);
-      showError('Failed to load establishments');
-    }
-  };
-
   const fetchMenuItems = async (establishmentId) => {
     try {
       setLoading(true);
-      const data = await orderApi.getMenuItems(establishmentId);
+      const data = await establishmentProductApi.getProductsByEstablishment(establishmentId);
+      console.log('menu items', data);
       setMenuItems(data);
       setCurrentView('menu');
     } catch (error) {
@@ -216,7 +172,8 @@ export default function StadiumOrdersPage() {
 
   const handleSelectEstablishment = (establishment) => {
     setSelectedEstablishment(establishment);
-    fetchMenuItems(establishment.id);
+    console.log('establishment', establishment);
+    fetchMenuItems(establishment.establishment_id);
   };
 
   const handleAddToCart = (item) => {
@@ -275,24 +232,23 @@ export default function StadiumOrdersPage() {
     } else if (currentView === 'activeOrders') {
       setCurrentView('establishments');
     } else {
-      navigate(`/clubs/${clubId}`);
+      navigate(`/game/${clubId}/${gameId}`);
     }
   };
 
   const handlePlaceOrder = async () => {
     try {
       setPlacingOrder(true);
-      
+      console.log('selectedEstablishment', cart);
       const orderData = {
-        clubId,
-        gameId,
-        establishmentId: selectedEstablishment.id,
-        items: cart.map(item => ({
-          itemId: item.id,
-          quantity: item.quantity,
-          price: item.price
+        match_id: gameId,
+        establishment_id: selectedEstablishment.establishment_id,
+        products: cart.map(item => ({
+          product_id: item.id,
+          quantity: item.quantity
         })),
-        totalAmount: cart.reduce((total, item) => total + (item.price * item.quantity), 0)
+        total_real: cart.reduce((total, item) => total + (item.value_real * item.quantity), 0),
+        total_fantoken: cart.reduce((total, item) => total + (item.value_tokefan * item.quantity), 0)
       };
       
       const orderResult = await orderApi.placeOrder(orderData);
@@ -315,7 +271,7 @@ export default function StadiumOrdersPage() {
   };
 
   const calculateTotal = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cart.reduce((total, item) => total + (item.value_real * item.quantity), 0);
   };
 
   // Get order status color
@@ -342,7 +298,7 @@ export default function StadiumOrdersPage() {
       </div>
     );
   }
-
+  console.log('activeOrders', activeOrders);
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
       {/* Header */}
@@ -399,7 +355,7 @@ export default function StadiumOrdersPage() {
             <div className="text-sm text-white/80 mt-1">
               {club.name}
               {gameInfo && (
-                <span className="ml-2">| {gameInfo.homeTeam} vs {gameInfo.awayTeam}</span>
+                <span className="ml-2">| {gameInfo.home_club_name} vs {gameInfo.away_club_name}</span>
               )}
             </div>
           )}
@@ -432,17 +388,17 @@ export default function StadiumOrdersPage() {
                 <div className="flex items-center mt-2">
                   <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse mr-2"></div>
                   <span className="text-sm font-medium text-primary dark:text-white">
-                    {gameInfo.homeTeam} vs {gameInfo.awayTeam}
+                    {gameInfo.home_club_name} vs {gameInfo.away_club_name}
                   </span>
                 </div>
                 <p className="text-sm text-primary/70 dark:text-white/70 mt-1">
-                  Stadium: {gameInfo.stadium}
+                  Stadium: {gameInfo.stadium_name}
                 </p>
                 <p className="text-sm text-primary/70 dark:text-white/70 mt-1">
-                  Current Score: {gameInfo.score}
+                  Current Score: 0 - 0
                 </p>
                 <p className="text-xs text-primary/60 dark:text-white/60 mt-1">
-                  {gameInfo.isHomeTeam ? "Your team is playing at home" : "Your team is the away team"}
+                  {gameInfo.is_home_team ? "Your team is playing at home" : "Your team is the away team"}
                 </p>
               </div>
             )}
@@ -453,13 +409,13 @@ export default function StadiumOrdersPage() {
             
             {establishments.length > 0 ? (
               <>
-                {isHomeGame === false && (
+                {/* {gameInfo.is_home_team === false && (
                   <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg mb-4">
                     <p className="text-amber-700 dark:text-amber-300 font-medium">
                       You're placing an order for an away game. Food and drinks will be available at {gameInfo?.stadium}.
                     </p>
                   </div>
-                )}
+                )} */}
                 
                 {establishments.map((establishment) => (
                   <div 
@@ -473,8 +429,8 @@ export default function StadiumOrdersPage() {
                           <Store size={24} className="text-secondary" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-primary dark:text-white">{establishment.name}</h3>
-                          <p className="text-sm text-primary/70 dark:text-white/70">{establishment.foodType}</p>
+                          <h3 className="font-medium text-primary dark:text-white">{establishment.establishment_name}</h3>
+                          <p className="text-sm text-primary/70 dark:text-white/70">{establishment.description || ''}</p>
                         </div>
                       </div>
                       <ChevronRight size={20} className="text-primary/50 dark:text-white/50" />
@@ -508,10 +464,22 @@ export default function StadiumOrdersPage() {
                     className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm"
                   >
                     <div className="flex justify-between">
-                      <div>
-                        <h3 className="font-medium text-primary dark:text-white">{item.name}</h3>
-                        <p className="text-sm text-primary/70 dark:text-white/70 mt-1">{item.description}</p>
-                        <p className="text-secondary font-medium mt-2">${item.price.toFixed(2)}</p>
+                      <div className="flex">
+                        {item.image && (
+                          <div className="mr-4 w-20 h-20 flex-shrink-0">
+                            <img 
+                              src={item.image} 
+                              alt={item.name}
+                              className="w-full h-full object-cover rounded-md"
+                              onError={(e) => e.target.src = 'https://via.placeholder.com/80?text=No+Image'}
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <h3 className="font-medium text-primary dark:text-white">{item.name}</h3>
+                          <p className="text-sm text-primary/70 dark:text-white/70 mt-1">{item.description}</p>
+                          <p className="text-secondary font-medium mt-2">R$ {item.value_real.toFixed(2)}</p>
+                        </div>
                       </div>
                       
                       {quantity > 0 ? (
@@ -566,13 +534,23 @@ export default function StadiumOrdersPage() {
               <>
                 <div className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm">
                   <h3 className="font-medium text-primary dark:text-white mb-3">
-                    {selectedEstablishment?.name}
+                    {selectedEstablishment?.establishment_name}
                   </h3>
                   
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
                     {cart.map((item) => (
                       <div key={item.id} className="py-3 flex justify-between items-center">
                         <div className="flex items-center">
+                          {item.image && (
+                            <div className="mr-3 w-12 h-12 flex-shrink-0">
+                              <img 
+                                src={item.image} 
+                                alt={item.name}
+                                className="w-full h-full object-cover rounded-md"
+                                onError={(e) => e.target.src = 'https://via.placeholder.com/48?text=No+Image'}
+                              />
+                            </div>
+                          )}
                           <div className="mr-3 flex items-center">
                             <span className="font-medium text-primary dark:text-white">
                               {item.quantity}x
@@ -580,13 +558,13 @@ export default function StadiumOrdersPage() {
                           </div>
                           <div>
                             <h4 className="text-primary dark:text-white">{item.name}</h4>
-                            <p className="text-sm text-secondary">${item.price.toFixed(2)}</p>
+                            <p className="text-sm text-secondary">R$ {item.value_real.toFixed(2)}</p>
                           </div>
                         </div>
                         
                         <div className="flex items-center">
                           <span className="font-medium text-primary dark:text-white mr-4">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            R$ {(item.value_real * item.quantity).toFixed(2)}
                           </span>
                           <Button 
                             variant="ghost" 
@@ -604,7 +582,7 @@ export default function StadiumOrdersPage() {
                   <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                     <div className="flex justify-between items-center font-bold">
                       <span className="text-primary dark:text-white">Total</span>
-                      <span className="text-primary dark:text-white">${calculateTotal().toFixed(2)}</span>
+                      <span className="text-primary dark:text-white">R$ {calculateTotal().toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -655,8 +633,8 @@ export default function StadiumOrdersPage() {
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="font-medium text-primary dark:text-white">Order #{order.orderNumber}</h3>
-                      <p className="text-sm text-primary/70 dark:text-white/70">{order.establishmentName}</p>
+                      <h3 className="font-medium text-primary dark:text-white">Order #{order.id}</h3>
+                      <p className="text-sm text-primary/70 dark:text-white/70">{order?.establishment_name}</p>
                     </div>
                     <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)} bg-opacity-10`}>
                       {order.status}
@@ -664,13 +642,13 @@ export default function StadiumOrdersPage() {
                   </div>
                   
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {order.items.map((item, idx) => (
+                    {order.products.map((item, idx) => (
                       <div key={idx} className="py-2 flex justify-between">
                         <span className="text-primary/80 dark:text-white/80">
-                          {item.quantity}x {item.name}
+                          {item.quantity}x {item.product_name}
                         </span>
                         <span className="text-primary/80 dark:text-white/80">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          R$ {(item.value_real * item.quantity).toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -680,12 +658,12 @@ export default function StadiumOrdersPage() {
                     <div className="flex justify-between items-center">
                       <div>
                         <p className="text-primary/70 dark:text-white/70 text-sm">Total</p>
-                        <p className="font-bold text-primary dark:text-white">${order.totalAmount.toFixed(2)}</p>
+                        <p className="font-bold text-primary dark:text-white">R$ {order.total_real.toFixed(2)}</p>
                       </div>
                       
                       <div className="text-right">
                         <p className="text-primary/70 dark:text-white/70 text-sm">Pickup Location</p>
-                        <p className="font-medium text-primary dark:text-white">{order.pickupLocation || 'Counter #' + order.id}</p>
+                        <p className="font-medium text-primary dark:text-white">{order?.pickup_location || 'no pickup location'}</p>
                       </div>
                     </div>
                     
@@ -693,7 +671,7 @@ export default function StadiumOrdersPage() {
                     {order.status === 'PROCESSING' && (
                       <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md text-sm">
                         <p className="text-blue-700 dark:text-blue-300">
-                          Estimated ready in {order.estimatedTime || '10-15 minutes'}
+                          Estimated ready in {order?.estimated_time || 'no estimated time'}
                         </p>
                       </div>
                     )}
@@ -763,7 +741,7 @@ export default function StadiumOrdersPage() {
                   
                   <div className="flex justify-between">
                     <span className="text-primary/70 dark:text-white/70">Total Amount:</span>
-                    <span className="font-medium text-primary dark:text-white">${order.totalAmount?.toFixed(2)}</span>
+                    <span className="font-medium text-primary dark:text-white">R$ {order.totalAmount?.toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between">
@@ -796,7 +774,7 @@ export default function StadiumOrdersPage() {
               onClick={handleViewCart}
             >
               <ShoppingCart size={18} className="mr-2" />
-              View Cart ({cart.reduce((total, item) => total + item.quantity, 0)} items) - ${calculateTotal().toFixed(2)}
+              View Cart ({cart.reduce((total, item) => total + item.quantity, 0)} items) - R$ {calculateTotal().toFixed(2)}
             </Button>
           </div>
         </div>
