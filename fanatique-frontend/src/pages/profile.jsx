@@ -536,6 +536,7 @@ export default function ProfilePage() {
                 <h2 className="text-lg font-semibold text-primary dark:text-white">Heart Club</h2>
                 <Button 
                   variant="outline" 
+                  className="text-white hover:bg-primary/80"
                   size="sm" 
                   onClick={() => navigate('/clubs')}
                 >
@@ -644,6 +645,7 @@ export default function ProfilePage() {
               <h2 className="text-lg font-semibold text-primary dark:text-white">My Clubs</h2>
               <Button 
                 variant="outline" 
+                className="text-white hover:bg-primary/80"
                 size="sm"
                 onClick={() => navigate('/clubs')}
               >
