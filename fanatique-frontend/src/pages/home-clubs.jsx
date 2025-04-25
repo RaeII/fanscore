@@ -273,9 +273,9 @@ export default function HomeClubsPage() {
     }
   };
 
-  const handleBackToDashboard = () => {
-    navigate('/dashboard');
-  }
+  // const handleBackToDashboard = () => {
+  //   navigate('/dashboard');
+  // }
 
   if (loading) {
     return (
@@ -305,13 +305,13 @@ export default function HomeClubsPage() {
         )}
         <div className="container mx-auto px-4 py-10 relative z-10">
           {/* Back button */}
-          <button
+          {/* <button
             onClick={handleBackToDashboard}
             className="flex items-center text-white/80 hover:text-white mb-6"
           >
             <ArrowLeft size={18} className="mr-1" />
             <span>Back to Clubs</span>
-          </button>
+          </button> */}
 
           {/* Club Info */}
           {selectedClub && (

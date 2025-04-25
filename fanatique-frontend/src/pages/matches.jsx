@@ -118,14 +118,14 @@ export default function MatchesPage() {
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center mb-6">
-          <Button
+          {/* <Button
             variant="normal"
             size="icon"
             onClick={handleBackButton}
             className="mr-2"
           >
             <ArrowLeft size={20} />
-          </Button>
+          </Button> */}
           <h1 className="text-2xl font-bold text-primary dark:text-white">{heartClub.name} Matches</h1>
         </div>
 
