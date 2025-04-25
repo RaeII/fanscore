@@ -308,14 +308,6 @@ export default function ClubForumPage() {
                 <Button 
                   variant="ghost" 
                   className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
-                  onClick={() => navigate(`/clubs/${clubId}`)}
-                >
-                  <Home size={20} className="mr-4" />
-                  <span>Home</span>
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
                 >
                   <Bell size={20} className="mr-4" />
                   <span>Notifications</span>
@@ -327,20 +319,13 @@ export default function ClubForumPage() {
                   <Bookmark size={20} className="mr-4" />
                   <span>Bookmarks</span>
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
-                >
-                  <User size={20} className="mr-4" />
-                  <span>Profile</span>
-                </Button>
               </div>
               
               <Button className="w-full rounded-full py-6 bg-primary hover:bg-primary/90 text-white">
                 New Post
               </Button>
               
-              <div className="mt-auto">
+              {/* <div className="mt-auto">
                 <div className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full cursor-pointer">
                   <Avatar className="h-10 w-10">
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=CurrentUser" alt="Your profile" />
@@ -351,7 +336,7 @@ export default function ClubForumPage() {
                   </div>
                   <MoreHorizontal size={16} className="text-gray-500" />
                 </div>
-              </div>
+              </div> */}
             </div>
           </aside>
           
