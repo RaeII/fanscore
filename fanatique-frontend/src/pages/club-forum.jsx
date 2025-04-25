@@ -1,0 +1,637 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Plus, MessageCircle, Clock, Search, Flame, TrendingUp, Users, Filter, Tag, ArrowLeft, Home, Bell, Bookmark, Settings, User, Calendar, MoreHorizontal } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Textarea } from '../components/ui/textarea';
+import { Input } from '../components/ui/input';
+import { Separator } from '../components/ui/separator';
+import { Avatar } from '../components/ui/avatar';
+import { Card } from '../components/ui/card';
+import { ForumPostCard } from '../components/ui/forum-post-card';
+import { useWalletContext } from '../hooks/useWalletContext';
+import { useUserContext } from '../hooks/useUserContext';
+import { showError, showSuccess } from '../lib/toast';
+import forumApi from '../api/forum';
+import clubApi from '../api/club';
+
+// Tab navigation item for Twitter-like header
+const NavItem = ({ icon, label, active, onClick }) => (
+  <button
+    className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+      active 
+        ? 'font-bold border-b-4 border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' 
+        : 'text-gray-800 dark:text-gray-100 border-b-4 border-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-500 dark:hover:text-blue-400'
+    }`}
+    onClick={onClick}
+  >
+    {icon}
+    <span className="hidden sm:inline">{label}</span>
+  </button>
+);
+
+// Category badges for forum posts
+const CategoryBadge = ({ category, active, onClick }) => {
+  const getIcon = (cat) => {
+    switch (cat) {
+      case 'all': return <Users size={16} />;
+      case 'trending': return <TrendingUp size={16} />;
+      case 'hot': return <Flame size={16} />;
+      case 'match': return <Tag size={16} />;
+      case 'general': return <MessageCircle size={16} />;
+      default: return <MessageCircle size={16} />;
+    }
+  };
+  
+  return (
+    <button 
+      className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+        active 
+          ? 'bg-primary text-white shadow-md' 
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
+      }`}
+      onClick={() => onClick(category)}
+    >
+      {getIcon(category)}
+      <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+    </button>
+  );
+};
+
+export default function ClubForumPage() {
+  const { clubId } = useParams();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useWalletContext();
+  const { isFollowingClub, isUserHeartClub } = useUserContext();
+  
+  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState([]);
+  const [filteredPosts, setFilteredPosts] = useState([]);
+  const [clubData, setClubData] = useState(null);
+  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newPostContent, setNewPostContent] = useState('');
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // For Twitter-like tabs
+  const [activeTab, setActiveTab] = useState('latest');
+  
+  // User is viewing the create post form in expanded mode
+  const [expandedCreatePost, setExpandedCreatePost] = useState(false);
+  
+  const categories = ['all', 'trending', 'hot', 'match', 'general'];
+  
+  useEffect(() => {
+    const checkAccessAndLoadData = async () => {
+      try {
+        if (!isAuthenticated) {
+          navigate('/app');
+          return;
+        }
+        
+        // Check if user is following this club or has it as heart club
+        const hasAccess = isFollowingClub(clubId) || isUserHeartClub(clubId);
+        if (!hasAccess) {
+          showError("You need to follow this club to access the forum");
+          navigate(`/clubs/${clubId}`);
+          return;
+        }
+        
+        setLoading(true);
+        
+        // Load club data
+        const club = await clubApi.getClubById(clubId);
+        setClubData(club);
+        
+        // Load forum posts
+        await loadPosts();
+      } catch (error) {
+        console.error('Error loading forum data:', error);
+        showError('Failed to load forum data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkAccessAndLoadData();
+  }, [clubId, isAuthenticated, navigate, isFollowingClub, isUserHeartClub]);
+  
+  // Filter posts when category or search changes
+  useEffect(() => {
+    filterPosts();
+  }, [posts, activeCategory, searchQuery, activeTab]);
+  
+  const filterPosts = () => {
+    let result = [...posts];
+    
+    // Filter by category
+    if (activeCategory !== 'all') {
+      result = result.filter(post => post.category === activeCategory);
+    }
+    
+    // Filter by tab
+    if (activeTab === 'trending') {
+      result = result.sort((a, b) => b.likes - a.likes);
+    }
+    
+    // Filter by search query
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(post => 
+        post.title.toLowerCase().includes(query) || 
+        post.content.toLowerCase().includes(query) ||
+        post.author.name.toLowerCase().includes(query)
+      );
+    }
+    
+    setFilteredPosts(result);
+  };
+  
+  const loadPosts = async () => {
+    try {
+      const forumPosts = await forumApi.getClubPosts(clubId);
+      setPosts(forumPosts);
+      setFilteredPosts(forumPosts);
+    } catch (error) {
+      console.error('Error loading posts:', error);
+      showError('Failed to load posts');
+    }
+  };
+  
+  const handleSubmitPost = async () => {
+    try {
+      if (!newPostTitle.trim()) {
+        showError('Post title is required');
+        return;
+      }
+      
+      if (!newPostContent.trim()) {
+        showError('Post content is required');
+        return;
+      }
+      
+      setSubmitLoading(true);
+      
+      await forumApi.createPost({
+        clubId,
+        title: newPostTitle,
+        content: newPostContent,
+        category: 'general' // Default category for new posts
+      });
+      
+      // Reset form and reload posts
+      setNewPostTitle('');
+      setNewPostContent('');
+      setExpandedCreatePost(false);
+      showSuccess('Post created successfully');
+      
+      // Reload posts to show the new one
+      await loadPosts();
+    } catch (error) {
+      console.error('Error creating post:', error);
+      showError('Failed to create post');
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+  
+  const handleLikePost = async (postId) => {
+    try {
+      await forumApi.likePost(postId);
+      
+      // Update the local state to reflect the like
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            likes: post.likes + 1,
+            userLiked: true
+          };
+        }
+        return post;
+      }));
+    } catch (error) {
+      console.error('Error liking post:', error);
+      showError('Failed to like post');
+    }
+  };
+  
+  const handleViewComments = (postId) => {
+    // Navigate to post detail view with comments
+    navigate(`/clubs/${clubId}/forum/post/${postId}`);
+  };
+  
+  // Make entire post card clickable
+  const handlePostClick = (postId) => {
+    navigate(`/clubs/${clubId}/forum/post/${postId}`);
+  };
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-950">
+        <div className="flex justify-center items-center h-screen">
+          <div className="relative">
+            <div className="animate-spin w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full"></div>
+          </div>
+          <p className="ml-3 text-primary/60 dark:text-white/60">Loading forum...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen bg-white dark:bg-gray-950">
+      {/* Twitter-style fixed header */}
+      <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 backdrop-blur-sm bg-white/80 dark:bg-gray-900/80">
+        <div className="flex justify-between items-center px-4 py-2">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="normal" 
+              size="icon"
+              className="rounded-full"
+              onClick={() => navigate(`/clubs/${clubId}`)}
+            >
+              <ArrowLeft size={20} />
+            </Button>
+            
+            {clubData && (
+              <div className="flex items-center gap-2">
+                <img 
+                  src={clubData.image || 'https://via.placeholder.com/40'} 
+                  alt={clubData.name} 
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+                <div>
+                  <h1 className="font-bold">{clubData.name}</h1>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{posts.length} posts</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <Button variant="normal" size="icon" className="rounded-full">
+              <Settings size={20} />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Tab navigation - Twitter/X style */}
+        <div className="flex overflow-x-auto border-b-2 border-gray-200 dark:border-gray-700">
+          <NavItem 
+            icon={<Home size={18} className={activeTab === 'latest' ? 'text-blue-600 dark:text-blue-400' : ''} />} 
+            label="Latest" 
+            active={activeTab === 'latest'} 
+            onClick={() => setActiveTab('latest')}
+          />
+          <NavItem 
+            icon={<TrendingUp size={18} className={activeTab === 'trending' ? 'text-blue-600 dark:text-blue-400' : ''} />} 
+            label="Trending" 
+            active={activeTab === 'trending'} 
+            onClick={() => setActiveTab('trending')}
+          />
+          <NavItem 
+            icon={<MessageCircle size={18} className={activeTab === 'mine' ? 'text-blue-600 dark:text-blue-400' : ''} />} 
+            label="My Discussions" 
+            active={activeTab === 'mine'} 
+            onClick={() => setActiveTab('mine')}
+          />
+        </div>
+      </header>
+      
+      <div className="container mx-auto max-w-screen-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
+          {/* Left sidebar - Twitter style */}
+          <aside className="hidden lg:block lg:col-span-3 px-4 py-6 border-r border-gray-200 dark:border-gray-800">
+            <div className="sticky top-20 space-y-6">
+              <div className="flex flex-col space-y-1">
+                <Button 
+                  variant="ghost" 
+                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
+                  onClick={() => navigate(`/clubs/${clubId}`)}
+                >
+                  <Home size={20} className="mr-4" />
+                  <span>Home</span>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
+                >
+                  <Bell size={20} className="mr-4" />
+                  <span>Notifications</span>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
+                >
+                  <Bookmark size={20} className="mr-4" />
+                  <span>Bookmarks</span>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
+                >
+                  <User size={20} className="mr-4" />
+                  <span>Profile</span>
+                </Button>
+              </div>
+              
+              <Button className="w-full rounded-full py-6 bg-primary hover:bg-primary/90 text-white">
+                New Post
+              </Button>
+              
+              <div className="mt-auto">
+                <div className="flex items-center gap-3 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full cursor-pointer">
+                  <Avatar className="h-10 w-10">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=CurrentUser" alt="Your profile" />
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">Your Name</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm truncate">@username</p>
+                  </div>
+                  <MoreHorizontal size={16} className="text-gray-500" />
+                </div>
+              </div>
+            </div>
+          </aside>
+          
+          {/* Main content - Timeline */}
+          <main className="lg:col-span-5 border-r border-gray-200 dark:border-gray-800">
+            {/* Create post input - Twitter style */}
+            <div className="border-b border-gray-200 dark:border-gray-800 p-4">
+              <div className="flex gap-3">
+                <Avatar className="h-10 w-10">
+                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=CurrentUser" alt="Your profile" />
+                </Avatar>
+                
+                <div className="flex-1 space-y-4">
+                  {!expandedCreatePost ? (
+                    <div className="flex flex-col gap-2">
+                      <button 
+                        onClick={() => setExpandedCreatePost(true)}
+                        className="text-left text-gray-600 dark:text-gray-300 hover:text-primary font-medium"
+                      >
+                        What's happening?
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Input
+                        placeholder="Title"
+                        value={newPostTitle}
+                        onChange={(e) => setNewPostTitle(e.target.value)}
+                        className="border-0 border-b border-gray-200 dark:border-gray-800 rounded-none px-0 text-lg font-bold focus-visible:ring-0"
+                      />
+                      <Textarea
+                        placeholder="What's happening?"
+                        className="min-h-[100px] border-0 resize-none focus-visible:ring-0 px-0"
+                        value={newPostContent}
+                        onChange={(e) => setNewPostContent(e.target.value)}
+                      />
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-800">
+                        <div className="flex gap-1">
+                          {categories.map(category => (
+                            <Button 
+                              key={category} 
+                              variant="ghost" 
+                              size="sm" 
+                              className="rounded-full text-xs text-gray-700 dark:text-gray-200 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800"
+                            >
+                              {category !== 'all' ? category.charAt(0).toUpperCase() + category.slice(1) : 'General'}
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setExpandedCreatePost(false);
+                              setNewPostTitle('');
+                              setNewPostContent('');
+                            }}
+                            className="rounded-full border-gray-400 dark:border-gray-500 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={handleSubmitPost}
+                            disabled={submitLoading || !newPostTitle.trim() || !newPostContent.trim()}
+                            className="rounded-full bg-primary hover:bg-primary/90 text-white"
+                          >
+                            {submitLoading ? (
+                              <span className="flex items-center gap-2">
+                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                <span>Posting...</span>
+                              </span>
+                            ) : 'Post'}
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Categories filter */}
+            <div className="p-3 overflow-x-auto flex items-center gap-2 border-b border-gray-200 dark:border-gray-800">
+              {categories.map(category => (
+                <CategoryBadge 
+                  className=""
+                  key={category} 
+                  category={category} 
+                  active={activeCategory === category}
+                  onClick={setActiveCategory}
+                />
+              ))}
+            </div>
+            
+            {/* Posts list - Twitter style feed */}
+            {filteredPosts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-10 text-center h-[50vh]">
+                <MessageCircle size={48} className="text-gray-400 mb-4" />
+                {searchQuery.trim() !== '' ? (
+                  <>
+                    <h3 className="text-xl font-medium mb-2">No posts match your search</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">Try different keywords or clear your search</p>
+                    <Button 
+                      onClick={() => setSearchQuery('')}
+                      className="rounded-full"
+                    >
+                      Clear Search
+                    </Button>
+                  </>
+                ) : activeCategory !== 'all' ? (
+                  <>
+                    <h3 className="text-xl font-medium mb-2">No posts in this category</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">Try a different category or create the first post</p>
+                    <Button 
+                      onClick={() => setActiveCategory('all')}
+                      className="rounded-full"
+                    >
+                      Show All Posts
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-medium mb-2">No discussions yet</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">Be the first to start a discussion!</p>
+                    <Button 
+                      onClick={() => setExpandedCreatePost(true)}
+                      className="rounded-full"
+                    >
+                      Create First Post
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div>
+                {filteredPosts.map((post) => (
+                  <div 
+                    key={post.id} 
+                    className="border-b border-gray-200 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50" 
+                    onClick={() => handlePostClick(post.id)}
+                  >
+                    <ForumPostCard 
+                      post={post} 
+                      onLike={handleLikePost}
+                      onClickComments={handleViewComments}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </main>
+          
+          {/* Right sidebar - Search, trends, who to follow */}
+          <aside className="hidden lg:block lg:col-span-4 px-6 py-4">
+            <div className="sticky top-20 space-y-6">
+              {/* Search */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search size={18} className="text-gray-400" />
+                </div>
+                <Input
+                  type="search"
+                  placeholder="Search discussions..."
+                  className="pl-10 w-full rounded-full bg-gray-100 dark:bg-gray-800 border-0"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              {/* Club info */}
+              {clubData && (
+                <Card className="overflow-hidden rounded-xl">
+                  <div className="h-32 bg-gradient-to-r from-primary to-primary/80"></div>
+                  <div className="p-4 relative">
+                    <Avatar className="absolute -top-10 left-4 w-20 h-20 border-4 border-white dark:border-gray-900">
+                      <img 
+                        src={clubData.image || 'https://via.placeholder.com/80'} 
+                        alt={clubData.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </Avatar>
+                    <div className="pt-10">
+                      <h2 className="text-xl font-bold">{clubData.name}</h2>
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">@{clubData.name.toLowerCase().replace(/\s/g, '')}</p>
+                      
+                      <p className="my-3 text-sm">Official club forum. Join the conversation with fellow fans!</p>
+                      
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold">{Math.floor(Math.random() * 500) + 1000}</span>
+                          <span className="text-gray-500 dark:text-gray-400">Followers</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold">{Math.floor(Math.random() * 100) + 50}</span>
+                          <span className="text-gray-500 dark:text-gray-400">Following</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+              
+              {/* Trending section */}
+              <Card className="overflow-hidden rounded-xl">
+                <div className="p-4">
+                  <h3 className="font-bold text-xl mb-4">Trending in the club</h3>
+                  
+                  <div className="space-y-4">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div key={index} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Trending topic {index + 1}</p>
+                        <p className="font-bold">
+                          {index === 0 
+                            ? "Latest match result" 
+                            : index === 1 
+                              ? "Transfer rumors"
+                              : index === 2
+                                ? "New stadium plans"
+                                : "Fan meetup event"
+                          }
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{Math.floor(Math.random() * 1000) + 100} posts</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+              
+              {/* Who to follow */}
+              <Card className="overflow-hidden rounded-xl">
+                <div className="p-4">
+                  <h3 className="font-bold text-xl mb-4">Who to follow</h3>
+                  
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <img 
+                              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=User${index}`} 
+                              alt="User" 
+                            />
+                          </Avatar>
+                          <div>
+                            <p className="font-bold">{['John Fan', 'Mary Supporter', 'Alex True'][index]}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">@{['johnfan', 'marysupporter', 'alextrue'][index]}</p>
+                          </div>
+                        </div>
+                        <Button size="sm" className="rounded-full bg-primary hover:bg-primary/90 text-white">
+                          Follow
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+              
+              {/* Forum stats */}
+              <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2">
+                <div className="flex items-center gap-1">
+                  <Users size={14} />
+                  <span>Active users: {Math.round(posts.length * 1.5)}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar size={14} />
+                  <span>Community since: Sep 2023</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MessageCircle size={14} />
+                  <span>Total posts: {posts.length}</span>
+                </div>
+                
+                <p className="text-xs mt-3">&copy; 2023 Fanatique. All rights reserved.</p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
+} 

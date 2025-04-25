@@ -25,6 +25,8 @@ import OrderDetailsPage from './pages/order-details'
 import OrdersHistoryPage from './pages/orders-history'
 import Quests from './pages/quests'
 import GamePage from './pages/game'
+import ClubForumPage from './pages/club-forum'
+import ForumPostPage from './pages/forum-post'
 
 // Criar uma instância do QueryClient para o TanStack Query
 const queryClient = new QueryClient()
@@ -60,6 +62,22 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Navigate to="/clubs/:clubId?tab=quests" replace />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'clubs/:clubId/forum',
+        element: (
+          <ProtectedRoute>
+            <ClubForumPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'clubs/:clubId/forum/post/:postId',
+        element: (
+          <ProtectedRoute>
+            <ForumPostPage />
           </ProtectedRoute>
         )
       },

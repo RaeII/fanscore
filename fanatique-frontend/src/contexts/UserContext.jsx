@@ -41,8 +41,8 @@ export function UserProvider({ children }) {
     }
     try {
       const data = await userClubApi.getUserClub();
-
-      const heartClub = data.find(club => club.club_type_id == 1);
+      console.log('user clubs data', data);
+      const heartClub = data.find(club => club.club_type.id == 1);
       setUserClubsData({ heart_club: heartClub, clubs: data });
     } catch (err) {
       console.error('Error fetching user clubs data:', err);
@@ -51,15 +51,15 @@ export function UserProvider({ children }) {
   }, [isAuthenticated]);
 
   const isUserHeartClub = useCallback((clubId) => {
-    return userClubsData?.heart_club?.club_id == clubId;
-  }, [userClubsData?.heart_club?.club_id]);
+    return userClubsData?.heart_club?.club?.id == clubId;
+  }, [userClubsData?.heart_club?.club?.id]);
 
   const hasUserHeartClub = useCallback(() => {
     return userClubsData?.heart_club != null;
   }, [userClubsData?.heart_club]);
 
   const isFollowingClub = useCallback((clubId) => {
-    return userClubsData?.clubs?.some(club => club.club_id == clubId && club.club_type_id == 2);
+    return userClubsData?.clubs?.some(club => club.club.id == clubId && club.club_type.id == 2);
   }, [userClubsData?.clubs]);
 
   // Fetch user data when authenticated

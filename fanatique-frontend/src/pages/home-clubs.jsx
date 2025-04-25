@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
-import { ChevronRight, Star, Calendar, MapPin, Loader2, ShoppingBag, Trophy, Ticket, ArrowLeft, Heart, UserPlus, UserCheck, CheckCircle, Clock, Lock } from 'lucide-react';
+import { ChevronRight, Star, Calendar, MapPin, Loader2, ShoppingBag, Trophy, Ticket, ArrowLeft, Heart, UserPlus, UserCheck, CheckCircle, Clock, Lock, MessageCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { showError } from '../lib/toast';
 import clubApi from '../api/club';
@@ -469,6 +469,21 @@ export default function HomeClubsPage() {
           >
             News
           </Button>
+          <Button
+            variant="ghost" 
+            size="sm"
+            className={`rounded-none border-b-2 px-4 ${
+              activeTab === 'forum'
+                ? 'border-secondary text-secondary font-semibold'
+                : 'border-transparent text-primary/70 dark:text-white/70'
+            }`}
+            onClick={() => {
+              setActiveTab('forum');
+              navigate(`/clubs/${clubId}/forum`);
+            }}
+          >
+            Forum
+          </Button>
         </div>
       </div>
 
@@ -660,6 +675,27 @@ export default function HomeClubsPage() {
                 )}
               </div>
             </section>
+
+            {/* New Forum Banner */}
+            <div className="bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-lg p-4 mb-6 shadow-md border border-indigo-500/30">
+              <div className="flex items-center gap-4">
+                <div className="bg-indigo-500/30 p-3 rounded-full">
+                  <MessageCircle size={24} className="text-indigo-300" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Club Forum Now Available!</h3>
+                  <p className="text-sm text-gray-300 mb-2">Join the conversation with other fans of {selectedClub.name}</p>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="border-indigo-500/50 hover:bg-indigo-500/20"
+                    onClick={() => navigate(`/clubs/${clubId}/forum`)}
+                  >
+                    Visit Forum
+                  </Button>
+                </div>
+              </div>
+            </div>
           </>
         )}
 
