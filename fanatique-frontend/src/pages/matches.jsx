@@ -75,8 +75,13 @@ export default function MatchesPage() {
     fetchMatches();
   }, [heartClub]);
 
-  const handleBackToDashboard = () => {
-    navigate('/dashboard');
+  const handleBackButton = () => {
+    // Go back to previous page if available, otherwise go to dashboard
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleMatchClick = (match) => {
@@ -114,9 +119,9 @@ export default function MatchesPage() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center mb-6">
           <Button
-            variant="ghost"
+            variant="normal"
             size="icon"
-            onClick={handleBackToDashboard}
+            onClick={handleBackButton}
             className="mr-2"
           >
             <ArrowLeft size={20} />
