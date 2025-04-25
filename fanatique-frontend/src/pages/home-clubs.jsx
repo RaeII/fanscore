@@ -643,7 +643,7 @@ export default function HomeClubsPage() {
             </section>
 
             {/* New Forum Banner */}
-            <div className="bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-lg p-4 mb-6 shadow-md border border-indigo-500/30">
+            {isHeartClub && <div className="bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-lg p-4 mb-6 shadow-md border border-indigo-500/30">
               <div className="flex items-center gap-4">
                 <div className="bg-indigo-500/30 p-3 rounded-full">
                   <MessageCircle size={24} className="text-indigo-300" />
@@ -661,7 +661,7 @@ export default function HomeClubsPage() {
                   </Button>
                 </div>
               </div>
-            </div>
+            </div>}
           </>
         )}
 
