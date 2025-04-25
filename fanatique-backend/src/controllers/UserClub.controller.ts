@@ -41,7 +41,7 @@ class UserClubController extends Controller {
         try {
             const userId: number = Number(res.locals.jwt.user_id);
 
-            const userClubs = await this.service.fetchByUserId(userId);
+            const userClubs = await this.service.fetchClubsWithDetails(userId);
             
             return this.sendSuccessResponse(res, { content: userClubs });
         } catch (err) {

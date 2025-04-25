@@ -64,6 +64,43 @@ class UserClubDatabase extends Database {
     async delete(id: number) {
         return await this.query('DELETE FROM user_club WHERE id = ?;', [id]);
     }
+
+    /**
+     * Busca informações detalhadas dos clubes do usuário
+     * @param userId ID do usuário
+     * @returns Clubes do usuário com informações detalhadas
+     */
+    async fetchDetailedByUserId(userId: number): Promise<any[]> {
+        const rows: any = await this.query(`
+            SELECT 
+                uc.id,
+                uc.user_id,
+                uc.club_id,
+                uc.club_type_id,
+                uc.register_date,
+                uc.update_date,
+                c.id as club_id,
+                c.name as club_name,
+                c.image as club_image,
+                c.register_date as club_register_date,
+                c.update_date as club_update_date,
+                ct.id as club_type_id,
+                s.id as stadium_id,
+                s.name as stadium_name,
+                s.image as stadium_image,
+                s.city,
+                s.state
+              
+            FROM user_club uc
+            JOIN club c ON uc.club_id = c.id
+            JOIN club_type ct ON uc.club_type_id = ct.id
+            LEFT JOIN stadium s ON s.club_id = c.id
+            WHERE uc.user_id = ?
+            ORDER BY uc.club_type_id ASC;
+        `, [userId]);
+
+        return rows[0];
+    }
 }
 
 export default UserClubDatabase; 

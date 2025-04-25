@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createBindParams } from '@/helpers/util';
 import Database from './Database';
-import { Match, MatchBasicInfo, MatchForFront, MatchInsert } from '../types';
+import { Match, MatchBasicInfo, MatchDetailedInfo, MatchForFront, MatchInsert } from '../types';
 
 class MatchDatabase extends Database {
 
@@ -21,7 +21,9 @@ class MatchDatabase extends Database {
 				m.is_started,
 				m.match_date,
 				hc.name as home_club_name,
+				hc.image as home_club_image,
 				ac.name as away_club_name,
+				ac.image as away_club_image,
 				s.name as stadium_name,
 				s.id as stadium_id,
 				s.name as stadium_name,
@@ -37,7 +39,7 @@ class MatchDatabase extends Database {
 
 		if (rows[0]?.length > 0) {
 			const matchData = rows[0][0];
-			// Formatar o resultado para incluir o objeto stadium
+			// Formatar o resultado para incluir os objetos home_club, away_club e stadium
 			return {
 				id: matchData.id,
 				home_club_id: matchData.home_club_id,
@@ -48,6 +50,16 @@ class MatchDatabase extends Database {
 				home_club_name: matchData.home_club_name,
 				away_club_name: matchData.away_club_name,
 				stadium_name: matchData.stadium_name,
+				home_club: {
+					id: matchData.home_club_id,
+					name: matchData.home_club_name,
+					image: matchData.home_club_image
+				},
+				away_club: {
+					id: matchData.away_club_id,
+					name: matchData.away_club_name,
+					image: matchData.away_club_image
+				},
 				stadium: {
 					id: matchData.stadium_id,
 					name: matchData.stadium_name,
@@ -89,18 +101,30 @@ class MatchDatabase extends Database {
 		return rows[0];
 	}
 
-	async fetchByClubId(clubId: number): Promise<Array<MatchBasicInfo>> {
+	async fetchByClubId(clubId: number): Promise<Array<MatchDetailedInfo>> {
 		const rows: any = await this.query(`
 			SELECT
 				m.id,
-				m.home_club_id,
-				m.away_club_id,
-				m.stadium_id,
 				m.is_started,
 				m.match_date,
+				
+				-- Home Club Details
+				hc.id as home_club_id,
 				hc.name as home_club_name,
+				hc.image as home_club_image,
+				
+				-- Away Club Details
+				ac.id as away_club_id,
 				ac.name as away_club_name,
-				s.name as stadium_name
+				ac.image as away_club_image,
+				
+				-- Stadium Details
+				s.id as stadium_id,
+				s.name as stadium_name,
+				s.image as stadium_image,
+				s.city as stadium_city,
+				s.state as stadium_state,
+				s.club_id as stadium_club_id
 			FROM \`match\` m
 			LEFT JOIN club hc ON m.home_club_id = hc.id
 			LEFT JOIN club ac ON m.away_club_id = ac.id
@@ -108,7 +132,33 @@ class MatchDatabase extends Database {
 			WHERE m.home_club_id = ? OR m.away_club_id = ?
 			ORDER BY m.match_date DESC;`, [clubId, clubId]);
 
-		return rows[0];
+		if (rows[0]?.length > 0) {
+			return rows[0].map((match: any) => ({
+				id: match.id,
+				match_date: match.match_date,
+				is_started: match.is_started,
+				home_club: {
+					id: match.home_club_id,
+					name: match.home_club_name,
+					image: match.home_club_image
+				},
+				away_club: {
+					id: match.away_club_id,
+					name: match.away_club_name,
+					image: match.away_club_image
+				},
+				stadium: {
+					id: match.stadium_id,
+					name: match.stadium_name,
+					image: match.stadium_image,
+					city: match.stadium_city,
+					state: match.stadium_state,
+					club_id: match.stadium_club_id
+				}
+			}));
+		}
+
+		return [];
 	}
 	
 	async fetchByStadiumId(stadiumId: number): Promise<Array<MatchBasicInfo>> {

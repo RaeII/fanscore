@@ -16,11 +16,14 @@ class QuestUserController extends Controller {
 
 	async create(req: Request, res: Response) {
 		try {
+
+			const userId: number = Number(res.locals.jwt.user_id);
+
 			const body: QuestUserInsert = {
-				user_id: req.body.user_id,
+				user_id: userId,
 				quest_id: req.body.quest_id,
 				match_id: req.body.match_id,
-				completed: req.body.completed || 0
+				status: req.body.status || 0
 			};
 
 			await Database.startTransaction();
@@ -60,9 +63,24 @@ class QuestUserController extends Controller {
 		}
 	}
 
+	async fetchAllQuestsWithUserCompletion(req: Request, res: Response) {
+		try {
+			const userId: number = Number(res.locals.jwt.user_id);
+			const scopeId: any = req?.query?.scope_id ? Number(req?.query?.scope_id) : undefined;
+
+			console.log({scopeId});
+			
+			const questsWithCompletion = await this.service.fetchAllQuestsWithUserCompletion(userId, scopeId);
+
+			return this.sendSuccessResponse(res, { content: questsWithCompletion });
+		} catch (err) {
+			return await this.sendErrorMessage(res, err);
+		}
+	}
+
 	async fetchByUser(req: Request, res: Response) {
 		try {
-			const userId: number = Number(req.params.userId);
+			const userId: number = Number(res.locals.jwt.user_id);
 			
 			const questUsers = await this.service.fetchByUser(userId);
 			return this.sendSuccessResponse(res, { content: questUsers });
@@ -95,7 +113,7 @@ class QuestUserController extends Controller {
 
 	async fetchCompletedByUser(req: Request, res: Response) {
 		try {
-			const userId: number = Number(req.params.userId);
+			const userId: number = Number(res.locals.jwt.user_id);
 			
 			const questUsers = await this.service.fetchCompletedByUser(userId);
 			return this.sendSuccessResponse(res, { content: questUsers });
@@ -107,7 +125,7 @@ class QuestUserController extends Controller {
 	async update(req: Request, res: Response) {
 		try {
 			const body: QuestUserUpdatePayload = {
-				completed: req.body.completed !== undefined ? req.body.completed : undefined,
+				status: req.body.status !== undefined ? req.body.status : undefined,
 				match_id: req.body.match_id !== undefined ? req.body.match_id : undefined
 			};
 			const questUserId: number = Number(req.params.id);

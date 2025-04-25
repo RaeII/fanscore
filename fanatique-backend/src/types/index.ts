@@ -83,6 +83,7 @@ export interface Match {
   match_date: Date;
   register_date: Date;
   update_date: Date;
+  create_date?: Date;
 }
 
 export interface MatchBasicInfo {
@@ -97,6 +98,30 @@ export interface MatchBasicInfo {
   stadium_name: string;
 }
 
+export interface MatchDetailedInfo {
+  id: number;
+  match_date: Date;
+  is_started: number;
+  home_club: {
+    id: number;
+    name: string;
+    image: string;
+  };
+  away_club: {
+    id: number;
+    name: string;
+    image: string;
+  };
+  stadium: {
+    id: number;
+    name: string;
+    image: string;
+    city: string;
+    state: string;
+    club_id: number;
+  };
+}
+
 export interface MatchForFront {
   id: number;
   home_club_id: number;
@@ -108,6 +133,16 @@ export interface MatchForFront {
   away_club_name: string;
   stadium_name: string;
   stadium: StadiumForFront;
+  home_club?: {
+    id: number;
+    name: string;
+    image: string;
+  };
+  away_club?: {
+    id: number;
+    name: string;
+    image: string;
+  };
 }
 
 export interface MatchInsert {

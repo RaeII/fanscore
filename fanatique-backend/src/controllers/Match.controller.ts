@@ -4,7 +4,7 @@ import { getErrorMessage, getSuccessMessage } from '@/helpers/response_collectio
 import Controller from './Controller';
 import MatchService from '@/services/Match.service';
 import Database from '@/database/Database';
-import { Match, MatchForFront, MatchInsert, MatchUpdatePayload } from '@/types';
+import { Match, MatchDetailedInfo, MatchForFront, MatchInsert, MatchUpdatePayload } from '@/types';
 
 class MatchController extends Controller {
 	private service: MatchService;
@@ -60,9 +60,17 @@ class MatchController extends Controller {
 			const match: MatchForFront | null = await this.service.fetchForFront(matchId);
 			if (!match) throw Error(getErrorMessage('registryNotFound', 'Partida'));
 			
-			// Verificar se as informações do estádio estão presentes
+			// Verificar se as informações estão presentes
 			if (!match.stadium) {
 				throw Error(getErrorMessage('registryNotFound', 'Informações do estádio para esta partida'));
+			}
+			
+			if (!match.home_club) {
+				throw Error(getErrorMessage('registryNotFound', 'Informações do clube mandante para esta partida'));
+			}
+			
+			if (!match.away_club) {
+				throw Error(getErrorMessage('registryNotFound', 'Informações do clube visitante para esta partida'));
 			}
 
 			return this.sendSuccessResponse(res, { content: match });
@@ -85,8 +93,7 @@ class MatchController extends Controller {
 			const clubId: number = Number(req.params.clubId);
 
 			const matches = await this.service.fetchByClubId(clubId);
-			if (!matches.length) throw Error(getErrorMessage('registryNotFound', 'Partidas para este clube'));
-
+			
 			return this.sendSuccessResponse(res, { content: matches });
 		} catch (err) {
 			return await this.sendErrorMessage(res, err);

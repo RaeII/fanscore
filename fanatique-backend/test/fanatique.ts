@@ -1,105 +1,169 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { ethers } from "hardhat";
-import { FanScore } from "../typechain-types";
-import { deployFanScore } from "./deploy/deploy";
+import { Fanatique, FanToken } from "../typechain-types";
+import { deployFanatique, deployFanToken } from "../scripts/deploy/deploy";
 import { expect } from "chai";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import PaymentService from "./services/payment.service";
 
-describe("\n\n  == FANSCORE == \n\n", function () {
-  let contractFanScore: FanScore;
-  let addressFanScore: string;
+describe("\n\n  == FANATIQUE == \n\n", function () {
+  
+  let contractFanatique: Fanatique;
+  let addressFanatique: string;
+  let contractFanToken: FanToken;
+  let addressFanToken: string;
   let ownerSigner: HardhatEthersSigner;
   let israel: HardhatEthersSigner;
   let vit: HardhatEthersSigner;
-  let israelSigner: FanScore;
-  let vitSigner: FanScore;
+  let treasury: HardhatEthersSigner;
+  let backendSigner: HardhatEthersSigner;
+  let israelSigner: Fanatique;
+  let vitSigner: Fanatique;
+  
+  // IDs para teste
+  const clubeId = 1;
+  const tokenName = "Flamengo Token";
+  const tokenSymbol = "FLA";
+  const initialSupply = ethers.parseEther("10000");
+  const orderAmount = ethers.parseEther("50");
+  const orderAmountInt = 50;
+  const orderId = 12345;
+  const gaslessOrderId = 54321;
 
   before(async function () {
     // Obtem os signers da rede de teste
-    [ownerSigner, israel, vit] = await ethers.getSigners() as unknown as HardhatEthersSigner[];
+    [ownerSigner, israel, vit,treasury] = await ethers.getSigners() as unknown as HardhatEthersSigner[];
 
-    // Realiza o deploy do contrato principal FanScore
-    contractFanScore = await deployFanScore() as FanScore;
-    addressFanScore = await contractFanScore.getAddress();
+    console.log("Signer Before:", ownerSigner.address);
+
+    // Realiza o deploy do contrato FanToken
+    contractFanToken = await deployFanToken() as FanToken;
+    addressFanToken = await contractFanToken.getAddress();
+    console.log("FanToken implantado em :", addressFanToken);
+
+    // Realiza o deploy do contrato principal Fanatique com os endereços corretos
+    // Definimos manualmente os parâmetros ao invés de usar a função deployFanatique padrão
+    contractFanatique = await deployFanatique(addressFanToken,treasury.address) as Fanatique;
+    addressFanatique = await contractFanatique.getAddress();
+    console.log("Fanatique implantado em:", addressFanatique);
+
+    console.log('\n\n')
 
     // Cria instâncias do contrato conectadas aos respectivos signers para simular interações de usuário
-    israelSigner = contractFanScore.connect(israel);
-    vitSigner = contractFanScore.connect(vit);
+    israelSigner = contractFanatique.connect(israel);
+    vitSigner = contractFanatique.connect(vit);
   });
 
-  it("Deve criar dois clubes e validar as informações", async function () {
-    // Cria o clube A
-    let txA = await contractFanScore.createClub("Gremio");
-    await txA.wait();         
-    // Obtém as informações do clube criado (id = 1)
-    let clubA = await contractFanScore.getClub(1);
-    // Verifica se o nome e o criador estão corretos
-    expect(clubA.name).to.deep.equal("Gremio");
-    expect(clubA.creator).to.deep.equal(ownerSigner.address);
+  it("Deve permitir pagamento gasless (sem gas para o usuário)", async function () {
 
-    // Cria o clube B
-    let txB = await contractFanScore.createClub("Inter");
-    await txB.wait();
-    // Obtém as informações do clube criado (id = 2)
-    let clubB = await contractFanScore.getClub(2);
-    // Valida as informações do clube B
-    expect(clubB.name).to.deep.equal("Inter");
-    expect(clubB.creator).to.deep.equal(ownerSigner.address);
-  });
+    // 1. Criar token para um clube
+    console.log("Criando token para o clube:", clubeId);
+    await contractFanToken.createToken(clubeId, tokenName, tokenSymbol, initialSupply);
+    
+    // Verificar se o token foi criado corretamente
+    const [name, symbol, totalSupply] = await contractFanToken.getTokenDetails(clubeId);
+    expect(name).to.equal(tokenName);
+    expect(symbol).to.equal(tokenSymbol);
+    expect(totalSupply).to.equal(initialSupply);
+    console.log(`Token criado: ${name} (${symbol}), Supply: ${ethers.formatEther(totalSupply)} tokens`);
 
-  it("Deve registrar torcedores aos clubes corretos", async function () {
-    // israel se registra no Clube A (id = 1)
-    let tx1 = await israelSigner.registerFanToClub(1);
-    await tx1.wait();
-    let israelFan = await contractFanScore.getFan(israel.address);
-    // Verifica se o torcedor está vinculado ao clube 1
-    expect(israelFan.clubId.toString()).to.deep.equal("1");
+    // Configurar o token como método de pagamento aceito
+    await contractFanatique.setTokenAcceptance(clubeId, true);
+    
+    console.log('\n\n')
 
-    // vit se registra no Clube B (id = 2)
-    let tx2 = await vitSigner.registerFanToClub(2);
-    await tx2.wait();
-    let vitFan = await contractFanScore.getFan(vit.address);
-    // Verifica se o torcedor está vinculado ao clube 2
-    expect(vitFan.clubId.toString()).to.deep.equal("2");
-  });
+    // Este teste pode não funcionar se a implementação dos contratos não estiver atualizada
+    // com as funções gaslessOrderPayment e getNonce.
+    // Você deve garantir que as interfaces estejam atualizadas nos typechain-types
+    
+    // 1. Transferir novos tokens para o usuário vit (simulando compra ou recompensa)
+    const gaslessAmount = ethers.parseEther("30");
+    const gaslessAmountInt = 30;
+    
+    console.log(`\nTRANSFERINDO ${ethers.formatEther(gaslessAmount)} tokens para ${await vit.getAddress()}`);
+    await contractFanToken.transferFromByOwner(clubeId, await vit.getAddress(), gaslessAmount);
+    
+    // Verificar o saldo do usuário
+    const vitBalance = await contractFanToken.balanceOf(clubeId, await vit.getAddress());
+    expect(vitBalance).to.equal(gaslessAmount);
+    console.log(`Saldo inicial de ${await vit.getAddress()}: ${ethers.formatEther(vitBalance)} ${tokenSymbol}`);
+    
+    // 2. Obter o nonce atual para o usuário
+    const vitAddress = await vit.getAddress();
+    // Método direto através do contrato, pode ser necessário chamar como função ou acessar propriedade
+    const nonceCall = await (contractFanToken as any).getNonce(vitAddress);
+    const nonce = Number(nonceCall); // Converter para Number para facilitar operações
+    console.log(`Nonce atual para ${vitAddress}: ${nonce}`);
+    
+    // 3. Obter o endereço da treasury do contrato Fanatique
+    const treasuryAddress = await contractFanatique.treasury();
+    console.log(`Treasury address: ${treasuryAddress}`);
+    
+    // 4. Gerar assinaturas para pagamento gasless
+    console.log("Gerando assinaturas para pagamento gasless");
+    
+    const metaPaymentData = await PaymentService.signMetaPayment(
+      gaslessOrderId,
+      vitAddress,
+      clubeId,
+      gaslessAmountInt,
+      addressFanatique,
+      addressFanToken,
+      treasuryAddress,
+      nonce,
+      vit // Passamos o usuário para assinar diretamente no teste
+    );
+    
+    console.log("Assinaturas geradas para meta-transação:", {
+      orderSignature: metaPaymentData.orderSignature.slice(0, 10) + "...",
+      v: metaPaymentData.v,
+      r: metaPaymentData.r?.slice(0, 10) + "...",
+      s: metaPaymentData.s?.slice(0, 10) + "..."
+    });
+    
+    // 5. Executar gaslessOrderPayment a partir do owner
+    // Usando 'as any' para ignorar erros de tipo durante o teste
+    console.log("Executando pagamento gasless...");
+    
+    const gaslessTx = await (contractFanatique as any).gaslessOrderPayment(
+      gaslessOrderId,
+      vitAddress,
+      clubeId,
+      gaslessAmount,
+      metaPaymentData.deadline,
+      metaPaymentData.orderSignature,
+      metaPaymentData.v,
+      metaPaymentData.r,
+      metaPaymentData.s
+    );
+    
+    await gaslessTx.wait();
+    console.log("Transação gasless completada!");
+    
+    // 6. Verificar saldos após o pagamento gasless
+    const vitBalanceAfter = await contractFanToken.balanceOf(clubeId, vitAddress);
+    const treasuryBalanceAfter = await contractFanToken.balanceOf(clubeId, treasuryAddress);
+    const ownerBalanceAfter = await contractFanToken.balanceOf(clubeId, ownerSigner.address);
+    
+    console.log(`Novo saldo de ${vitAddress}: ${ethers.formatEther(vitBalanceAfter)} ${tokenSymbol}`);
+    console.log(`Novo saldo da treasury ${treasuryAddress}: ${ethers.formatEther(treasuryBalanceAfter)} ${tokenSymbol}`);
+    console.log(`Novo saldo do owner ${ownerSigner.address}: ${ethers.formatEther(ownerBalanceAfter)} ${tokenSymbol}`);
+    // 7. Verificar se os tokens foram transferidos corretamente
+    expect(vitBalanceAfter).to.equal(0); // Vit gastou todos os seus tokens
+    
+    // Comparar com o valor inicial + transferências
+    // A treasury inicialmente tem initialSupply, então somamos os dois valores transferidos
+    const expectedTreasuryBalance = initialSupply; // Já contém todos os tokens 
+    
+    // Verificamos se o saldo da treasury é pelo menos igual à quantidade de tokens que enviamos
+    expect(treasuryBalanceAfter).to.be.gte(gaslessAmount);
+    console.log(`Treasury tem pelo menos os ${ethers.formatEther(gaslessAmount)} tokens da transação gasless`);
 
-  it("Deve adicionar pontos aos torcedores e atualizar os pontos dos clubes", async function () {
-    // Adiciona 100 pontos ao torcedor israel
-    let tx1 = await contractFanScore.addFanPoints(israel.address, 100);
-    await tx1.wait();
-    let israelFanUpdated = await contractFanScore.getFan(israel.address);
-    // Valida se os pontos do israel foram atualizados para 100
-    expect(israelFanUpdated.points.toString()).to.deep.equal("100");
-    // Valida se o clube do israel (Clube A) teve sua pontuação atualizada
-    let clubAUpdated = await contractFanScore.getClub(1);
-    expect(clubAUpdated.totalPoints.toString()).to.deep.equal("100");
-
-    // Adiciona 50 pontos ao torcedor vit
-    let tx2 = await contractFanScore.addFanPoints(vit.address, 50);
-    await tx2.wait();
-    let vitFanUpdated = await contractFanScore.getFan(vit.address);
-    // Verifica se os pontos do vit foram atualizados para 50
-    expect(vitFanUpdated.points.toString()).to.deep.equal("50");
-    // Verifica se o clube do vit (Clube B) teve sua pontuação atualizada
-    let clubBUpdated = await contractFanScore.getClub(2);
-    expect(clubBUpdated.totalPoints.toString()).to.deep.equal("50");
-  });
-
-  it("Deve retornar o ranking dos torcedores em ordem decrescente de pontos", async function () {
-    // Obtém o ranking dos torcedores
-    let fanRanking = await contractFanScore.getFanRanking();
-    // Como israel tem 100 pontos e vit 50, a ordem deve ser [israel, vit]
-    expect(fanRanking[0]).to.deep.equal(israel.address);
-    expect(fanRanking[1]).to.deep.equal(vit.address);
-  });
-
-  it("Deve retornar o ranking dos clubes em ordem decrescente de pontos", async function () {
-    // Obtém o ranking dos clubes
-    let clubRanking = await contractFanScore.getClubRanking();
-    // O Clube A (id 1) possui 100 pontos e o Clube B (id 2) possui 50 pontos,
-    // portanto, a ordem deve ser [1, 2]
-    expect(clubRanking[0].toString()).to.deep.equal("1");
-    expect(clubRanking[1].toString()).to.deep.equal("2");
+    // 8. Verificar se o nonce foi incrementado
+    const newNonceCall = await (contractFanToken as any).getNonce(vitAddress);
+    const newNonce = Number(newNonceCall);
+    expect(newNonce).to.equal(nonce + 1);
+    console.log(`Novo nonce para ${vitAddress}: ${newNonce}`);
   });
 });

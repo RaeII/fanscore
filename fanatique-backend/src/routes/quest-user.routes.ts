@@ -53,11 +53,19 @@ router.get('/match/:matchId', [
 	}
 ]);
 
-router.get('/completed/:userId', [
+router.get('/status', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
 		const controller = new Controller();
 		await controller.fetchCompletedByUser(req, res);
+	}
+]);
+
+router.get('/all-quests/user', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+		await controller.fetchAllQuestsWithUserCompletion(req, res);
 	}
 ]);
 

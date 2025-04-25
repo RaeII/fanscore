@@ -5,7 +5,7 @@ export interface QuestUser {
   user_id: number;
   quest_id: number;
   match_id?: number | null;
-  completed: number;
+  status: number;
   register_date: Date;
   update_date: Date | null;
 }
@@ -14,16 +14,16 @@ export interface QuestUserInsert {
   user_id: number;
   quest_id: number;
   match_id?: number | null;
-  completed?: number;
+  status?: number;
 }
 
 export interface QuestUserUpdate {
-  completed?: number;
+  status?: number;
   match_id?: number | null;
 }
 
 export interface QuestUserUpdatePayload {
-  completed?: number;
+  status?: number;
   match_id?: number | null;
 }
 
@@ -44,7 +44,7 @@ export interface QuestUserForFront {
   user_id: number;
   quest_id: number;
   match_id?: number | null;
-  completed: number;
+  status: number;
   register_date: Date;
   update_date: Date | null;
   quest?: QuestInfo;
@@ -55,5 +55,5 @@ export interface QuestUserBasicInfo {
   user_id: number;
   quest_id: number;
   match_id?: number | null;
-  completed: number;
+  status: number;
 } 
