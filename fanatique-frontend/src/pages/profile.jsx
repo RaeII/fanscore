@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserContext } from '../hooks/useUserContext';
 import { useWalletContext } from '../hooks/useWalletContext';
-import { User, Trophy, Star, ShoppingBag, Ticket, Heart, UserCheck, Calendar, Clock, Settings, Edit, Loader2, Award, BadgeCheck, Lock, CheckCircle2, Medal, Target, Crown, Gift } from 'lucide-react';
+import { User, Trophy, Star, ShoppingBag, Ticket, Heart, UserCheck, Calendar, Clock, Settings, Edit, Loader2, Award, BadgeCheck, Lock, CheckCircle2, Medal, Target, Crown, Gift, Pin } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { showSuccess, showError } from '../lib/toast';
@@ -58,9 +58,9 @@ function ClubCard({ club, isHeartClub }) {
 }
 
 // Achievement Card component
-function AchievementCard({ achievement }) {
+function AchievementCard({ achievement, isPinned, onPinClick }) {
   return (
-    <div className={`bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm border ${achievement.completed ? 'border-green-500/30' : 'border-gray-300/30 dark:border-white/10'}`}>
+    <div className={`bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm border ${achievement.completed ? 'border-green-500/30' : 'border-gray-300/30 dark:border-white/10'} ${isPinned ? 'ring-2 ring-primary' : ''}`}>
       <div className="flex items-start gap-4">
         <div className={`h-16 w-16 rounded-lg flex-shrink-0 flex items-center justify-center ${achievement.completed ? 'bg-green-100 dark:bg-green-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
           <div className="relative">
@@ -107,6 +107,81 @@ function AchievementCard({ achievement }) {
               </div>
             </div>
           )}
+          
+          {achievement.completed && (
+            <div className="mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={`w-full ${isPinned ? 'bg-primary/10 text-white dark:border-white/40' : 'border-white/30 dark:border-white/40 text-white'}`}
+                onClick={() => onPinClick(achievement.id)}
+                disabled={!achievement.completed}
+              >
+                <Pin size={14} className={`mr-1 ${isPinned ? 'fill-primary' : ''}`} />
+                {isPinned ? 'Featured' : 'Set as Featured'}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Quest Card Component
+function QuestCard({ quest, isPinned, onPinClick }) {
+  return (
+    <div className={`bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm border border-primary/20 dark:border-white/10 ${isPinned ? 'ring-2 ring-primary' : ''}`}>
+      <div className="flex items-start gap-4">
+        <div className="h-16 w-16 rounded-lg flex-shrink-0 flex items-center justify-center bg-primary/10 dark:bg-primary/20">
+          <Star size={28} className="text-white" />
+        </div>
+        <div className="flex-grow">
+          <h3 className="text-base font-semibold text-primary dark:text-white">
+            {quest.title}
+          </h3>
+          <p className="text-xs text-primary/60 dark:text-white/60 mb-2">
+            {quest.description}
+          </p>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-primary/60 dark:text-white/60">
+              Completed: {quest.completedDate}
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className={`${isPinned ? 'bg-primary/10 text-white dark:border-white/40' : 'border-white/30 dark:border-white/40 text-white'}`}
+              onClick={() => onPinClick(quest.id)}
+            >
+              <Pin size={14} className={`mr-1 ${isPinned ? 'fill-primary' : ''}`} />
+              {isPinned ? 'Featured' : 'Set as Featured'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Featured Item Display component
+function FeaturedItemCard({ item, type }) {
+  if (!item) return null;
+  
+  return (
+    <div className="bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm border border-primary">
+      {/* <div className="flex items-center gap-2 mb-2">
+        <Pin size={16} className="text-white fill-white" />
+        <h3 className="text-sm font-medium text-white">Featured {type}</h3>
+      </div> */}
+      
+      <div className="flex items-start gap-4">
+        <div className="h-12 w-12 rounded-lg flex-shrink-0 flex items-center justify-center bg-primary/10 dark:bg-primary/20">
+          {type === 'Achievement' ? item.icon : <Star size={24} className="text-white" />}
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold text-primary dark:text-white">{item.title}</h4>
+          <p className="text-xs text-primary/60 dark:text-white/60">{item.description}</p>
         </div>
       </div>
     </div>
@@ -129,6 +204,10 @@ export default function ProfilePage() {
     tickets: 0
   });
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // State for featured items
+  const [featuredAchievement, setFeaturedAchievement] = useState(null);
+  const [featuredQuest, setFeaturedQuest] = useState(null);
   
   // Mock achievements data
   const achievements = [
@@ -234,6 +313,38 @@ export default function ProfilePage() {
       rarity: "rare"
     }
   ];
+
+  // Mock quests data
+  const completedQuests = [
+    {
+      id: 1,
+      title: "Daily Login",
+      description: "Log in 7 days in a row",
+      completedDate: "May 15, 2023",
+      points: 50
+    },
+    {
+      id: 2,
+      title: "Match Prediction",
+      description: "Correctly predict the outcome of a match",
+      completedDate: "May 12, 2023",
+      points: 100
+    },
+    {
+      id: 3,
+      title: "First Purchase",
+      description: "Make your first merchandise purchase",
+      completedDate: "Apr 30, 2023",
+      points: 150
+    },
+    {
+      id: 4,
+      title: "Social Share",
+      description: "Share club content on social media",
+      completedDate: "Apr 28, 2023",
+      points: 75
+    }
+  ];
   
   // Calculate achievement progress stats
   const achievementStats = {
@@ -294,6 +405,87 @@ export default function ProfilePage() {
     
     fetchTotalStats();
   }, [userClubsData]);
+
+  // Load featured items from local storage or API
+  useEffect(() => {
+    try {
+      const storedAchievement = localStorage.getItem('featuredAchievement');
+      const storedQuest = localStorage.getItem('featuredQuest');
+      
+      if (storedAchievement) {
+        const achievementId = parseInt(storedAchievement);
+        const achievement = achievements.find(a => a.id === achievementId && a.completed);
+        if (achievement) {
+          setFeaturedAchievement(achievement);
+        }
+      }
+      
+      if (storedQuest) {
+        const questId = parseInt(storedQuest);
+        const quest = completedQuests.find(q => q.id === questId);
+        if (quest) {
+          setFeaturedQuest(quest);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading featured items:', error);
+    }
+  }, []);
+  
+  // Save featured items to local storage or API
+  const saveFeaturedItems = async () => {
+    try {
+      // Save to local storage for now
+      if (featuredAchievement) {
+        localStorage.setItem('featuredAchievement', featuredAchievement.id.toString());
+      } else {
+        localStorage.removeItem('featuredAchievement');
+      }
+      
+      if (featuredQuest) {
+        localStorage.setItem('featuredQuest', featuredQuest.id.toString());
+      } else {
+        localStorage.removeItem('featuredQuest');
+      }
+      
+      // In a real app, you would save to API as well
+      // await userApi.updateFeaturedItems({
+      //   achievementId: featuredAchievement?.id,
+      //   questId: featuredQuest?.id
+      // });
+      
+      showSuccess('Featured items updated');
+    } catch (error) {
+      console.error('Error saving featured items:', error);
+      showError('Failed to update featured items');
+    }
+  };
+
+  const handlePinAchievement = (achievementId) => {
+    const achievement = achievements.find(a => a.id === achievementId);
+    
+    if (featuredAchievement?.id === achievementId) {
+      setFeaturedAchievement(null);
+    } else if (achievement && achievement.completed) {
+      setFeaturedAchievement(achievement);
+    }
+    
+    // Save changes
+    setTimeout(saveFeaturedItems, 100);
+  };
+  
+  const handlePinQuest = (questId) => {
+    const quest = completedQuests.find(q => q.id === questId);
+    
+    if (featuredQuest?.id === questId) {
+      setFeaturedQuest(null);
+    } else {
+      setFeaturedQuest(quest);
+    }
+    
+    // Save changes
+    setTimeout(saveFeaturedItems, 100);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -465,6 +657,18 @@ export default function ProfilePage() {
         />
       </div>
       
+      {/* Featured Items Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <FeaturedItemCard 
+          item={featuredAchievement} 
+          type="Achievement" 
+        />
+        <FeaturedItemCard 
+          item={featuredQuest} 
+          type="Quest" 
+        />
+      </div>
+      
       {/* Achievement Progress */}
       <div className="mb-8 bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -497,6 +701,7 @@ export default function ProfilePage() {
         <TabsList className="w-full mb-6">
           <TabsTrigger value="overview" className="flex-grow">Overview</TabsTrigger>
           <TabsTrigger value="achievements" className="flex-grow">Achievements</TabsTrigger>
+          <TabsTrigger value="quests" className="flex-grow">Quests</TabsTrigger>
           <TabsTrigger value="clubs" className="flex-grow">My Clubs</TabsTrigger>
           <TabsTrigger value="settings" className="flex-grow">Settings</TabsTrigger>
         </TabsList>
@@ -602,6 +807,8 @@ export default function ProfilePage() {
                   <AchievementCard 
                     key={achievement.id}
                     achievement={achievement}
+                    isPinned={featuredAchievement?.id === achievement.id}
+                    onPinClick={handlePinAchievement}
                   />
                 ))}
               </div>
@@ -636,6 +843,29 @@ export default function ProfilePage() {
                 <p className="text-primary/70 dark:text-white/70">You haven't unlocked any achievements yet</p>
               </div>
             )}
+          </div>
+        </TabsContent>
+        
+        {/* New Quests Tab */}
+        <TabsContent value="quests" className="space-y-6">
+          <div className="bg-white dark:bg-[#150924] p-6 rounded-lg shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-semibold text-primary dark:text-white">Completed Quests</h2>
+              <span className="text-sm bg-primary/10 px-2 py-1 rounded-full text-primary">
+                {completedQuests.length} quests
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              {completedQuests.map(quest => (
+                <QuestCard 
+                  key={quest.id}
+                  quest={quest}
+                  isPinned={featuredQuest?.id === quest.id}
+                  onPinClick={handlePinQuest}
+                />
+              ))}
+            </div>
           </div>
         </TabsContent>
         
