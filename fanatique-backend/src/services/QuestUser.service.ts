@@ -46,7 +46,7 @@ class QuestUserService {
 			user_id: data.user_id,
 			quest_id: data.quest_id,
 			match_id: data.match_id,
-			completed: data.completed || 0
+			status: data.status || 0
 		};
 
 		const result: any = await this.database.create(insertData);
@@ -67,6 +67,24 @@ class QuestUserService {
 
 	async fetchAll(): Promise<Array<QuestUserBasicInfo>> {
 		return await this.database.fetchAll();
+	}
+
+	async fetchAllQuestsWithUserCompletion(userId: number, scopeId?: number): Promise<any[]> {
+		if (!userId) throw Error(getErrorMessage('missingField', 'ID do usuário'));
+
+		// Verificar se o usuário existe
+		const user = await this.userDatabase.fetch(userId);
+		if (!user) throw Error(getErrorMessage('registryNotFound', 'Usuário'));
+
+		// Se scopeId foi informado, verificar se existe
+		if (scopeId) {
+			const scope = await this.questDatabase.fetchQuestScope(scopeId);
+			if (!scope) throw Error(getErrorMessage('registryNotFound', 'Escopo de quest'));
+		}
+
+		const response = await this.database.fetchAllQuestsWithUserCompletion(userId, scopeId);
+
+		return response;
 	}
 
 	async fetchByUser(userId: number): Promise<Array<QuestUserBasicInfo>> {
@@ -115,8 +133,8 @@ class QuestUserService {
 
 		const toUpdate: QuestUserUpdate = {};
 
-		if (data.completed !== undefined) {
-			toUpdate.completed = data.completed;
+		if (data.status !== undefined) {
+			toUpdate.status = data.status;
 		}
 
 		if (data.match_id !== undefined) {
@@ -137,11 +155,11 @@ class QuestUserService {
 		const questUser = await this.fetch(id);
 		if (!questUser) throw Error(getErrorMessage('registryNotFound', 'QuestUser'));
 
-		if (questUser.completed === 1) {
+		if (questUser.status === 1) {
 			throw Error(getErrorMessage('alreadyCompleted', 'Quest já foi completada'));
 		}
 
-		await this.database.update({ completed: 1 }, id);
+		await this.database.update({ status: 1 }, id);
 	}
 
 	async remove(id: number): Promise<void> {

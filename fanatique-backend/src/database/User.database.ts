@@ -16,7 +16,8 @@ class UserDatabase extends Database {
 			SELECT
 				id,
 				name,
-				wallet_address
+				wallet_address,
+				register_date
 			FROM user
 			WHERE id = ?;`, [id]);
 

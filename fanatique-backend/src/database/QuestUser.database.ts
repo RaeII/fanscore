@@ -46,6 +46,41 @@ class QuestUserDatabase extends Database {
 		return questUser;
 	}
 
+	async fetchAllQuestsWithUserCompletion(userId: number, scopeId?: number): Promise<any[]> {
+		let query = `
+			SELECT
+				q.id,
+				q.name,
+				q.description,
+				q.image,
+				q.type,
+				q.scope,
+				q.point_value,
+				qt.name as type_name,
+				qs.name as scope_name,
+				CASE WHEN qu.id IS NOT NULL THEN 1 ELSE 0 END as is_assigned,
+				IFNULL(qu.status, 0) as status,
+				qu.id as quest_user_id,
+				qu.match_id
+			FROM quest q
+			LEFT JOIN quest_type qt ON q.type = qt.id
+			LEFT JOIN quest_scope qs ON q.scope = qs.id
+			LEFT JOIN quest_user qu ON q.id = qu.quest_id AND qu.user_id = ?
+		`;
+
+		const params = [userId];
+
+		if (scopeId) {
+			query += ` WHERE q.scope = ?`;
+			params.push(scopeId);
+		}
+
+		query += ` ORDER BY q.scope, q.type, q.name`;
+
+		const rows: any = await this.query(query, params);
+		return rows[0];
+	}
+
 	async fetch(id: number): Promise<QuestUser | null> {
 		const rows: any = await this.query('SELECT * FROM quest_user WHERE id = ?;', [id]);
 
@@ -59,7 +94,7 @@ class QuestUserDatabase extends Database {
 				qu.user_id, 
 				qu.quest_id, 
 				qu.match_id, 
-				qu.completed
+				qu.status
 			FROM quest_user qu;`, []);
 
 		return rows[0];
@@ -72,7 +107,7 @@ class QuestUserDatabase extends Database {
 				qu.user_id, 
 				qu.quest_id, 
 				qu.match_id, 
-				qu.completed
+				qu.status
 			FROM quest_user qu
 			WHERE qu.user_id = ?;`, [userId]);
 
@@ -86,7 +121,7 @@ class QuestUserDatabase extends Database {
 				qu.user_id, 
 				qu.quest_id, 
 				qu.match_id, 
-				qu.completed
+				qu.status
 			FROM quest_user qu
 			WHERE qu.quest_id = ?;`, [questId]);
 
@@ -100,7 +135,7 @@ class QuestUserDatabase extends Database {
 				qu.user_id, 
 				qu.quest_id, 
 				qu.match_id, 
-				qu.completed
+				qu.status
 			FROM quest_user qu
 			WHERE qu.match_id = ?;`, [matchId]);
 
@@ -114,9 +149,9 @@ class QuestUserDatabase extends Database {
 				qu.user_id, 
 				qu.quest_id, 
 				qu.match_id, 
-				qu.completed
+				qu.status
 			FROM quest_user qu
-			WHERE qu.user_id = ? AND qu.completed = 1;`, [userId]);
+			WHERE qu.user_id = ? AND qu.status = 1;`, [userId]);
 
 		return rows[0];
 	}

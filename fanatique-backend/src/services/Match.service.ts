@@ -2,7 +2,7 @@ import { getErrorMessage } from '@/helpers/response_collection';
 import MatchDatabase from '@/database/Match.database';
 import ClubService from './Club.service';
 import StadiumService from './Stadium.service';
-import { Match, MatchBasicInfo, MatchForFront, MatchInsert, MatchUpdatePayload, MatchUpdate } from '../types';
+import { Match, MatchBasicInfo, MatchDetailedInfo, MatchForFront, MatchInsert, MatchUpdatePayload, MatchUpdate } from '../types';
 
 class MatchService {
 	private database: MatchDatabase;
@@ -65,18 +65,41 @@ class MatchService {
 
 		const match = await this.database.fetchForFront(id);
 		
-		// Validação adicional para garantir que o estádio esteja presente
-		if (match && !match.stadium) {
-			throw Error(getErrorMessage('registryNotFound', 'Informações do estádio'));
+		// Validação adicional para garantir que as informações estejam presentes
+		if (match) {
+			if (!match.stadium) {
+				throw Error(getErrorMessage('registryNotFound', 'Informações do estádio'));
+			}
+			
+			if (!match.home_club) {
+				throw Error(getErrorMessage('registryNotFound', 'Informações do clube mandante'));
+			}
+			
+			if (!match.away_club) {
+				throw Error(getErrorMessage('registryNotFound', 'Informações do clube visitante'));
+			}
 		}
 		
 		return match;
 	}
 
-	async fetchByClubId(clubId: number): Promise<Array<MatchBasicInfo>> {
+	async fetchByClubId(clubId: number): Promise<Array<MatchDetailedInfo>> {
 		if (!clubId) throw Error(getErrorMessage('missingField', 'Id do clube'));
 
-		return await this.database.fetchByClubId(clubId);
+		const matches = await this.database.fetchByClubId(clubId);
+		
+		if (!matches.length) {
+			throw Error(getErrorMessage('registryNotFound', 'Partidas para este clube'));
+		}
+		
+		// Verifique se todos os dados necessários estão presentes
+		for (const match of matches) {
+			if (!match.home_club || !match.away_club || !match.stadium) {
+				throw Error(getErrorMessage('registryNotFound', 'Informações completas das partidas'));
+			}
+		}
+		
+		return matches;
 	}
 	
 	async fetchByStadiumId(stadiumId: number): Promise<Array<MatchBasicInfo>> {

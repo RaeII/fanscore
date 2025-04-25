@@ -100,6 +100,46 @@ class UserClubService {
         return await this.database.fetchAllByUserId(userId);
     }
 
+    /**
+     * Retorna informações detalhadas dos clubes do usuário
+     * @param userId ID do usuário
+     * @returns Array com os clubes do usuário incluindo informações completas de cada clube
+     */
+    async fetchClubsWithDetails(userId: number): Promise<any[]> {
+        if (!userId) throw Error(getErrorMessage('missingField', 'ID do usuário'));
+
+        // Buscar detalhes dos clubes diretamente do banco de dados com JOIN
+        const detailedClubs = await this.database.fetchDetailedByUserId(userId);
+        
+        // Formatar os dados para um formato mais estruturado
+        return detailedClubs.map(club => {
+            return {
+                id: club.id,
+                user_id: club.user_id,
+                club_type: {
+                    id: club.club_type_id,
+                    name: club.club_type_name
+                },
+                register_date: club.register_date,
+                update_date: club.update_date,
+                club: {
+                    id: club.club_id,
+                    name: club.club_name,
+                    image: club.club_image,
+                    register_date: club.club_register_date,
+                    update_date: club.club_update_date,
+                    stadium: club.stadium_id ? {
+                        id: club.stadium_id,
+                        name: club.stadium_name,
+                        image: club.stadium_image,
+                        city: club.city,
+                        state: club.state
+                    } : null
+                }
+            };
+        });
+    }
+
     async update(data: UserClubUpdate, userClubId: number, userId: number): Promise<void> {
         if (!userClubId) throw Error(getErrorMessage('missingField', 'ID do clube do usuário'));
         if (!userId) throw Error(getErrorMessage('missingField', 'ID do usuário'));
