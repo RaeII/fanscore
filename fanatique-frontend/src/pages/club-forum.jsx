@@ -243,7 +243,7 @@ export default function ClubForumPage() {
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Twitter-style fixed header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 backdrop-blur-sm bg-white/80 dark:bg-gray-900/80">
-        <div className="flex justify-between items-center px-4 py-2">
+        {/* <div className="flex justify-between items-center px-4 py-2">
           <div className="flex items-center gap-3">
             <Button 
               variant="normal" 
@@ -274,7 +274,7 @@ export default function ClubForumPage() {
               <Settings size={20} />
             </Button>
           </div>
-        </div>
+        </div> */}
         
         {/* Tab navigation - Twitter/X style */}
         <div className="flex overflow-x-auto border-b-2 border-gray-200 dark:border-gray-700">

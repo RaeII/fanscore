@@ -470,7 +470,7 @@ export default function HomeClubsPage() {
           >
             News
           </Button>
-          <Button
+          {/* <Button
             variant="ghost" 
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
@@ -484,7 +484,7 @@ export default function HomeClubsPage() {
             }}
           >
             Forum
-          </Button>
+          </Button> */}
         </div>
       </div>
 
