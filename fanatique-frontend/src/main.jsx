@@ -27,6 +27,7 @@ import GamePage from './pages/game'
 import ClubForumPage from './pages/club-forum'
 import ForumPostPage from './pages/forum-post'
 import MatchesPage from './pages/matches'
+import ProfilePage from './pages/profile'
 
 // Criar uma instância do QueryClient para o TanStack Query
 const queryClient = new QueryClient()
@@ -166,10 +167,10 @@ const router = createBrowserRouter([
         )
       },
       {
-        path: 'perfil',
+        path: 'profile',
         element: (
           <ProtectedRoute>
-            <div className="container mx-auto px-4 py-16">Página de Perfil em breve...</div>
+            <ProfilePage />
           </ProtectedRoute>
         )
       }
