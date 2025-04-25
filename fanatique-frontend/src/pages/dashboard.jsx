@@ -5,7 +5,7 @@ import { Trophy, Star, Ticket, ShoppingBag, User, Volleyball as Football, LogOut
 import { Button } from '../components/ui/button';
 import clubApi from '../api/club';
 import QuestScope from '../enum/QuestScope';
-import Quests from './quests';
+import Quests from '../components/quests';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -228,7 +228,7 @@ export default function DashboardPage() {
           ))}
         </div> */}
         <Quests questScope={QuestScope.GENERAL} />
-        <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Ações Rápidas</h2>
+        {/* <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Ações Rápidas</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ActionCard 
@@ -252,7 +252,7 @@ export default function DashboardPage() {
             buttonText="Ver Perfil"
             onClick={() => navigate('/perfil')}
           />
-        </div>
+        </div> */}
       </div>
     </div>
   );

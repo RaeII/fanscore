@@ -17,7 +17,7 @@ import { Button } from '../components/ui/button';
 import { showError } from '../lib/toast';
 import clubApi from '../api/club';
 import matchApi from '../api/match';
-import Quests from './quests';
+import Quests from '../components/quests';
 import QuestScope from '../enum/QuestScope';
 
 // QuestStatusChip component

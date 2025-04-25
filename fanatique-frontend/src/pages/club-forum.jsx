@@ -343,13 +343,13 @@ export default function ClubForumPage() {
           {/* Main content - Timeline */}
           <main className="lg:col-span-5 border-r border-gray-200 dark:border-gray-800">
             {/* Create post input - Twitter style */}
-            <div className="border-b border-gray-200 dark:border-gray-800 p-4">
-              <div className="flex gap-3">
-                <Avatar className="h-10 w-10">
+            <div className="border-b border-gray-200 dark:border-gray-800 p-2 sm:p-4">
+              <div className="flex gap-2 sm:gap-3">
+                <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                   <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=CurrentUser" alt="Your profile" />
                 </Avatar>
                 
-                <div className="flex-1 space-y-4">
+                <div className="flex-1 space-y-3 sm:space-y-4 min-w-0 overflow-hidden">
                   {!expandedCreatePost ? (
                     <div className="flex flex-col gap-2">
                       <button 
@@ -365,16 +365,16 @@ export default function ClubForumPage() {
                         placeholder="Title"
                         value={newPostTitle}
                         onChange={(e) => setNewPostTitle(e.target.value)}
-                        className="border-0 border-b border-gray-200 dark:border-gray-800 rounded-none px-0 text-lg font-bold focus-visible:ring-0"
+                        className="border-0 border-b border-gray-200 dark:border-gray-800 rounded-none px-0 text-lg font-bold focus-visible:ring-0 w-full"
                       />
                       <Textarea
                         placeholder="What's happening?"
-                        className="min-h-[100px] border-0 resize-none focus-visible:ring-0 px-0"
+                        className="min-h-[100px] border-0 resize-none focus-visible:ring-0 px-0 w-full"
                         value={newPostContent}
                         onChange={(e) => setNewPostContent(e.target.value)}
                       />
-                      <div className="flex justify-between items-center pt-2 border-t border-gray-200 dark:border-gray-800">
-                        <div className="flex gap-1">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 pt-2 border-t border-gray-200 dark:border-gray-800">
+                        <div className="flex flex-wrap gap-1 w-full sm:w-auto">
                           {categories.map(category => (
                             <Button 
                               key={category} 
@@ -386,7 +386,7 @@ export default function ClubForumPage() {
                             </Button>
                           ))}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto justify-end mt-2 sm:mt-0">
                           <Button 
                             variant="outline" 
                             size="sm" 
