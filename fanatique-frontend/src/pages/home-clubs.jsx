@@ -688,7 +688,7 @@ export default function HomeClubsPage() {
                   <Button 
                     size="sm" 
                     variant="outline"
-                    className="border-indigo-500/50 hover:bg-indigo-500/20"
+                    className="border-indigo-500/50 hover:bg-indigo-500/20 text-indigo-200"
                     onClick={() => navigate(`/clubs/${clubId}/forum`)}
                   >
                     Visit Forum
