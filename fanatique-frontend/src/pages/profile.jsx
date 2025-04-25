@@ -29,7 +29,6 @@ function StatCard({ icon, title, value, label }) {
 
 // Club Card component for displaying clubs the user follows
 function ClubCard({ club, isHeartClub }) {
-  console.log('club', club);
   return (
     <div className="bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm flex items-center gap-4">
       <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
@@ -43,16 +42,16 @@ function ClubCard({ club, isHeartClub }) {
       </div>
       <div className="flex-grow">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-semibold text-primary dark:text-white">{club.club_name}</h3>
+          <h3 className="text-base font-semibold text-primary dark:text-white">{club.name}</h3>
           {isHeartClub && (
             <div className="p-0.5 rounded-full bg-red-100 dark:bg-red-900/20">
               <Heart size={14} className="text-red-500 fill-red-500" />
             </div>
           )}
         </div>
-        <p className="text-xs text-primary/60 dark:text-white/60">
+        {/* <p className="text-xs text-primary/60 dark:text-white/60">
           {club.club_type_name}
-        </p>
+        </p> */}
       </div>
     </div>
   );
