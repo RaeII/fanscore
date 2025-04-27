@@ -154,7 +154,7 @@ export default function DashboardPage() {
                 {followedClubs.map(club => (
                   <div 
                     key={club.id} 
-                    className="flex flex-col items-center cursor-pointer"
+                    className="flex flex-col items-center cursor-pointer pt-2"
                     onClick={() => handleSelectClub(club.id)}
                   >
                     <div className="relative w-20 h-20">
@@ -184,11 +184,11 @@ export default function DashboardPage() {
                   </div>
                 ))}
                 <div 
-                  className="flex flex-col items-center cursor-pointer"
+                  className="flex flex-col items-center cursor-pointer pt-2"
                   onClick={handleAddTeams}
                 >
                   <div className="w-20 h-20">
-                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 border-2 border-dashed border-primary/50 dark:border-white/50 flex items-center justify-center">
+                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 origin-center border-2 border-dashed border-primary/50 dark:border-white/50 flex items-center justify-center">
                       <Plus size={30} className="text-primary/70 dark:text-white/70" />
                     </div>
                   </div>
@@ -206,11 +206,11 @@ export default function DashboardPage() {
                   </p>
                 </div>
                 <div 
-                  className="flex flex-col items-center cursor-pointer"
+                  className="flex flex-col items-center cursor-pointer pt-2"
                   onClick={handleAddTeams}
                 >
                   <div className="w-20 h-20">
-                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 border-2 border-dashed border-primary/50 dark:border-white/50 flex items-center justify-center">
+                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 origin-center border-2 border-dashed border-primary/50 dark:border-white/50 flex items-center justify-center">
                       <Plus size={30} className="text-primary/70 dark:text-white/70" />
                     </div>
                   </div>
