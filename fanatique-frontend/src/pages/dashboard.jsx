@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
-import { Trophy, Star, Ticket, ShoppingBag, User, Volleyball as Football, LogOut } from 'lucide-react';
+import { Trophy, Star, Ticket, ShoppingBag, User, Volleyball as Football, LogOut, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import clubApi from '../api/club';
 import QuestScope from '../enum/QuestScope';
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   } = useWalletContext();
   const [loading, setLoading] = useState(false);
   const [clubs, setClubs] = useState([]);
+  const [followedClubs, setFollowedClubs] = useState([]);
   const [liveGameClubs, setLiveGameClubs] = useState([]);
 
   // Efeito para garantir que a carteira esteja conectada
@@ -48,6 +49,10 @@ export default function DashboardPage() {
         setLoading(true);
         const clubs = await clubApi.getClubs();
         setClubs(clubs);
+        
+        // Mock data for followed clubs - in a real app this would come from an API
+        // For now, we'll assume the first 2 clubs are followed
+        setFollowedClubs(clubs.slice(0, 2));
         
         // Mock data for clubs with live games - in a real app this would come from an API
         // This simulates a club ID to club name mapping
@@ -107,6 +112,11 @@ export default function DashboardPage() {
     return liveGameClubs.includes(clubId);
   };
 
+  const handleAddTeams = () => {
+    // Navigate to teams directory page
+    navigate('/teams', { state: { availableClubs: clubs } });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
@@ -121,7 +131,7 @@ export default function DashboardPage() {
       {/* Conteúdo principal */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-primary dark:text-white">Escolha um Clube</h1>
+          <h1 className="text-2xl font-bold text-primary dark:text-white">Seus Clubes</h1>
           <Button 
             variant="outline"
             className="text-primary border-primary hover:bg-primary/10 dark:text-white dark:border-white dark:hover:bg-white/10"
@@ -133,52 +143,82 @@ export default function DashboardPage() {
         </div>
 
         <p className="text-primary/70 dark:text-white/70 mb-5">
-          Selecione um clube para ver detalhes, eventos, notícias e muito mais.
+          Clubes que você segue. Selecione um para ver detalhes, eventos e notícias.
         </p>
 
         {/* Horizontal scrollable clubs */}
         <div className="overflow-x-auto pb-4 mb-8">
           <div className="flex space-x-4 min-w-max">
-            {clubs.length > 0 ? (
-              clubs.map(club => (
-                <div 
-                  key={club.id} 
-                  className="flex flex-col items-center cursor-pointer"
-                  onClick={() => handleSelectClub(club.id)}
-                >
-                  <div className="relative w-20 h-20">
-                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 border-2 border-transparent hover:border-secondary">
-                      {club.image ? (
-                        <img 
-                          src={club.image} 
-                          alt={club.name} 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-primary/5 dark:bg-primary/20 text-primary/50 dark:text-white/50">
-                          <Football size={30} />
+            {followedClubs.length > 0 ? (
+              <>
+                {followedClubs.map(club => (
+                  <div 
+                    key={club.id} 
+                    className="flex flex-col items-center cursor-pointer"
+                    onClick={() => handleSelectClub(club.id)}
+                  >
+                    <div className="relative w-20 h-20">
+                      <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 border-2 border-transparent hover:border-secondary">
+                        {club.image ? (
+                          <img 
+                            src={club.image} 
+                            alt={club.name} 
+                            className="w-full h-full object-cover" 
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-primary/5 dark:bg-primary/20 text-primary/50 dark:text-white/50">
+                            <Football size={30} />
+                          </div>
+                        )}
+                      </div>
+                      {isClubLive(club.id) && (
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center animate-pulse shadow-md">
+                          <div className="h-2 w-2 rounded-full bg-white mr-1"></div>
+                          LIVE
                         </div>
                       )}
                     </div>
-                    {isClubLive(club.id) && (
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center animate-pulse shadow-md">
-                        <div className="h-2 w-2 rounded-full bg-white mr-1"></div>
-                        LIVE
-                      </div>
-                    )}
+                    <p className="text-sm font-medium text-primary dark:text-white text-center w-24 truncate mt-2">
+                      {club.name}
+                    </p>
+                  </div>
+                ))}
+                <div 
+                  className="flex flex-col items-center cursor-pointer"
+                  onClick={handleAddTeams}
+                >
+                  <div className="w-20 h-20">
+                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 border-2 border-dashed border-primary/50 dark:border-white/50 flex items-center justify-center">
+                      <Plus size={30} className="text-primary/70 dark:text-white/70" />
+                    </div>
                   </div>
                   <p className="text-sm font-medium text-primary dark:text-white text-center w-24 truncate mt-2">
-                    {club.name}
+                    Ver Todos
                   </p>
                 </div>
-              ))
+              </>
             ) : (
-              <div className="w-full py-8 text-center">
-                <Football size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
-                <p className="text-primary/70 dark:text-white/70">
-                  Nenhum clube disponível
-                </p>
-              </div>
+              <>
+                <div className="w-full py-8 text-center mr-4">
+                  <Football size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
+                  <p className="text-primary/70 dark:text-white/70">
+                    Você ainda não segue nenhum clube
+                  </p>
+                </div>
+                <div 
+                  className="flex flex-col items-center cursor-pointer"
+                  onClick={handleAddTeams}
+                >
+                  <div className="w-20 h-20">
+                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 border-2 border-dashed border-primary/50 dark:border-white/50 flex items-center justify-center">
+                      <Plus size={30} className="text-primary/70 dark:text-white/70" />
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-primary dark:text-white text-center w-24 truncate mt-2">
+                    Explorar
+                  </p>
+                </div>
+              </>
             )}
           </div>
         </div>
