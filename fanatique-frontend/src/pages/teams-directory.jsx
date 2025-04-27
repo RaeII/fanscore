@@ -16,14 +16,8 @@ export default function TeamsDirectoryPage() {
     const fetchClubs = async () => {
       try {
         setLoading(true);
-        // Try to use clubs passed from previous page
-        if (location.state?.availableClubs?.length > 0) {
-          setClubs(location.state.availableClubs);
-        } else {
-          // Otherwise fetch clubs from API
-          const clubs = await clubApi.getClubs();
-          setClubs(clubs);
-        }
+        const clubs = await clubApi.getClubs();
+        setClubs(clubs);
       } catch (error) {
         console.error('Error fetching clubs:', error);
       } finally {

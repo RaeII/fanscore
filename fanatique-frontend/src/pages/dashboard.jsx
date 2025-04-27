@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
-import { Trophy, Star, Ticket, ShoppingBag, User, Volleyball as Football, LogOut, Plus } from 'lucide-react';
+import { Volleyball as Football, LogOut, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
-import clubApi from '../api/club';
 import QuestScope from '../enum/QuestScope';
 import Quests from '../components/quests';
+import { useUserContext } from '../hooks/useUserContext';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -17,10 +17,9 @@ export default function DashboardPage() {
     isConnected, 
     connectWallet
   } = useWalletContext();
-  const [loading, setLoading] = useState(false);
-  const [clubs, setClubs] = useState([]);
+  const { userClubsData } = useUserContext();
   const [followedClubs, setFollowedClubs] = useState([]);
-  const [liveGameClubs, setLiveGameClubs] = useState([]);
+  // const [liveGameClubs, setLiveGameClubs] = useState([]);
 
   // Efeito para garantir que a carteira esteja conectada
   useEffect(() => {
@@ -36,6 +35,10 @@ export default function DashboardPage() {
   }, [account, isAuthenticated, isConnected, connectWallet]);
 
   useEffect(() => {
+    setFollowedClubs(userClubsData.clubs.map(club => club.club));
+  }, [userClubsData]);
+
+  useEffect(() => {
     // Verificar se o usuário está autenticado usando o contexto
     if (!isAuthenticated) {
       console.log('Dashboard: Usuário não autenticado, redirecionando para /app');
@@ -44,87 +47,29 @@ export default function DashboardPage() {
     }
 
     console.log('Dashboard: Usuário autenticado via contexto, buscando dados');
-    const fetchClubs = async () => {
-      try {
-        setLoading(true);
-        const clubs = await clubApi.getClubs();
-        setClubs(clubs);
-        
-        // Mock data for followed clubs - in a real app this would come from an API
-        // For now, we'll assume the first 2 clubs are followed
-        setFollowedClubs(clubs.slice(0, 2));
-        
-        // Mock data for clubs with live games - in a real app this would come from an API
-        // This simulates a club ID to club name mapping
-        const clubNames = {
-          '1': 'FC Barcelona',
-          '2': 'Real Madrid',
-          '3': 'Manchester United',
-          '4': 'Vasco'
-        };
-        
-        // Check which clubs have live games
-        const mockAvailableGames = [
-          {
-            id: 'game-123',
-            homeTeam: 'FC Barcelona',
-            awayTeam: 'Real Madrid',
-            status: 'LIVE',
-          },
-          {
-            id: 'game-456',
-            homeTeam: 'Manchester United',
-            awayTeam: 'Liverpool FC',
-            status: 'LIVE',
-          },
-          {
-            id: 'game-789',
-            homeTeam: 'Vasco',
-            awayTeam: 'Flamengo',
-            status: 'LIVE',
-          }
-        ];
-        
-        // Find clubs that have live games
-        const liveClubIds = clubs.filter(club => {
-          const clubName = clubNames[club.id];
-          return mockAvailableGames.some(game => 
-            game.homeTeam === clubName || game.awayTeam === clubName
-          );
-        }).map(club => club.id);
-        
-        setLiveGameClubs(liveClubIds);
-      } catch (error) {
-        console.error('Erro ao buscar clubes:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchClubs();
   }, [isAuthenticated, navigate, clearAuthCredentials]);
 
   const handleSelectClub = (clubId) => {
     navigate(`/clubs/${clubId}`);
   };
 
-  const isClubLive = (clubId) => {
-    return liveGameClubs.includes(clubId);
-  };
+  // const isClubLive = (clubId) => {
+  //   return liveGameClubs.includes(clubId);
+  // };
 
   const handleAddTeams = () => {
     // Navigate to teams directory page
-    navigate('/teams', { state: { availableClubs: clubs } });
+    navigate('/teams');
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary"></div>
-      </div>
-    );
-  }
-
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+  //       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-secondary"></div>
+  //     </div>
+  //   );
+  // }
+  console.log('userClubsData', userClubsData);
   //CONTEÚDO PRINCIPAL DO DASHBOARD
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
@@ -171,7 +116,7 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </div>
-                      {isClubLive(club.id) && (
+                      {club?.is_live && (
                         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center animate-pulse shadow-md">
                           <div className="h-2 w-2 rounded-full bg-white mr-1"></div>
                           LIVE
