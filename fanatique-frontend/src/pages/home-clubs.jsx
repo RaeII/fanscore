@@ -60,11 +60,14 @@ export default function HomeClubsPage() {
   const [heartClubLoading, setHeartClubLoading] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [activeSport, setActiveSport] = useState('all');
+  const [clubSports, setClubSports] = useState([]);
   const { isUserHeartClub, hasUserHeartClub, isFollowingClub, updateUserClubsData } = useUserContext();
 
   // Get the tab from URL query parameter or default to 'overview'
   const queryParams = new URLSearchParams(location.search);
   const tabParam = queryParams.get('tab');
+  const sportParam = queryParams.get('sport');
 
   // Tab state
   const [activeTab, setActiveTab] = useState(tabParam || 'overview');
@@ -152,6 +155,34 @@ export default function HomeClubsPage() {
       const clubData = await clubApi.getClubById(id);
       if (clubData) {
         setSelectedClub(clubData);
+        
+        // Set club sports - in a real app, this would come from the API
+        // For now, we'll mock it with some sample data
+        const mockSports = [];
+        
+        // Check if this is a club with multiple sports
+        if (clubData.name === "Flamengo") {
+          mockSports.push({ id: "football", name: "Futebol", icon: "/futeboll_icon.svg" });
+          mockSports.push({ id: "lol", name: "League of Legends", icon: "/lol_icon_white.svg" });
+          mockSports.push({ id: "csgo", name: "CS:GO", icon: "/csgo_icon.svg" });
+        } else if (clubData.name === "Furia") {
+          mockSports.push({ id: "lol", name: "League of Legends", icon: "/lol_icon_white.svg" });
+          mockSports.push({ id: "csgo", name: "CS:GO", icon: "/trophy-icon.svg" });
+        } else if (clubData.name === "Palmeiras") {
+          mockSports.push({ id: "football", name: "Futebol", icon: "/futeboll_icon.svg" });
+        } else {
+          // Default for other clubs
+          mockSports.push({ id: "football", name: "Futebol", icon: "/futeboll_icon.svg" });
+        }
+        
+        setClubSports(mockSports);
+        
+        // Set active sport from URL or default to first available sport
+        if (sportParam && mockSports.some(sport => sport.id === sportParam)) {
+          setActiveSport(sportParam);
+        } else if (mockSports.length > 0) {
+          setActiveSport(mockSports[0].id);
+        }
 
         // Fetch events for the club
         await fetchClubEvents(id);
@@ -422,8 +453,41 @@ export default function HomeClubsPage() {
         </div>
       </div>
 
+      {/* Sports Filter - Only show if club has multiple sports */}
+      {clubSports.length > 1 && (
+        <div className="container mx-auto px-4 mt-6">
+          <div className="dark:bg-[#150924] rounded-lg overflow-hidden shadow-md">
+            <div className="flex overflow-x-auto scrollbar-none">
+              {clubSports.map((sport) => (
+                <button
+                  key={sport.id}
+                  className={`px-6 py-4 flex flex-1 justify-center items-center transition-all border-b-2 ${
+                    activeSport === sport.id 
+                      ? 'border-secondary text-secondary font-medium' 
+                      : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                  }`}
+                  onClick={() => {
+                    setActiveSport(sport.id);
+                    navigate(`/clubs/${clubId}?sport=${sport.id}${activeTab !== 'overview' ? `&tab=${activeTab}` : ''}`);
+                  }}
+                  title={sport.name}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <img 
+                      src={sport.icon} 
+                      alt={sport.name} 
+                      className="w-6 h-6 object-contain dark:filter dark:brightness-0 dark:invert" 
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tab Navigation */}
-      <div className="container mx-auto px-4 mt-6 mb-2">
+      <div className="container mx-auto px-4 mt-2 mb-2">
         <div className="flex space-x-1 overflow-x-auto border-b border-gray-200 dark:border-gray-700">
           <Button 
             variant="ghost" 
@@ -435,7 +499,7 @@ export default function HomeClubsPage() {
             }`}
             onClick={() => {
               setActiveTab('overview');
-              navigate(`/clubs/${clubId}`);
+              navigate(`/clubs/${clubId}${activeSport !== 'all' ? `?sport=${activeSport}` : ''}`);
             }}
           >
             Overview
@@ -450,7 +514,7 @@ export default function HomeClubsPage() {
             }`}
             onClick={() => {
               setActiveTab('events');
-              navigate(`/clubs/${clubId}?tab=events`);
+              navigate(`/clubs/${clubId}?tab=events${activeSport !== 'all' ? `&sport=${activeSport}` : ''}`);
             }}
           >
             Events
@@ -465,7 +529,7 @@ export default function HomeClubsPage() {
             }`}
             onClick={() => {
               setActiveTab('news');
-              navigate(`/clubs/${clubId}?tab=news`);
+              navigate(`/clubs/${clubId}?tab=news${activeSport !== 'all' ? `&sport=${activeSport}` : ''}`);
             }}
           >
             News
@@ -490,6 +554,15 @@ export default function HomeClubsPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-2 pb-20">
+        {/* Sport-specific message */}
+        {activeSport !== 'all' && activeSport !== 'football' && (
+          <div className="bg-secondary/10 rounded-lg p-3 mb-4 border border-secondary/20">
+            <p className="text-sm text-primary dark:text-white">
+              Showing {clubSports.find(s => s.id === activeSport)?.name || activeSport} content for {selectedClub?.name}
+            </p>
+          </div>
+        )}
+        
         {/* Live Game Banner - Always show regardless of tab */}
         {liveGame && (
           <MatchCard
