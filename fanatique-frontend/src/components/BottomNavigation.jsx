@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, User, Heart, MessageCircle, Trophy, Settings, Store, Calendar, ChevronUp } from 'lucide-react';
+import { Home, User, Heart, MessageCircle, Trophy, Settings, Store, Calendar, ChevronUp, X, Wallet } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useUserContext } from '../hooks/useUserContext';
 
@@ -10,6 +10,7 @@ export default function BottomNavigation() {
   const { userClubsData } = useUserContext();
   const [activeItem, setActiveItem] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showClubOptions, setShowClubOptions] = useState(false);
   
   // Get the heart club data
   const heartClub = userClubsData?.heart_club?.club;
@@ -31,8 +32,31 @@ export default function BottomNavigation() {
       setActiveItem('shop');
     } else if (path.includes('/settings')) {
       setActiveItem('settings');
+    } else if (path.includes('/buy-fantokens')) {
+      setActiveItem('wallet');
     }
   }, [location, heartClub]);
+
+  // Fechar opções do clube quando mudar de rota
+  useEffect(() => {
+    setShowClubOptions(false);
+  }, [location]);
+
+  // Opções do clube
+  const clubOptions = [
+    {
+      id: 'club',
+      label: 'Meu Clube',
+      icon: <Heart size={20} />,
+      onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}`) : navigate('/dashboard'),
+    },
+    {
+      id: 'matches',
+      label: 'Partidas',
+      icon: <Trophy size={20} />,
+      onClick: () => navigate('/matches'),
+    }
+  ];
 
   // Mobile nav items - limited set
   const mobileNavItems = [
@@ -51,21 +75,22 @@ export default function BottomNavigation() {
     },
     {
       id: 'heartClub',
-      label: 'My Club',
+      label: 'Meu Clube',
       icon: <Heart size={20} />,
-      onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}`) : navigate('/dashboard'),
+      onClick: () => {
+        setShowClubOptions(!showClubOptions);
+      },
       disabled: !heartClub,
     },
     {
-      id: 'matches',
-      label: 'Matches',
-      icon: <Trophy size={20} />,
-      onClick: () => navigate('/matches'),
-      disabled: !heartClub,
+      id: 'wallet',
+      label: 'Carteira',
+      icon: <Wallet size={20} />,
+      onClick: () => navigate('/buy-fantokens'),
     },
     {
       id: 'profile',
-      label: 'Profile',
+      label: 'Perfil',
       icon: <User size={20} />,
       onClick: () => navigate('/profile'),
     }
@@ -88,36 +113,25 @@ export default function BottomNavigation() {
     },
     {
       id: 'heartClub',
-      label: 'My Club',
+      label: 'Meu Clube',
       icon: <Heart size={20} />,
-      onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}`) : navigate('/dashboard'),
+      onClick: () => {
+        setShowClubOptions(!showClubOptions);
+      },
       disabled: !heartClub,
     },
     {
-      id: 'matches',
-      label: 'Matches',
-      icon: <Calendar size={20} />,
-      onClick: () => navigate('/matches'),
-      disabled: !heartClub,
+      id: 'wallet',
+      label: 'Carteira',
+      icon: <Wallet size={20} />,
+      onClick: () => navigate('/buy-fantokens'),
     },
-    // {
-    //   id: 'shop',
-    //   label: 'Shop',
-    //   icon: <Store size={20} />,
-    //   onClick: () => navigate('/shop'),
-    // },
     {
       id: 'profile',
-      label: 'Profile',
+      label: 'Perfil',
       icon: <User size={20} />,
       onClick: () => navigate('/profile'),
     },
-    // {
-    //   id: 'settings',
-    //   label: 'Settings',
-    //   icon: <Settings size={20} />,
-    //   onClick: () => navigate('/settings'),
-    // },
   ];
 
   return (
@@ -129,11 +143,12 @@ export default function BottomNavigation() {
             <button
               key={item.id}
               className={cn(
-                'flex flex-col items-center justify-center px-2 py-1 w-full h-full',
+                'flex flex-col items-center justify-center px-2 py-1 w-full h-full relative',
                 activeItem === item.id
                   ? 'text-secondary'
                   : 'text-primary/70 dark:text-white/70',
-                item.disabled && 'opacity-40'
+                item.disabled && 'opacity-40',
+                showClubOptions && item.id === 'heartClub' && 'text-secondary'
               )}
               onClick={item.onClick}
               disabled={item.disabled}
@@ -143,6 +158,29 @@ export default function BottomNavigation() {
             </button>
           ))}
         </nav>
+        
+        {/* Menu de opções do clube (mobile) */}
+        {showClubOptions && (
+          <div className="absolute bottom-20 left-0 right-0 flex justify-center items-center z-50 px-4">
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-3">
+              {clubOptions.map((option) => (
+                <button
+                  key={option.id}
+                  className={cn(
+                    'flex items-center justify-center w-12 h-12 rounded-full bg-white/10 dark:bg-[#221130] shadow-lg border border-gray-700',
+                    activeItem === option.id
+                      ? 'text-secondary border-secondary'
+                      : 'text-primary/70 dark:text-white/90'
+                  )}
+                  onClick={option.onClick}
+                  title={option.label}
+                >
+                  {option.icon}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Desktop dock-style navigation - always visible and centered */}
@@ -167,12 +205,13 @@ export default function BottomNavigation() {
               <button
                 key={item.id}
                 className={cn(
-                  'flex items-center rounded-full transition-all duration-200',
+                  'flex items-center rounded-full transition-all duration-200 relative',
                   isExpanded ? 'px-4 py-2' : 'p-2',
                   activeItem === item.id
                     ? 'text-white bg-secondary shadow-md'
                     : 'text-primary/70 dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10',
-                  item.disabled && 'opacity-40 cursor-not-allowed'
+                  item.disabled && 'opacity-40 cursor-not-allowed',
+                  showClubOptions && item.id === 'heartClub' && 'text-white bg-secondary'
                 )}
                 onClick={item.onClick}
                 disabled={item.disabled}
@@ -186,6 +225,29 @@ export default function BottomNavigation() {
             ))}
           </nav>
         </div>
+        
+        {/* Menu de opções do clube (desktop) */}
+        {showClubOptions && (
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="flex gap-3">
+              {clubOptions.map((option) => (
+                <button
+                  key={option.id}
+                  className={cn(
+                    'flex items-center justify-center w-10 h-10 rounded-full bg-white/10 dark:bg-[#221130] shadow-lg backdrop-blur-sm border border-gray-700',
+                    activeItem === option.id
+                      ? 'text-secondary border-secondary'
+                      : 'text-primary/70 dark:text-white/90'
+                  )}
+                  onClick={option.onClick}
+                  title={option.label}
+                >
+                  {option.icon}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add bottom padding for mobile to prevent content being hidden behind the nav bar */}

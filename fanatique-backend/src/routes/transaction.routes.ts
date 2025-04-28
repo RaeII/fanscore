@@ -1,34 +1,34 @@
 import express, { Request, Response } from 'express';
 
-import Controller from '@/controllers/Contract.controller';
+import Controller from '@/controllers/Transaction.controller';
 import jwtMiddleware from '@/middlewares/jwt.middleware';
 
 const router = express.Router();
 
-router.post('/all-club-tokens', [
+router.get('/:id', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
 		const controller = new Controller();
 
-		controller.configureAllClubTokens(req, res);
+		controller.fetch(req, res);
 	}
 ]);
 
-router.post('/transfer-tokens', [
+router.get('/user/all', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
 		const controller = new Controller();
 
-		controller.transferTokensToUser(req, res);
+		controller.fetchByUser(req, res);
 	}
 ]);
 
-router.get('/wallet-tokens/:wallet_address', [
+router.get('/all', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
 		const controller = new Controller();
 
-		controller.getWalletTokens(req, res);
+		controller.fetchAll(req, res);
 	}
 ]);
 

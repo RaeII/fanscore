@@ -4,6 +4,7 @@ import { getErrorMessage, getSuccessMessage } from '@/helpers/response_collectio
 import Controller from './Controller';
 import ContractService from '@/services/Contract.service';
 import Database from '@/database/Database';
+import { TransferTokenPayload } from '@/types/transaction';
 
 class ConfigController extends Controller {
 	private service: ContractService;
@@ -27,6 +28,57 @@ class ConfigController extends Controller {
 			});
 		} catch (err) {
 			await Database.rollback().catch(console.log);
+			return await this.sendErrorMessage(res, err);
+		}
+	}
+
+	async transferTokensToUser(req: Request, res: Response) {
+		try {
+			const data: TransferTokenPayload = req.body;
+			const userId: number = Number(res.locals.jwt.user_id);
+			
+			if (!data.club_id) throw Error(getErrorMessage('missingField', 'ID do clube'));
+			if (!data.to) throw Error(getErrorMessage('missingField', 'Endereço do destinatário'));
+			if (!data.amount) throw Error(getErrorMessage('missingField', 'Quantidade de tokens'));
+			
+			await Database.startTransaction();
+			const result = await this.service.transferTokensToUser(data, userId);
+			await Database.commit();
+			
+			return this.sendSuccessResponse(res, { 
+				content: result, 
+				message: getSuccessMessage('create', 'Tokens transferidos com sucesso') 
+			});
+		} catch (err) {
+			await Database.rollback().catch(console.log);
+			return await this.sendErrorMessage(res, err);
+		}
+	}
+
+	async getWalletTokens(req: Request, res: Response) {
+		try {
+			// Se o endereço não for fornecido, usar o do usuário logado
+			let walletAddress = req.params.wallet_address as string;
+			
+			if (!walletAddress) {
+				// Obter o endereço da carteira do usuário logado
+				const userId = Number(res.locals.jwt.user_id);
+				const userService = this.service['userService']; // Acesso ao userService
+				const user = await userService.fetch(userId);
+				
+				if (!user) {
+					throw Error(getErrorMessage('registryNotFound', 'Usuário'));
+				}
+				walletAddress = user.wallet_address;
+			}
+			
+			const tokens = await this.service.getWalletTokens(walletAddress);
+			
+			return this.sendSuccessResponse(res, { 
+				content: tokens,
+				message: getSuccessMessage('fetch', 'FanTokens da carteira') 
+			});
+		} catch (err) {
 			return await this.sendErrorMessage(res, err);
 		}
 	}

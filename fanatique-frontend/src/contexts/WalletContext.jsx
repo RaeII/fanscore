@@ -33,6 +33,11 @@ export function WalletProvider({ children }) {
         return null;
       }
       
+      // Verifica se já temos um signer válido antes de solicitar um novo
+      if (signer) {
+        return signer;
+      }
+      
       const ethSigner = await provider.getSigner();
       setSigner(ethSigner);
       return ethSigner;
@@ -40,7 +45,7 @@ export function WalletProvider({ children }) {
       console.error('Erro ao obter signer:', error);
       return null;
     }
-  }, [provider, isConnected]);
+  }, [provider, isConnected, signer]);
   
   // Limpa as credenciais
   const clearAuthCredentials = useCallback(() => {
@@ -89,9 +94,14 @@ export function WalletProvider({ children }) {
     const checkAuth = async () => {
       try {
         // Inicializa o provider independente de autenticação
-        if (!provider) {
-          const ethersProvider = new ethers.BrowserProvider(window.ethereum);
-          setProvider(ethersProvider);
+        if (!provider && window.ethereum) {
+          try {
+            const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+            setProvider(ethersProvider);
+          } catch (providerError) {
+            console.error('Erro ao inicializar provider:', providerError);
+            // Continua mesmo com erro no provider
+          }
         }
         
         // Verifica se há dados armazenados
@@ -106,11 +116,8 @@ export function WalletProvider({ children }) {
           setIsAuthenticated(true);
           setIsConnected(true);
           
-          // Se já está autenticado, obtém o signer
-          if (provider) {
-            const ethSigner = await provider.getSigner();
-            setSigner(ethSigner);
-          }
+          // Não solicitamos o signer automaticamente aqui para evitar conflitos
+          // O signer será obtido apenas quando necessário através da função getSigner
         } else {
           setIsAuthenticated(false);
           console.log('WalletContext: Sem dados de autenticação no localStorage');
@@ -176,11 +183,8 @@ export function WalletProvider({ children }) {
         setAddress(accounts[0]);
         setIsConnected(true);
         
-        // Obtém signer para transações
-        if (provider) {
-          const ethSigner = await provider.getSigner();
-          setSigner(ethSigner);
-        }
+        // Não solicitamos o signer automaticamente aqui
+        // O signer será obtido apenas quando necessário através da função getSigner
         
         return true;
       } else {
@@ -192,6 +196,9 @@ export function WalletProvider({ children }) {
       if (err.code === 4001) {
         // Usuário recusou a conexão
         showError('Você recusou a conexão com a carteira');
+      } else if (err.code === -32002) {
+        // Já existe uma solicitação em processamento
+        showError('Já existe uma solicitação de conexão em processamento. Por favor, aguarde.');
       } else {
         showError('Erro ao conectar com a carteira: ' + (err.message || 'Erro desconhecido'));
       }
@@ -256,6 +263,12 @@ export function WalletProvider({ children }) {
       return false;
     }
     
+    // Verifica se já está assinando
+    if (signing) {
+      showError('Já existe uma solicitação de assinatura em andamento. Por favor, aguarde.');
+      return false;
+    }
+    
     try {
       setSigning(true);
       
@@ -278,6 +291,8 @@ export function WalletProvider({ children }) {
         // Cancelamento pelo usuário
         if (signError.code === 4001) {
           showError('Assinatura cancelada pelo usuário. É necessário assinar para entrar na plataforma.');
+        } else if (signError.code === -32002) {
+          showError('Já existe uma solicitação de assinatura em processamento. Por favor, aguarde.');
         } else {
           showError('Falha ao solicitar assinatura. Tente novamente mais tarde.');
         }
@@ -325,7 +340,7 @@ export function WalletProvider({ children }) {
     } finally {
       setSigning(false);
     }
-  }, [address, setAuthCredentials, checkIfMetaMaskAvailable]);
+  }, [address, setAuthCredentials, checkIfMetaMaskAvailable, signing]);
   
   // Registrar com assinatura
   const registerWithSignature = useCallback(async (userName) => {
@@ -388,6 +403,11 @@ export function WalletProvider({ children }) {
   // Conectar e verificar registro em uma única operação
   const connectAndCheckRegistration = useCallback(async () => {
     try {
+      // Verifica se já está conectando
+      if (connecting) {
+        return { success: false, message: 'Já existe uma conexão em andamento. Por favor, aguarde.' };
+      }
+      
       // Primeiro apenas conecta a carteira
       const connected = await connectWallet();
       
@@ -415,12 +435,21 @@ export function WalletProvider({ children }) {
       };
     } catch (error) {
       console.error('Erro ao conectar e verificar registro:', error);
+      
+      // Tratamento específico para o erro de solicitação em processamento
+      if (error.code === -32002) {
+        return { 
+          success: false, 
+          message: 'Já existe uma solicitação de conexão em processamento. Por favor, aguarde.'
+        };
+      }
+      
       return { 
         success: false, 
         message: error.message || 'Erro ao conectar e verificar registro'
       };
     }
-  }, [connectWallet, address, isAuthenticated, checkWalletExists]);
+  }, [connectWallet, address, isAuthenticated, checkWalletExists, connecting]);
   
   // Define os valores compartilhados
   const contextValue = {

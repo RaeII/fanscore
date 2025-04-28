@@ -5,7 +5,7 @@ import env from "@/config";
 import UserService from './User.service';
 
 const jwtSecret = env.JWT_SECRET || "seu_secret_padrao";
-const JWT_EXPIRATION = env.JWT_EXPIRATION || '7d'; // Token expira em 7 dias por padrão
+const JWT_EXPIRATION = env.JWT_EXPIRATION || '30d'; // Token expira em 30 dias por padrão
 const userService = new UserService();
 
 class walletService {
