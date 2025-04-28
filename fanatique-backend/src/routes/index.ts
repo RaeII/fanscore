@@ -12,6 +12,7 @@ import establishmentStadium from './establishmentStadium.routes'
 import order from './order.routes'
 import quest from './quest.routes'
 import questUser from './quest-user.routes'
+import contract from './contract.routes'
 
 const apiRouter = Router();
 
@@ -27,5 +28,6 @@ apiRouter.use("/establishment-stadium", establishmentStadium);
 apiRouter.use("/order", order);
 apiRouter.use("/quest", quest);
 apiRouter.use("/quest-user", questUser);
+apiRouter.use("/contract", contract);
 
 export default apiRouter;

@@ -26,7 +26,6 @@ export default function DashboardPage() {
     const ensureWalletConnected = async () => {
       // Se não temos uma conta mas temos autenticação, tente conectar a carteira
       if (!isConnected && isAuthenticated) {
-        console.log('Dashboard: Usuário autenticado, mas carteira não está conectada. Reconectando...');
         await connectWallet();
       }
     };
@@ -41,7 +40,6 @@ export default function DashboardPage() {
   useEffect(() => {
     // Verificar se o usuário está autenticado usando o contexto
     if (!isAuthenticated) {
-      console.log('Dashboard: Usuário não autenticado, redirecionando para /app');
       navigate('/app');
       return;
     }

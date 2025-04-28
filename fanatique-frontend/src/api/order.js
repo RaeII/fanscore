@@ -30,6 +30,13 @@ const getUserOrders = async () => {
   return response.data?.content || [];
 };
 
+const paymentOrder = async (orderData) => {
+  console.log('Enviando dados de pagamento para API:', orderData);
+  const response = await api.post(`/order/payment`, orderData);
+  console.log('Resposta do backend:', response.data);
+  return response.data?.content || null;
+};
+
 // // Get order details
 // const getOrderDetails = async (orderId) => {
 //   // In a real app, this would be:
@@ -49,5 +56,6 @@ export default {
   placeOrder,
   getUserOrders,
   getActiveOrders,
-  getMatchOrders
+  getMatchOrders,
+  paymentOrder
 }; 

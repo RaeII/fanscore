@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
@@ -12,7 +13,8 @@ import {
   Loader2, 
   X, 
   Check,
-  Clock
+  Clock,
+  CreditCard
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { showError, showSuccess } from '../lib/toast';
@@ -22,16 +24,20 @@ import matchApi from '../api/match';
 import establishmentApi from '../api/establishment';
 import { useLocation } from 'react-router-dom';
 import establishmentProductApi from '../api/establishment_product';
+import { usePayment } from '../utils/web3/payment';
 
 export default function StadiumOrdersPage() {
   const navigate = useNavigate();
   const { clubId, gameId } = useParams();
   const { isAuthenticated, getUserData } = useWalletContext();
   const { state } = useLocation();
+  const { paymentSignature } = usePayment();
   // UI States
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState('establishments'); // 'establishments', 'menu', 'cart', 'confirmation', 'activeOrders'
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState(false);
+
   
   // Data States
   const [establishments, setEstablishments] = useState([]);
@@ -48,7 +54,6 @@ export default function StadiumOrdersPage() {
     const checkAuthAndLoadData = async () => {
       try {
         if (!isAuthenticated) {
-          console.log('StadiumOrders: User not authenticated, redirecting to /app');
           navigate('/app');
           return;
         }
@@ -126,8 +131,7 @@ export default function StadiumOrdersPage() {
         navigate(`/clubs/${clubId}`);
         return;
       }
-      console.log('game', game);
-      console.log('currentClubName', currentClubName);
+
       // Check if the current club is playing in this game
       const isParticipating = game.home_club_name === currentClubName || game.away_club_name === currentClubName;
       
@@ -159,7 +163,6 @@ export default function StadiumOrdersPage() {
     try {
       setLoading(true);
       const data = await establishmentProductApi.getProductsByEstablishment(establishmentId);
-      console.log('menu items', data);
       setMenuItems(data);
       setCurrentView('menu');
     } catch (error) {
@@ -172,7 +175,6 @@ export default function StadiumOrdersPage() {
 
   const handleSelectEstablishment = (establishment) => {
     setSelectedEstablishment(establishment);
-    console.log('establishment', establishment);
     fetchMenuItems(establishment.establishment_id);
   };
 
@@ -239,7 +241,6 @@ export default function StadiumOrdersPage() {
   const handlePlaceOrder = async () => {
     try {
       setPlacingOrder(true);
-      console.log('selectedEstablishment', cart);
       const orderData = {
         match_id: gameId,
         establishment_id: selectedEstablishment.establishment_id,
@@ -277,14 +278,55 @@ export default function StadiumOrdersPage() {
   // Get order status color
   const getStatusColor = (status) => {
     switch (status) {
-      case 'READY':
+      case 1:
         return 'text-green-600 dark:text-green-400';
-      case 'PROCESSING':
+      case 2:
         return 'text-amber-600 dark:text-amber-400';
-      case 'PENDING':
+      case 3:
         return 'text-blue-600 dark:text-blue-400';
       default:
         return 'text-gray-600 dark:text-gray-400';
+    }
+  };
+
+  // Função para lidar com o pagamento de uma ordem
+  const handlePayment = async (order) => {
+    try {
+      setProcessingPayment(true);
+      
+      // Obter assinatura do usuário usando a nova função de pagamento
+      const signatureData = await paymentSignature(order.id, Number(clubId), order.total_fantoken);
+      
+      // Adiciona os dados de pagamento à ordem no formato que o backend espera
+      const paymentData = {
+        order_id: order.id,
+        club_id: clubId, 
+        user_address: signatureData.userAddress,
+        amount: order.total_fantoken,
+        deadline: signatureData.deadline,
+        signature: signatureData.signature,
+        v: signatureData.v,
+        r: signatureData.r,
+        s: signatureData.s
+      };
+            
+      console.log('Dados de pagamento:', paymentData);
+      
+      // Enviar para o backend processar o pagamento
+      const paymentResult = await orderApi.paymentOrder(paymentData);
+      
+      if (paymentResult) {
+        // Após o pagamento bem-sucedido, atualizar os pedidos ativos
+        await fetchActiveOrders();
+        showSuccess('Pagamento realizado com sucesso!');
+      } else {
+        showError('Falha ao processar o pagamento');
+      }
+    } catch (error) {
+      console.error('Erro ao processar pagamento:', error);
+      showError('Falha ao processar o pagamento');
+    } finally {
+      setProcessingPayment(false);
     }
   };
 
@@ -636,8 +678,8 @@ export default function StadiumOrdersPage() {
                       <h3 className="font-medium text-primary dark:text-white">Order #{order.id}</h3>
                       <p className="text-sm text-primary/70 dark:text-white/70">{order?.establishment_name}</p>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)} bg-opacity-10`}>
-                      {order.status}
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status_id)} bg-opacity-10`}>
+                      {order.status_name}
                     </div>
                   </div>
                   
@@ -666,6 +708,27 @@ export default function StadiumOrdersPage() {
                         <p className="font-medium text-primary dark:text-white">{order?.pickup_location || 'no pickup location'}</p>
                       </div>
                     </div>
+                    
+                    {/* Botão de pagamento para ordens com status_id igual a 1 */}
+                    {order.status_id === 1 && (
+                      <Button
+                        className="w-full mt-4"
+                        onClick={() => handlePayment(order)}
+                        disabled={processingPayment}
+                      >
+                        {processingPayment ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processando pagamento...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            Pagar Agora
+                          </>
+                        )}
+                      </Button>
+                    )}
                     
                     {/* Estimated time or other info */}
                     {order.status === 'PROCESSING' && (

@@ -67,8 +67,6 @@ class QuestUserController extends Controller {
 		try {
 			const userId: number = Number(res.locals.jwt.user_id);
 			const scopeId: any = req?.query?.scope_id ? Number(req?.query?.scope_id) : undefined;
-
-			console.log({scopeId});
 			
 			const questsWithCompletion = await this.service.fetchAllQuestsWithUserCompletion(userId, scopeId);
 

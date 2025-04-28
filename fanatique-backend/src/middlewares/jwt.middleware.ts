@@ -21,6 +21,7 @@ class JwtMiddleware {
           next();
         }
       } catch (err) {
+
         res.status(403).send({
           status: 'ERROR',
           message: 'Token expirado ou inválido'

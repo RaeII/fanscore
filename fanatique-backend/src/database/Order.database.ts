@@ -100,7 +100,7 @@ class OrderDatabase extends Database {
 		return rows[0];
 	}
 
-	async fetchByMatch(matchId: number): Promise<Array<OrderBasicInfo>> {
+	async fetchByMatch(matchId: number, userId: number): Promise<Array<OrderBasicInfo>> {
 		const rows: any = await this.query(`
 			SELECT
 				o.id,
@@ -115,8 +115,8 @@ class OrderDatabase extends Database {
 			FROM \`order\` o
 			LEFT JOIN establishment e ON o.establishment_id = e.id
 			LEFT JOIN order_status os ON o.status_id = os.id
-			WHERE o.match_id = ?
-			ORDER BY o.date_register DESC;`, [matchId]);
+			WHERE o.match_id = ? AND o.user_id = ?
+			ORDER BY o.date_register DESC;`, [matchId, userId]);
 
 		return rows[0];
 	}
@@ -137,6 +137,12 @@ class OrderDatabase extends Database {
 		const mysqlBind = createBindParams(filteredData);
 
 		return await this.query(`UPDATE \`order\` SET ${mysqlBind} WHERE id = ?;`, [...Object.values(filteredData), id]);
+	}
+
+	async registerPayment(data: any) {
+		const mysqlBind = createBindParams(data);
+
+		return await this.query(`INSERT INTO order_payment SET ${mysqlBind};`, Object.values(data));
 	}
 }
 

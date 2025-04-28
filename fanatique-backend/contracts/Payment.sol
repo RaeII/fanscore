@@ -197,7 +197,10 @@ contract Payment is Ownable {
         console.log("ClubId:", clubId);
         console.log("Amount:", amount);
         console.log("Relayer:", msg.sender);
+        console.log("this address:", address(this));
+        console.log("BlockchainId:", block.chainid);
         console.log("Deadline:", deadline);
+        
         console.log("\n========================================\n");
 
         // 1. Verificar assinatura da ordem (pelo backend)
@@ -214,7 +217,10 @@ contract Payment is Ownable {
         
         bytes32 orderEthSigned = MessageHashUtils.toEthSignedMessageHash(orderMessage);
         address recoveredSigner = ECDSA.recover(orderEthSigned, orderSignature);
-        require(recoveredSigner == signer, "Invalid order signature");
+        console.log("Recovered Signer:", recoveredSigner);
+        console.log("recoveredSigner == buyer:", recoveredSigner == buyer);
+        console.log("dale");
+        require(recoveredSigner == buyer, "Invalid order signature");
 
         // 2. Executar a meta-transação (o usuário não paga gas)
         // O usuário precisa ter assinado uma mensagem permitindo esta transferência

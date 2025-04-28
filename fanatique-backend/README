@@ -1,0 +1,39 @@
+
+### LINEA CONTRACT ###
+
+#TEST NET
+VALOCRACY ADDRESS: 0x5091D1C03B7fEACD7828c02e30e5f68f3DAcB002
+LP VALOCRACY ADDRESS: 0xCF82416d30adE9D495bc9302A09634C86885e4fA
+USDC ADDRESS: 0xDffd951c7C5bDA32df6dfb12B9ac8B48FCEB1167
+
+DEPLOY CONTRACT:
+
+- DEPLOYER vai ser dono LpValocracy
+- DEPLYER minta para OWNER LPs
+- DEPLOYER com a função approveLpSpender() aprova a valocracia usar os LPs do OWNER
+
+- DEPLOYER vai ser dono do USDTVALOCRACY de test
+
+Objetivo é ter uma carteira de deploy e outra admin
+
+---
+#DEPLOY
+export NODE_ENV=development && npx hardhat deploy --network localhost --contract fantoken
+export NODE_ENV=development && npx hardhat deploy --network localhost --contract fanatique
+
+export NODE_ENV=test && npx hardhat deploy --network lineaSepolia --contract usdt
+export NODE_ENV=test && npx hardhat deploy --network lineaSepolia --contract valocracy
+
+#ESTIMATE GAS
+export NODE_ENV=development && npx hardhat estimateGas --network localhost --contract usdt
+export NODE_ENV=development && npx hardhat estimateGas --network localhost --contract valocracy
+
+export NODE_ENV=test && npx hardhat estimateGas --network lineaSepolia --contract usdt
+export NODE_ENV=test && npx hardhat estimateGas --network lineaSepolia --contract valocracy
+
+#VERIFY 
+export NODE_ENV=test && npx hardhat verifyContracts --network lineaSepolia 
+
+0x70cb76f1aa8cb85f95536d448973ba89231d5f0a
+0x70CB76f1aa8cB85F95536d448973Ba89231D5F0a
+0x70cb76f1aa8cb85f95536d448973ba89231d5f0a

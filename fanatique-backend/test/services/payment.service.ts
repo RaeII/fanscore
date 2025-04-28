@@ -222,41 +222,6 @@ class PaymentService {
       throw new Error(`Erro ao assinar meta-transação: ${err.message}`);
     }
   }
-
-  /**
-   * Verifica se uma assinatura é válida para os dados fornecidos
-   * Útil para debugging e testes
-   * 
-   * @param orderId ID único da compra
-   * @param buyer Endereço da carteira do comprador
-   * @param clubId ID do clube cujo token será usado
-   * @param amount Valor em tokens a ser pago
-   * @param signature Assinatura a ser verificada
-   * @returns true se a assinatura for válida
-   */
-/*   async verifySignature(orderId: number, buyer: string, clubId: number, amount: string, signature: string): Promise<boolean> {
-    try {
-      const amountBigInt = ethers.parseEther(amount);
-      
-      // Recria o hash da mensagem
-      const messageHash = ethers.solidityPackedKeccak256(
-        ['uint256', 'address', 'uint256', 'uint256', 'address', 'uint256'],
-        [orderId, buyer, clubId, amountBigInt, this.contractAddress, this.chainId]
-      );
-      
-      // Converte o hash para bytes
-      const messageBytes = ethers.getBytes(messageHash);
-      
-      // Recupera o endereço que assinou a mensagem
-      const signerAddress = ethers.verifyMessage(messageBytes, signature);
-      
-      // Verifica se o endereço recuperado é o mesmo do wallet configurado
-      return signerAddress === this.wallet.address;
-    } catch (err) {
-      console.error('Erro ao verificar assinatura:', err);
-      return false;
-    }
-  } */
 }
 
 export default new PaymentService(); 

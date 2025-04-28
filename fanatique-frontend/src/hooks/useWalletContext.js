@@ -12,13 +12,13 @@ export function useWalletContext() {
   // Efeito para verificar status da carteira quando o hook é usado
   useEffect(() => {
     // Console log para depuração
-    if (context.isInitialized) {
+/*     if (context.isInitialized) {
       console.log('useWalletContext: Status atual:', {
         account: context.account ? context.account.slice(0, 6) + '...' + context.account.slice(-4) : null,
         isConnected: context.isConnected,
         isAuthenticated: context.isAuthenticated,
       });
-    }
+    } */
   }, [context.isInitialized, context.account, context.isAuthenticated, context.isConnected]);
   
   return context;

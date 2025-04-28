@@ -6,10 +6,11 @@ task("deploy", "Deploy contracts")
 
     console.log("network ->",env.network.name,"\n")
  
-    const contractDeploy = new Map<string, () => Promise<void>>();
+    const contractDeploy = new Map<string, (...args: any[]) => Promise<any>>();
 
-    const { deployFanScore } = await import("./deploy/deploy");
-   // contractDeploy.set("fanScore", deployFanScore);
+    const { deployFanatique,deployFanToken } = await import("./deploy/deploy");
+    contractDeploy.set("fanatique", deployFanatique);
+    contractDeploy.set("fantoken", deployFanToken);
 
     const runDeploy = contractDeploy.get(taskArgs.contract);
 

@@ -43,9 +43,12 @@ interface ENV {
   MINTALIEN_CONTRACT_ADDRESS:string,
   CATALOG_CONTRACT_ADDRESS:string,
   DEVELOPMENT:boolean,
-  USDC_CONTRACT_ADDRESS:string
-  JWT_SECRET:string
-  JWT_EXPIRATION:string
+  USDC_CONTRACT_ADDRESS:string,
+  JWT_SECRET:string,
+  JWT_EXPIRATION:string,
+  FANTOKEN_CONTRACT_ADDRESS:string,
+  FANATIQUE_CONTRACT_ADDRESS:string,
+  TREASURY_ADDRESS:string
 }
 const env: ENV = {
   // Application
@@ -60,6 +63,9 @@ const env: ENV = {
   DEVELOPMENT:process.env.NODE_ENV === 'development',
   JWT_SECRET:process.env.JWT_SECRET || '',
   JWT_EXPIRATION:process.env.JWT_EXPIRATION || '',
+  FANTOKEN_CONTRACT_ADDRESS:process.env.FANTOKEN_CONTRACT_ADDRESS || '',
+  FANATIQUE_CONTRACT_ADDRESS:process.env.FANATIQUE_CONTRACT_ADDRESS || '',
+  TREASURY_ADDRESS:process.env.TREASURY_ADDRESS || '',
 };
 
 export default env;

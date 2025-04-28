@@ -6,6 +6,9 @@ import MatchService from './Match.service';
 import UserService from './User.service';
 import ProductService from './Product.service';
 import { Order, OrderBasicInfo, OrderForFront, OrderInsert, OrderUpdatePayload, OrderUpdate, ProductOrderInsert } from '../types';
+import { provider,wallet } from '@/loaders/provider';
+import ContractService from './Contract.service';
+import { ethers } from 'ethers';
 
 class OrderService {
 	private database: OrderDatabase;
@@ -102,6 +105,114 @@ class OrderService {
 		return orderId;
 	}
 
+	async paymentOrder(data: any): Promise<any> {
+
+		// Validar os dados necessários
+		if (!data.orderId) throw Error(getErrorMessage('missingField', 'ID do pedido'));
+		if (!data.userId) throw Error(getErrorMessage('missingField', 'ID do usuário'));
+		if (!data.userAddress) throw Error(getErrorMessage('missingField', 'Endereço do usuário'));
+		if (!data.clubId) throw Error(getErrorMessage('missingField', 'ID do clube'));
+		if (!data.amount) throw Error(getErrorMessage('missingField', 'Valor do pagamento'));
+		if (!data.signature) throw Error(getErrorMessage('missingField', 'Assinatura do pagamento'));
+		if (!data.deadline) throw Error(getErrorMessage('missingField', 'Prazo limite para a meta-transação'));
+		if (!data.v) throw Error(getErrorMessage('missingField', 'Componente v da assinatura do usuário para a meta-transação'));
+		if (!data.r) throw Error(getErrorMessage('missingField', 'Componente r da assinatura do usuário para a meta-transação'));
+		if (!data.s) throw Error(getErrorMessage('missingField', 'Componente s da assinatura do usuário para a meta-transação'));
+
+		// Verificar se o pedido existe
+		const order = await this.fetch(data.orderId);
+		if (!order) throw Error(getErrorMessage('registryNotFound', 'Pedido'));
+
+		console.log('Order:', order);
+		console.log('User:', data.userId);
+
+		// Verificar se o pedido pertence ao usuário
+		if (order.user_id !== data.userId) {
+			throw Error('Este pedido não pertence ao usuário autenticado');
+		}
+
+		// Verificar se o pedido está pendente de pagamento (status_id = 1)
+		if (order.status_id !== 1) {
+			throw Error('Este pedido não está em estado pendente de pagamento');
+		}
+
+		// Verificar se o valor do pagamento corresponde ao valor do pedido
+		const orderAmountFantoken = parseFloat(order.total_fantoken.toString());
+		const paymentAmount = parseFloat(data.amount.toString());
+		
+		if (Math.abs(orderAmountFantoken - paymentAmount) > 0.001) {
+			throw Error('Valor do pagamento não corresponde ao valor do pedido');
+		}
+
+		try {
+			// Aqui enviamos para o smart contract (simulado nesse exemplo)
+			// Em produção, chamaríamos o método gaslessOrderPayment do contrato
+			console.log('Processando pagamento blockchain com assinatura:', data.signature);
+
+			// Processar o pagamento utilizando a assinatura EIP-712
+			// Este é o ponto onde você integraria com seu contrato inteligente
+
+			const contractService = new ContractService();
+			const contractFanatique = contractService.getFanatiqueContract();
+			
+			console.log({
+				orderId:data.orderId, 
+				userAddress:data.userAddress, 
+				clubId:data.clubId, 
+				amount:order.total_fantoken.toString(), 
+			});
+
+			// Chamar a função gaslessOrderPayment do contrato
+			const tx = await contractFanatique.gaslessOrderPayment(
+				data.orderId,
+				data.userAddress,
+				Number(data.clubId),
+				ethers.parseEther(order.total_fantoken.toString()),
+				data.deadline,
+				data.signature,
+				data.v,
+				data.r,
+				data.s
+			);
+
+			// uint256 orderId,
+			// address buyer,
+			// uint256 clubId,
+			// uint256 amount,
+			// uint256 deadline,
+			// bytes calldata orderSignature,
+			// uint8 v, 
+			// bytes32 r, 
+			// bytes32 s
+
+			// Aguardar a transação ser confirmada
+			await tx.wait();
+			
+			// Atualizar o status do pedido para "pago" (status_id = 2)
+			await this.database.update({ status_id: 2 }, data.orderId);
+
+			// Registrar o pagamento no banco de dados
+			await this.database.registerPayment({
+				order_id: data.orderId,
+				amount: data.amount,
+				payment_type: 'fantoken',
+				transaction_data: JSON.stringify(data.signature),
+				club_id: data.clubId
+			});
+
+
+			return {
+				success: true,
+				order_id: data.orderId,
+				new_status: 'Pago',
+				status_id: 2
+			};
+		} catch (error) {
+			console.error('Erro ao processar pagamento blockchain:', error);
+			throw Error('Falha ao processar o pagamento na blockchain');
+		}
+	}
+
 	private async createProductOrders(orderId: number, products: ProductOrderInsert[]): Promise<void> {
 		for (const product of products) {
 			await this.productOrderDatabase.create({
@@ -134,17 +245,17 @@ class OrderService {
 		return await this.database.fetchByEstablishment(establishmentId);
 	}
 
-	async fetchByMatch(matchId: number): Promise<Array<OrderBasicInfo>> {
+	async fetchByMatch(matchId: number, userId: number): Promise<Array<OrderBasicInfo>> {
 		if (!matchId) throw Error(getErrorMessage('missingField', 'Id do jogo'));
 
-		return await this.database.fetchByMatch(matchId);
+		return await this.database.fetchByMatch(matchId, userId);
 	}
 
-	async fetchByMatchWithProducts(matchId: number): Promise<Array<any>> {
+	async fetchByMatchWithProducts(matchId: number, userId: number): Promise<Array<any>> {
 		if (!matchId) throw Error(getErrorMessage('missingField', 'Id do jogo'));
 
 		// Buscar os pedidos da partida
-		const orders = await this.database.fetchByMatch(matchId);
+		const orders = await this.database.fetchByMatch(matchId, userId);
 		
 		// Para cada pedido, buscar os produtos
 		const ordersWithProducts = await Promise.all(orders.map(async (order) => {

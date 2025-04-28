@@ -21,6 +21,14 @@ router.get('/:id', [
 	}
 ]);
 
+router.post('/payment', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+		await controller.paymentOrder(req, res);
+	}
+]);
+
 router.get('/user/list', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
