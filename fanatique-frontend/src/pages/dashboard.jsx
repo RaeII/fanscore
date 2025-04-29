@@ -35,7 +35,7 @@ export default function DashboardPage() {
   }, [account, isAuthenticated, isConnected, connectWallet]);
 
   useEffect(() => {
-    setFollowedClubs(userClubsData.clubs.map(club => club.club));
+    setFollowedClubs(userClubsData?.clubs.map(club => club.club));
   }, [userClubsData]);
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function DashboardPage() {
         {/* Horizontal scrollable clubs */}
         <div className="overflow-x-auto pb-4 mb-8">
           <div className="flex space-x-4 min-w-max">
-            {followedClubs.length > 0 ? (
+            {followedClubs?.length > 0 ? (
               <>
                 {followedClubs.map(club => (
                   <div 
