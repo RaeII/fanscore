@@ -21,10 +21,11 @@ const placeOrder = async (orderData) => {
 // Get active orders for a game
 const getActiveOrders = async (gameId) => {
   const response = await api.get(`/order/match/${gameId}`);
-  return response.data?.content?.filter(o => o.status_id == 1) || [];
+  //return response.data?.content?.filter(o => o.status_id == 1) || [];
+  return response.data?.content || [];
 };
 
-// Get user orders history
+// Get user orders history 
 const getUserOrders = async () => {
   const response = await api.get(`/order/user/list`);
   return response.data?.content || [];

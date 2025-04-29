@@ -116,8 +116,8 @@ export function WalletProvider({ children }) {
           setIsAuthenticated(true);
           setIsConnected(true);
           
-          // Não solicitamos o signer automaticamente aqui para evitar conflitos
-          // O signer será obtido apenas quando necessário através da função getSigner
+          // Obter o signer após restaurar o estado da carteira
+          await getSigner();
         } else {
           setIsAuthenticated(false);
           console.log('WalletContext: Sem dados de autenticação no localStorage');
@@ -155,7 +155,7 @@ export function WalletProvider({ children }) {
         window.ethereum.removeListener('disconnect', handleDisconnect);
       }
     };
-  }, [handleAccountsChanged, handleDisconnect, provider]);
+  }, [handleAccountsChanged, handleDisconnect, provider, getSigner]);
   
   // Função para conectar a carteira
   const connectWallet = useCallback(async () => {
@@ -183,8 +183,8 @@ export function WalletProvider({ children }) {
         setAddress(accounts[0]);
         setIsConnected(true);
         
-        // Não solicitamos o signer automaticamente aqui
-        // O signer será obtido apenas quando necessário através da função getSigner
+        // Obter o signer após conectar a carteira
+        await getSigner();
         
         return true;
       } else {
@@ -207,7 +207,7 @@ export function WalletProvider({ children }) {
     } finally {
       setConnecting(false);
     }
-  }, [provider]);
+  }, [provider, getSigner]);
   
   // Função para desconectar a carteira
   const disconnectWallet = useCallback(async () => {

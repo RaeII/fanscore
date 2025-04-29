@@ -9,9 +9,11 @@ import { Order, OrderBasicInfo, OrderForFront, OrderInsert, OrderUpdatePayload, 
 import { provider,wallet } from '@/loaders/provider';
 import ContractService from './Contract.service';
 import { ethers } from 'ethers';
+import OrderStatusDatabase from '@/database/OrderStatus.database';
 
 class OrderService {
 	private database: OrderDatabase;
+	private orderStatusDatabase: OrderStatusDatabase;
 	private productOrderDatabase: ProductOrderDatabase;
 	private establishmentService: EstablishmentService;
 	private matchService: MatchService;
@@ -20,6 +22,7 @@ class OrderService {
 
 	constructor() {
 		this.database = new OrderDatabase();
+		this.orderStatusDatabase = new OrderStatusDatabase();
 		this.productOrderDatabase = new ProductOrderDatabase();
 		this.establishmentService = new EstablishmentService();
 		this.matchService = new MatchService();
@@ -175,37 +178,24 @@ class OrderService {
 				data.s
 			);
 
-			// uint256 orderId,
-			// address buyer,
-			// uint256 clubId,
-			// uint256 amount,
-			// uint256 deadline,
-			// bytes calldata orderSignature,
-			// uint8 v, 
-			// bytes32 r, 
-			// bytes32 s
-
 			// Aguardar a transação ser confirmada
-			await tx.wait();
+			const receipt = await tx.wait();
+			
+			// Obter o hash da transação do recibo
+			const transactionHash = receipt.hash;
 			
 			// Atualizar o status do pedido para "pago" (status_id = 2)
-			await this.database.update({ status_id: 2 }, data.orderId);
-
-			// Registrar o pagamento no banco de dados
-			await this.database.registerPayment({
-				order_id: data.orderId,
-				amount: data.amount,
-				payment_type: 'fantoken',
-				transaction_data: JSON.stringify(data.signature),
-				club_id: data.clubId
-			});
-
-
+			await this.database.update({ 
+				status_id: 2,
+				transaction_hash: transactionHash
+			}, data.orderId);
+			
 			return {
 				success: true,
 				order_id: data.orderId,
 				new_status: 'Pago',
-				status_id: 2
+				status_id: 2,
+				transaction_hash: transactionHash
 			};
 		} catch (error) {
 			console.error('Erro ao processar pagamento blockchain:', error);
@@ -293,12 +283,17 @@ class OrderService {
 				throw Error('Status de pedido inválido');
 			}
 			
-			toUpdate.status_id = data.status_id;
+			if(data?.status_id) toUpdate.status_id = data.status_id
 		}
+
+		if(data?.transaction_hash) toUpdate.transaction_hash = data.transaction_hash
 
 		if (Object.keys(toUpdate).length === 0) throw Error(getErrorMessage('noValidDataFound'));
 
-		await this.database.update(toUpdate, id);
+		if (Object.keys(toUpdate).length > 0) {
+			toUpdate.update_date = new Date();
+			await this.database.update(toUpdate, id);
+		}
 	}
 }
 

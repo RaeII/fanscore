@@ -354,10 +354,14 @@ export interface OrderInsert {
 
 export interface OrderUpdatePayload {
   status_id?: number;
+  transaction_hash?: string;
+  update_date?: Date;
 }
 
 export interface OrderUpdate {
   status_id?: number;
+  transaction_hash?: string;
+  update_date?: Date;
 }
 
 // ProductOrder Types
