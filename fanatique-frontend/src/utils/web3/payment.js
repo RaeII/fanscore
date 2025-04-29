@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 
 export function usePayment() {
 
-    const { signer, isConnected, provider } = useContext(WalletContext);
+    const { getSigner, isConnected, provider } = useContext(WalletContext);
     const { getContracts } = useContracts();
 
     // 1. Usuário solicita pagamento
@@ -13,24 +13,32 @@ export function usePayment() {
 
         try {   
 
-            const { fanTokenContract, fanatiqueContract, fanatiqueContractAddress,fanTokenContractAddress } = getContracts();
+            console.log('paymentSignature');
+
+            const { fanTokenContract, fanatiqueContract, fanatiqueContractAddress, fanTokenContractAddress } = await getContracts();
 
             console.log({fanTokenContractAddress});
             // Verificar se a carteira está conectada
+
+            console.log({isConnected});
+
             if (!isConnected) {
-                throw new Error("Carteira não está conectada. Por favor, conecte sua carteira.");
+                throw new Error("conecte sua carteira.");
             }
+
+            // Obter o signer usando getSigner
+            const signer = await getSigner();
 
             // Verificar se o signer está disponível
             if (!signer) {
-                throw new Error("Carteira bloqueada ou não disponível. Por favor, desbloqueie sua carteira.");
+                throw new Error("Carteira bloqueada ou não disponível");
             }
 
             let userAddress;
             try {
                 userAddress = await signer.getAddress();
             } catch {
-                throw new Error("Não foi possível obter o endereço da carteira. Por favor, desbloqueie sua carteira.");
+                throw new Error("Por favor, desbloqueie sua carteira.");
             }
 
             console.log('amount',amount.toString());
@@ -124,7 +132,11 @@ export function usePayment() {
             };
         } catch (err) {
             console.error('Erro ao assinar pagamento:', err);
-            throw new Error(`Erro ao assinar pagamento: ${err.message}`);
+            if (err.message) {
+                throw new Error(`Erro ao assinar pagamento:\n${err.message}`);
+            } else {
+                throw new Error('Erro ao assinar pagamento');
+            }
         }
     }
 

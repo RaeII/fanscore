@@ -9,17 +9,18 @@ const FANATIQUE_CONTRACT_ADDRESS = import.meta.env.VITE_FANATIQUE_CONTRACT_ADDRE
 
 // Hook para usar os contratos com o provider do WalletContext
 export const useContracts = () => {
-  const { signer } = useContext(WalletContext);
+  const { getSigner } = useContext(WalletContext);
   
   // Cria os contratos com o provider ou signer atual
-  const getContracts = () => {
+  const getContracts = async () => {
+    // Obter o signer através da função getSigner
+    const signer = await getSigner();
+    
+    console.log('Signer obtido:', signer);
 
     if (!signer) {
       throw new Error('Conecte sua carteira!');
     }
-    
-    // Escolhe usar o signer se disponível, caso contrário usa provider (somente leitura)
-   
     
     const fanTokenContract = new ethers.Contract(
       FANTOKEN_CONTRACT_ADDRESS,

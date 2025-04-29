@@ -21,6 +21,7 @@ class OrderDatabase extends Database {
 				o.match_id,
 				o.status_id,
 				os.name as status_name,
+				o.transaction_hash,
 				o.total_real,
 				o.total_fantoken,
 				o.date_register
@@ -48,6 +49,7 @@ class OrderDatabase extends Database {
 				o.match_id,
 				o.status_id,
 				os.name as status_name,
+				os.transaction_hash,
 				o.total_real,
 				o.total_fantoken
 			FROM \`order\` o
@@ -68,6 +70,7 @@ class OrderDatabase extends Database {
 				o.match_id,
 				o.status_id,
 				os.name as status_name,
+				os.transaction_hash,
 				o.total_real,
 				o.total_fantoken
 			FROM \`order\` o
@@ -89,6 +92,7 @@ class OrderDatabase extends Database {
 				o.match_id,
 				o.status_id,
 				os.name as status_name,
+				os.transaction_hash,
 				o.total_real,
 				o.total_fantoken
 			FROM \`order\` o
@@ -110,6 +114,7 @@ class OrderDatabase extends Database {
 				o.match_id,
 				o.status_id,
 				os.name as status_name,
+				o.transaction_hash,
 				o.total_real,
 				o.total_fantoken
 			FROM \`order\` o
@@ -139,11 +144,6 @@ class OrderDatabase extends Database {
 		return await this.query(`UPDATE \`order\` SET ${mysqlBind} WHERE id = ?;`, [...Object.values(filteredData), id]);
 	}
 
-	async registerPayment(data: any) {
-		const mysqlBind = createBindParams(data);
-
-		return await this.query(`INSERT INTO order_payment SET ${mysqlBind};`, Object.values(data));
-	}
 }
 
 export default OrderDatabase; 

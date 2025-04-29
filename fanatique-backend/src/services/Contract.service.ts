@@ -11,6 +11,10 @@ import fanatique from 'artifacts/contracts/Fanatique.sol/Fanatique.json';
 import { ClubBasicInfo } from '@/types';
 import { TransactionInsert } from '@/types/transaction';
 import { TransferTokenPayload } from '@/types/transaction';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execPromise = promisify(exec);
 
 class ContractService {
 	private clubService: ClubService;
@@ -88,6 +92,27 @@ class ContractService {
 
 	async configureAllClubTokens(initialSupply: string = "1000000000000000000000000"): Promise<Array<object>> {
 		try {
+			// Executar os comandos de deploy dos contratos
+			console.log('Iniciando deploy do contrato FanToken...');
+			try {
+				const { stdout: fanTokenOutput, stderr: fanTokenError } = await execPromise('export NODE_ENV=development && npx hardhat deploy --network localhost --contract fantoken');
+				console.log('FanToken deploy output:', fanTokenOutput);
+				if (fanTokenError) console.error('FanToken deploy error:', fanTokenError);
+			} catch (error: any) {
+				console.error('Erro ao executar deploy do FanToken:', error.message);
+				throw new Error(`Falha ao fazer deploy do contrato FanToken: ${error.message}`);
+			}
+
+			console.log('Iniciando deploy do contrato Fanatique...');
+			try {
+				const { stdout: fanatiqueOutput, stderr: fanatiqueError } = await execPromise('export NODE_ENV=development && npx hardhat deploy --network localhost --contract fanatique');
+				console.log('Fanatique deploy output:', fanatiqueOutput);
+				if (fanatiqueError) console.error('Fanatique deploy error:', fanatiqueError);
+			} catch (error: any) {
+				console.error('Erro ao executar deploy do Fanatique:', error.message);
+				throw new Error(`Falha ao fazer deploy do contrato Fanatique: ${error.message}`);
+			}
+
 			// Buscar todos os clubes cadastrados
 			const clubs: Array<ClubBasicInfo> = await this.clubService.fetchAll();
 

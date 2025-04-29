@@ -48,6 +48,7 @@ class EstablishmentStadiumDatabase extends Database {
 				   es.establishment_id, 
 				   es.stadium_id,
 				   e.name as establishment_name,
+				   e.image,
 				   s.name as stadium_name
 			FROM establishment_stadium es
 			JOIN establishment e ON es.establishment_id = e.id
