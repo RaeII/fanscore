@@ -86,13 +86,13 @@ export default function Quests({ questScope, gameId = null }) {
     }
   };
 
-  const filteredQuests = quests.filter(quest => {
+  const filteredQuests = quests?.filter(quest => {
     if (activeFilter === 'all') return true;
     if (activeFilter === 'available') return quest.status === 0;
     if (activeFilter === 'inProgress') return quest.status === 2;
     if (activeFilter === 'completed') return quest.status === 1;
     return true;
-  });
+  }) || [];
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
