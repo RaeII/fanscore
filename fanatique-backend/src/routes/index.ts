@@ -12,6 +12,9 @@ import establishmentStadium from './establishmentStadium.routes'
 import order from './order.routes'
 import quest from './quest.routes'
 import questUser from './quest-user.routes'
+import contract from './contract.routes'
+import userClubToken from './userClubToken.routes'
+import transaction from './transaction.routes'
 
 const apiRouter = Router();
 
@@ -27,5 +30,7 @@ apiRouter.use("/establishment-stadium", establishmentStadium);
 apiRouter.use("/order", order);
 apiRouter.use("/quest", quest);
 apiRouter.use("/quest-user", questUser);
-
+apiRouter.use("/contract", contract);
+apiRouter.use("/user-club-token", userClubToken);
+apiRouter.use("/transaction", transaction);
 export default apiRouter;

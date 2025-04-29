@@ -29,6 +29,7 @@ import ForumPostPage from './pages/forum-post'
 import MatchesPage from './pages/matches'
 import ProfilePage from './pages/profile'
 import TeamsDirectoryPage from './pages/teams-directory'
+import BuyFantokensPage from './pages/buy-fantokens'
 
 // Criar uma instância do QueryClient para o TanStack Query
 const queryClient = new QueryClient()
@@ -39,8 +40,8 @@ const router = createBrowserRouter([
     element: (
       <>
         <Layout />
-        {/* <AdminNav /> */}
-      </>
+{/*         <AdminNav />
+ */}      </>
     ),
     children: [
       {
@@ -180,6 +181,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <TeamsDirectoryPage />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: 'buy-fantokens',
+        element: (
+          <ProtectedRoute>
+            <BuyFantokensPage />
           </ProtectedRoute>
         )
       }

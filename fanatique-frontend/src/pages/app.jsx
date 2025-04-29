@@ -47,20 +47,16 @@ export default function AppPage() {
         return;
       }
       
-      console.log('Verificação de cadastro:', walletCheck);
       
       // Se o usuário não estiver cadastrado, exibe o formulário de registro
       setShowRegister(!walletCheck.exists);
       
       // Se o usuário já estiver cadastrado, solicita a assinatura automaticamente
       if (walletCheck.exists) {
-        console.log('App: Usuário já cadastrado, solicitando assinatura');
         
         const loggedIn = await requestSignature();
-        console.log('App: Resultado da assinatura:', loggedIn);
         
         if (loggedIn) {
-          console.log('App: Login bem-sucedido, redirecionando para o dashboard');
           
           // Aguarda um pouco para garantir que os dados estejam persistidos
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -86,7 +82,6 @@ export default function AppPage() {
   useEffect(() => {
     (async () => {
       if (isAuthenticated) {
-        console.log('App: Usuário já autenticado pelo contexto, redirecionando para dashboard');
         navigate('/dashboard');
         return;
       }

@@ -332,6 +332,8 @@ contract FanToken is Ownable {
         );
         
         address signer = ecrecover(digest, v, r, s);
+        console.log("\n\nsigner:", signer);
+        console.log("from:", from);
         return signer == from;
     }
     

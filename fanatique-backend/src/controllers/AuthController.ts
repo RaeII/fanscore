@@ -15,7 +15,7 @@ class AuthController extends Controller {
       }
 
       const jwtSecret = process.env.JWT_SECRET || 'default_secret_key';
-      const expiresIn = 60 * 60 * 24 * 7; // 7 dias
+      const expiresIn = 60 * 60 * 24 * 30; // 30 dias
 
       const token = jwt.sign({ user_id: userId }, jwtSecret, { expiresIn });
 

@@ -1,0 +1,49 @@
+import { ethers } from 'ethers';
+import FanTokenContract from '../../abi/FanToken.json'
+import FanatiqueContract from '../../abi/Fanatique.json'
+import { useContext } from 'react';
+import { WalletContext } from '../../contexts/WalletContextDef';
+
+const FANTOKEN_CONTRACT_ADDRESS = import.meta.env.VITE_FANTOKEN_CONTRACT_ADDRESS;
+const FANATIQUE_CONTRACT_ADDRESS = import.meta.env.VITE_FANATIQUE_CONTRACT_ADDRESS;
+
+// Hook para usar os contratos com o provider do WalletContext
+export const useContracts = () => {
+  const { signer } = useContext(WalletContext);
+  
+  // Cria os contratos com o provider ou signer atual
+  const getContracts = () => {
+
+    if (!signer) {
+      throw new Error('Conecte sua carteira!');
+    }
+    
+    // Escolhe usar o signer se disponível, caso contrário usa provider (somente leitura)
+   
+    
+    const fanTokenContract = new ethers.Contract(
+      FANTOKEN_CONTRACT_ADDRESS,
+      FanTokenContract.abi,
+      signer
+    );
+
+    const fanatiqueContract = new ethers.Contract(
+      FANATIQUE_CONTRACT_ADDRESS,
+      FanatiqueContract.abi,
+      signer
+    );
+    
+    return {
+      fanTokenContract,
+      fanatiqueContract,
+      fanTokenContractAddress: FANTOKEN_CONTRACT_ADDRESS,
+      fanatiqueContractAddress: FANATIQUE_CONTRACT_ADDRESS
+    
+    };
+  };
+  
+  return { getContracts };
+};
+
+export default useContracts;
+

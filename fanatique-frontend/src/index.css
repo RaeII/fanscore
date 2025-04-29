@@ -44,4 +44,16 @@
   .dark body {
     @apply bg-[#0d0117] text-white;
   }
+}
+
+/* Adicione este código no final do arquivo para remover as setas do input numérico */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 } 

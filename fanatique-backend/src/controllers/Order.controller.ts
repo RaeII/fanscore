@@ -44,6 +44,39 @@ class OrderController extends Controller {
 		}
 	}
 
+	async paymentOrder(req: Request, res: Response) {
+		
+		try {	
+			const userId: number = Number(res.locals.jwt.user_id);
+
+			const body: any = {
+				userId,
+				orderId: req.body.order_id,
+				clubId: req.body.club_id,
+				amount: req.body.amount,
+				signature: req.body.signature,
+				userAddress: req.body.user_address,
+				deadline: req.body.deadline,
+				v: req.body.v,
+				r: req.body.r,
+				s: req.body.s
+			};
+
+			await Database.startTransaction();
+			const result = await this.service.paymentOrder(body);
+			await Database.commit();
+			
+			return this.sendSuccessResponse(res, { 
+				content: result, 
+				message: getSuccessMessage('pagamento concluido', 'Pedido') 
+			});
+		} catch (err) {
+			await Database.rollback().catch(console.log);
+			console.error('Erro no pagamento:', err);
+			return await this.sendErrorMessage(res, err);
+		}
+	}
+
 	async fetch(req: Request, res: Response) {
 		try {
 			const orderId: number = Number(req.params.id);
@@ -93,8 +126,9 @@ class OrderController extends Controller {
 	async fetchByMatch(req: Request, res: Response) {
 		try {
 			const matchId: number = Number(req.params.matchId);
+			const userId: number = Number(res.locals.jwt.user_id);
 			
-			const orders = await this.service.fetchByMatchWithProducts(matchId);
+			const orders = await this.service.fetchByMatchWithProducts(matchId, userId);
 			return this.sendSuccessResponse(res, { content: orders });
 		} catch (err) {
 			return await this.sendErrorMessage(res, err);
