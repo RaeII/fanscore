@@ -32,7 +32,22 @@ export const getWalletTokens = async (walletAddress) => {
   }
 };
 
+export const getWalletTokensByClub = async (walletAddress, clubId) => {
+  try {
+    if (!walletAddress || !clubId) {
+      throw new Error('Endereço da carteira e ID do clube são obrigatórios');
+    }
+    
+    const response = await api.get(`/contract/wallet-tokens/${walletAddress}/club/${clubId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Erro ao buscar tokens da carteira:', error);
+    throw error;
+  }
+}
+
 export default {
   transferTokens,
   getWalletTokens,
+  getWalletTokensByClub
 }; 

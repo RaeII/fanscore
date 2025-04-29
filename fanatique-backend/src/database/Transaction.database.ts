@@ -25,8 +25,10 @@ class TransactionDatabase extends Database {
         t.value, 
         t.user_id, 
         t.club_id,
+        t.date_register,
         c.name as club_name,
-        c.image as club_image
+        c.image as club_image,
+        c.symbol
       FROM transaction t
       LEFT JOIN club c ON t.club_id = c.id
       WHERE t.user_id = ?
@@ -39,10 +41,12 @@ class TransactionDatabase extends Database {
       value: row.value,
       user_id: row.user_id,
       club_id: row.club_id,
+      date_register: row.date_register,
       club: row.club_id ? {
         id: row.club_id,
         name: row.club_name,
-        image: row.club_image
+        image: row.club_image,
+        symbol: row.symbol
       } : undefined
     }));
   }

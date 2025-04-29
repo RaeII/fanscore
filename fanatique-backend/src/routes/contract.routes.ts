@@ -32,4 +32,13 @@ router.get('/wallet-tokens/:wallet_address', [
 	}
 ]);
 
+router.get('/wallet-tokens/:wallet_address/club/:club_id', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+
+		controller.getWalletTokenByClub(req, res);
+	}
+]);
+
 export default router; 

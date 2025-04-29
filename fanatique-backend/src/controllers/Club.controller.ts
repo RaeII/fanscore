@@ -18,7 +18,8 @@ class ClubController extends Controller {
 		try {
 			const body: ClubInsert = {
 				name: req.body.name,
-				image: req.body.image
+				image: req.body.image,
+				symbol: req.body.symbol
 			};
 
 			// Validar se existe a imagem
@@ -28,6 +29,10 @@ class ClubController extends Controller {
 
 			if (!body.image) {
 				return this.sendErrorMessage(res, new Error(getErrorMessage('missingField', 'Imagem do clube')));
+			}
+
+			if (!body.symbol) {
+				return this.sendErrorMessage(res, new Error(getErrorMessage('missingField', 'Símbolo do clube')));
 			}
 
 			await Database.startTransaction();

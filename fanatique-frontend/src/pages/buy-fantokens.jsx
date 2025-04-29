@@ -104,12 +104,6 @@ export default function BuyFantokensPage() {
     return token ? parseFloat(token.balance) : 0;
   };
 
-  // Função para obter o símbolo do token de um clube
-  const getClubTokenSymbol = (club) => {
-    const token = walletTokens.find(token => token.club_id === club.id.toString());
-    return token ? token.tokenSymbol : club.tokenSymbol || club.name.substring(0, 3).toUpperCase();
-  };
-
   const handleSelectClub = (club) => {
     setSelectedClub(club);
     setShowModal(true);
@@ -178,8 +172,7 @@ export default function BuyFantokensPage() {
 
   // Gerar QR Code aleatório
   const getRandomQRCode = () => {
-    const randomNum = Math.floor(Math.random() * 1000);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=fanatique-payment-${selectedClub?.id}-${quantity}-${randomNum}`;
+    return `qr.png`;
   };
 
   // Filter clubs based on search term
@@ -251,7 +244,7 @@ export default function BuyFantokensPage() {
         {activeTab === 'comprar' ? (
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-primary dark:text-white mb-4">
-              PRINCIPAIS TOKENS EM MOVIMENTO
+              PRINCIPAIS TOKENS
             </h2>
             
             {/* Search input */}
@@ -292,17 +285,14 @@ export default function BuyFantokensPage() {
                     </div>
                     <div>
                       <p className="font-medium text-white">
-                        {club.name}
+                        {club.symbol}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center">
                     <div className="text-right mr-4">
                       <p className="font-bold text-white">
-                        {getClubTokenBalance(club.id)} {getClubTokenSymbol(club)}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {getClubTokenBalance(club.id) ? `${getClubTokenBalance(club.id)} CHZ • ~${(getClubTokenBalance(club.id) * 0.8).toFixed(2)} EUR` : '0 CHZ • ~0 EUR'}
+                        {getClubTokenBalance(club.id)} {club.symbol}
                       </p>
                     </div>
                     <ChevronRight size={20} className="text-gray-400" />
@@ -360,7 +350,7 @@ export default function BuyFantokensPage() {
                       </div>
                       <div>
                         <p className="font-medium text-white">
-                          {transaction.club?.name || 'Clube Desconhecido'}
+                          {transaction.club?.symbol || 'FanToken'}
                         </p>
                         <div className="flex items-center text-xs text-gray-400">
                           <span className="inline-flex items-center">
@@ -387,7 +377,7 @@ export default function BuyFantokensPage() {
                         +{transaction.value}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {new Date().toLocaleDateString()}
+                        {new Date(transaction.date_register).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -433,7 +423,7 @@ export default function BuyFantokensPage() {
                   <div className="mb-4 text-center">
                     <p className="text-sm text-primary/70 dark:text-white/70 mb-1">Seu saldo atual</p>
                     <p className="text-xl font-bold text-primary dark:text-white">
-                      {getClubTokenBalance(selectedClub.id)} {getClubTokenSymbol(selectedClub)}
+                      {getClubTokenBalance(selectedClub.id)} {selectedClub.symbol}
                     </p>
                   </div>
 

@@ -130,8 +130,8 @@ class ContractService {
 			for (const club of clubs) {
 				try {
 					const clubId = club.id;
-					const tokenName = `${club.name} Fan Token`;
-					const tokenSymbol = `${club.name.substring(0, 3).toUpperCase()}FT`;
+					const tokenName = club.name;
+					const tokenSymbol = club.symbol;
 
 					console.log(`Configurando token para clube ${clubId}: ${club.name}`);
 					
@@ -373,6 +373,62 @@ class ContractService {
 			}
 		} catch (error: any) {
 			console.error(`Erro ao buscar tokens da carteira:`, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Retorna os detalhes e saldo de um FanToken específico que uma carteira possui
+	 * @param walletAddress Endereço da carteira do usuário
+	 * @param clubId ID do clube do token
+	 * @returns Objeto com informações de saldo e detalhes do token
+	 */
+	async getWalletTokenByClub(walletAddress: string, clubId: number): Promise<any> {
+		try {
+			if (!walletAddress) throw Error(getErrorMessage('missingField', 'Endereço da carteira'));
+			if (!clubId) throw Error(getErrorMessage('missingField', 'ID do clube'));
+
+			// Obter instância do contrato FanToken
+			const contractFanToken = this.getFanTokenContract();
+
+			// Verificar se o clube existe
+			const club = await this.clubService.fetch(clubId);
+			if (!club) throw Error(getErrorMessage('registryNotFound', 'Clube'));
+
+			try {
+				// Obter o saldo do token para a carteira
+				const balance = await contractFanToken.balanceOf(clubId, walletAddress);
+				
+				// Obter os detalhes do token
+				const [name, symbol, totalSupply] = await contractFanToken.getTokenDetails(clubId);
+				
+				// Retornar as informações
+				return {
+					club_id: clubId.toString(),
+					clubName: club.name,
+					clubSymbol: club.symbol,
+					clubImage: club.image,
+					tokenName: name,
+					tokenSymbol: symbol,
+					balance: ethers.formatUnits(balance, 18), // Converter de wei para unidade normal (assumindo 18 decimais)
+				};
+			} catch (error: any) {
+				// Se o usuário não tiver o token do clube, retornar saldo zero
+				if (error.message && (error.message.includes("no tokens") || error.message.includes("token does not exist"))) {
+					return {
+						club_id: clubId.toString(),
+						clubName: club.name,
+						clubSymbol: club.symbol,
+						clubImage: club.image,
+						tokenName: club.name,
+						tokenSymbol: club.symbol,
+						balance: "0"
+					};
+				}
+				throw error;
+			}
+		} catch (error: any) {
+			console.error(`Erro ao buscar token do clube ${clubId}:`, error);
 			throw error;
 		}
 	}

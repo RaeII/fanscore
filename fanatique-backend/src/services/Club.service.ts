@@ -12,13 +12,14 @@ class ClubService {
 	async create(data: ClubInsert): Promise<number> {
 		if (!data.name) throw Error(getErrorMessage('missingField', 'Nome do clube'));
 		if (!data.image) throw Error(getErrorMessage('missingField', 'Imagem do clube'));
-		
+		if (!data.symbol) throw Error(getErrorMessage('missingField', 'Símbolo do clube'));
 		const clubByName = await this.fetchByName(data.name);
 		if (clubByName.length > 0) throw Error(getErrorMessage('clubAlreadyExist'));
 
 		const insertData: ClubInsert = {
 			name: data.name,
-			image: data.image
+			image: data.image,
+			symbol: data.symbol
 		};
 
 		const result: any = await this.database.create(insertData);
@@ -60,6 +61,10 @@ class ClubService {
 		
 		if (data?.image) {
 			toUpdate.image = data.image;
+		}
+
+		if (data?.symbol) {
+			toUpdate.symbol = data.symbol;
 		}
 
 		if (Object.keys(toUpdate).length === 0) throw Error(getErrorMessage('noValidDataFound'));

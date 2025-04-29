@@ -16,7 +16,8 @@ class ClubDatabase extends Database {
 			SELECT
 				id,
 				name,
-				image
+				image,
+				symbol
 			FROM club
 			WHERE id = ?;`, [id]);
 
@@ -30,13 +31,13 @@ class ClubDatabase extends Database {
 	}
 
 	async fetchAll(): Promise<Array<ClubBasicInfo>> {
-		const rows: any = await this.query('SELECT id, name, image FROM club;', []);
+		const rows: any = await this.query('SELECT id, name, image, symbol FROM club;', []);
 
 		return rows[0];
 	}
 
 	async fetchByName(name: string): Promise<Array<ClubBasicInfo>> {
-		const rows = await this.query('SELECT id, name, image FROM club WHERE name = ?;', [name]);
+		const rows = await this.query('SELECT id, name, image, symbol FROM club WHERE name = ?;', [name]);
 
 		return rows[0] as Array<ClubBasicInfo>;
 	}

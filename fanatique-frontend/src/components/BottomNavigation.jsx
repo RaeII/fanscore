@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, User, Heart, MessageCircle, Trophy, Settings, Store, Calendar, ChevronUp, X, Wallet } from 'lucide-react';
+import { 
+  Home, User, Heart, MessageCircle, Trophy, Settings, 
+  Store, Calendar, ChevronUp, X, Wallet, ChevronRight, ChevronLeft, Menu
+} from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useUserContext } from '../hooks/useUserContext';
 
-export default function BottomNavigation() {
+export default function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const { userClubsData } = useUserContext();
   const [activeItem, setActiveItem] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [showClubOptions, setShowClubOptions] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Get the heart club data
   const heartClub = userClubsData?.heart_club?.club;
@@ -25,7 +29,7 @@ export default function BottomNavigation() {
     } else if (path.includes('/forum')) {
       setActiveItem('forum');
     } else if (path.startsWith('/clubs/') && heartClub && path.includes(heartClub.id)) {
-      setActiveItem('heartClub');
+      setActiveItem('club');
     } else if (path.includes('/matches')) {
       setActiveItem('matches');
     } else if (path.includes('/shop')) {
@@ -40,9 +44,10 @@ export default function BottomNavigation() {
   // Fechar opções do clube quando mudar de rota
   useEffect(() => {
     setShowClubOptions(false);
+    setIsMobileMenuOpen(false);
   }, [location]);
 
-  // Opções do clube
+  // Opções do clube para mobile
   const clubOptions = [
     {
       id: 'club',
@@ -58,46 +63,8 @@ export default function BottomNavigation() {
     }
   ];
 
-  // Mobile nav items - limited set
+  // Itens de navegação para mobile
   const mobileNavItems = [
-    {
-      id: 'home',
-      label: 'Home',
-      icon: <Home size={20} />,
-      onClick: () => navigate('/dashboard'),
-    },
-    {
-      id: 'forum',
-      label: 'Forum',
-      icon: <MessageCircle size={20} />,
-      onClick: () => navigate(`/clubs/${heartClub.id}/forum`),
-      disabled: !heartClub,
-    },
-    {
-      id: 'heartClub',
-      label: 'Meu Clube',
-      icon: <Heart size={20} />,
-      onClick: () => {
-        setShowClubOptions(!showClubOptions);
-      },
-      disabled: !heartClub,
-    },
-    {
-      id: 'wallet',
-      label: 'Carteira',
-      icon: <Wallet size={20} />,
-      onClick: () => navigate('/buy-fantokens'),
-    },
-    {
-      id: 'profile',
-      label: 'Perfil',
-      icon: <User size={20} />,
-      onClick: () => navigate('/profile'),
-    }
-  ];
-
-  // Desktop nav items - expanded set with more options
-  const desktopNavItems = [
     {
       id: 'home',
       label: 'Home',
@@ -134,17 +101,148 @@ export default function BottomNavigation() {
     },
   ];
 
+  // Itens de navegação para desktop (incluindo Meu Clube e Partidas diretamente)
+  const desktopNavItems = [
+    {
+      id: 'home',
+      label: 'Home',
+      icon: <Home size={20} />,
+      onClick: () => navigate('/dashboard'),
+    },
+    {
+      id: 'club',
+      label: 'Meu Clube',
+      icon: <Heart size={20} />,
+      onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}`) : navigate('/dashboard'),
+      disabled: !heartClub,
+    },
+    {
+      id: 'matches',
+      label: 'Partidas',
+      icon: <Trophy size={20} />,
+      onClick: () => navigate('/matches'),
+    },
+    {
+      id: 'forum',
+      label: 'Forum',
+      icon: <MessageCircle size={20} />,
+      onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}/forum`) : navigate('/dashboard'),
+      disabled: !heartClub,
+    },
+    {
+      id: 'wallet',
+      label: 'Carteira',
+      icon: <Wallet size={20} />,
+      onClick: () => navigate('/buy-fantokens'),
+    },
+    {
+      id: 'profile',
+      label: 'Perfil',
+      icon: <User size={20} />,
+      onClick: () => navigate('/profile'),
+    },
+  ];
+
   return (
     <>
-      {/* Mobile bottom navigation - traditional tab bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#0d0117] shadow-lg border-t border-gray-200 dark:border-gray-800 z-50 md:hidden">
+      {/* Overlay para fechar o menu mobile quando aberto */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Botão hamburguer para mobile */}
+      <button
+        className="fixed top-4 left-4 z-50 rounded-full bg-white dark:bg-[#150924] p-2 shadow-md md:hidden"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        <Menu size={24} className="text-primary dark:text-white" />
+      </button>
+
+      {/* Mobile slide-in menu */}
+      <div 
+        className={cn(
+          "fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-[#0d0117] shadow-lg z-50 transition-transform duration-300 md:hidden",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="h-full flex flex-col py-4">
+          <div className="px-4 mb-6 mt-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-primary dark:text-white">Fanatique</h2>
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <X size={20} className="text-primary dark:text-white" />
+              </button>
+            </div>
+          </div>
+          
+          <nav className="flex-1 overflow-y-auto px-3">
+            {mobileNavItems.map((item) => (
+              <div key={item.id}>
+                <button
+                  className={cn(
+                    'w-full flex items-center py-3 px-4 mb-1 rounded-lg transition-all',
+                    (activeItem === item.id || (item.id === 'heartClub' && (activeItem === 'club' || activeItem === 'matches')))
+                      ? 'bg-secondary text-white'
+                      : 'text-primary/80 dark:text-white/80 hover:bg-gray-100 dark:hover:bg-white/10',
+                    item.disabled && 'opacity-40 cursor-not-allowed'
+                  )}
+                  onClick={item.onClick}
+                  disabled={item.disabled}
+                >
+                  {item.icon}
+                  <span className="ml-3 font-medium">{item.label}</span>
+                  {item.id === 'heartClub' && (
+                    <ChevronRight 
+                      size={16} 
+                      className={cn(
+                        "ml-auto transition-transform",
+                        showClubOptions && "rotate-90"
+                      )} 
+                    />
+                  )}
+                </button>
+                
+                {/* Submenu para clube no mobile */}
+                {showClubOptions && item.id === 'heartClub' && (
+                  <div className="pl-10 mb-2">
+                    {clubOptions.map((option) => (
+                      <button
+                        key={option.id}
+                        className={cn(
+                          'w-full flex items-center py-2 px-4 rounded-lg transition-all',
+                          activeItem === option.id
+                            ? 'text-secondary font-medium'
+                            : 'text-primary/70 dark:text-white/70 hover:bg-gray-100 dark:hover:bg-white/10'
+                        )}
+                        onClick={option.onClick}
+                      >
+                        {option.icon}
+                        <span className="ml-3">{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Bottom mobile navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#0d0117] shadow-lg border-t border-gray-200 dark:border-gray-800 z-40 md:hidden">
         <nav className="flex justify-around items-center h-16">
           {mobileNavItems.map((item) => (
             <button
               key={item.id}
               className={cn(
                 'flex flex-col items-center justify-center px-2 py-1 w-full h-full relative',
-                activeItem === item.id
+                (activeItem === item.id || (item.id === 'heartClub' && (activeItem === 'club' || activeItem === 'matches')))
                   ? 'text-secondary'
                   : 'text-primary/70 dark:text-white/70',
                 item.disabled && 'opacity-40',
@@ -158,100 +256,71 @@ export default function BottomNavigation() {
             </button>
           ))}
         </nav>
-        
-        {/* Menu de opções do clube (mobile) */}
-        {showClubOptions && (
-          <div className="absolute bottom-20 left-0 right-0 flex justify-center items-center z-50 px-4">
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-3">
-              {clubOptions.map((option) => (
-                <button
-                  key={option.id}
-                  className={cn(
-                    'flex items-center justify-center w-12 h-12 rounded-full bg-white/10 dark:bg-[#221130] shadow-lg border border-gray-700',
-                    activeItem === option.id
-                      ? 'text-secondary border-secondary'
-                      : 'text-primary/70 dark:text-white/90'
-                  )}
-                  onClick={option.onClick}
-                  title={option.label}
-                >
-                  {option.icon}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Desktop dock-style navigation - always visible and centered */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 hidden md:block">
-        <div className={cn(
-          'relative rounded-full bg-white/90 dark:bg-[#150924]/90 shadow-lg backdrop-blur-sm border border-gray-200 dark:border-gray-700 transition-all duration-300',
-          isExpanded ? 'py-3 px-4' : 'py-2 px-3'
-        )}>
-          {/* Expand/collapse button */}
-          <button 
-            className={cn(
-              "absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white dark:bg-[#150924] rounded-full w-7 h-7 flex items-center justify-center shadow-md border border-gray-200 dark:border-gray-700 text-primary/70 dark:text-white/70 transition-transform duration-300",
-              isExpanded && "rotate-180"
+      {/* Desktop side navigation */}
+      <div 
+        className={cn(
+          "fixed top-0 left-0 bottom-0 bg-white/90 dark:bg-[#0d0117]/90 shadow-lg backdrop-blur-sm border-r border-gray-200 dark:border-gray-800 z-50 transition-all duration-300 hidden md:block",
+          isExpanded ? "w-64" : "w-20"
+        )}
+      >
+        <div className="h-full flex flex-col p-3">
+          <div className={cn(
+            "flex items-center px-3 py-5 mb-4",
+            !isExpanded && "justify-center"
+          )}>
+            {isExpanded ? (
+              <h2 className="text-xl font-bold text-primary dark:text-white">Fanatique</h2>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-white font-bold">F</div>
             )}
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            <ChevronUp size={16} />
-          </button>
+          </div>
 
-          <nav className="flex items-center space-x-1">
+          <nav className="flex-1 overflow-y-auto">
             {desktopNavItems.map((item) => (
               <button
                 key={item.id}
                 className={cn(
-                  'flex items-center rounded-full transition-all duration-200 relative',
-                  isExpanded ? 'px-4 py-2' : 'p-2',
+                  'w-full flex items-center py-3 mb-2 rounded-lg transition-all',
+                  isExpanded ? 'px-4' : 'px-0 justify-center',
                   activeItem === item.id
-                    ? 'text-white bg-secondary shadow-md'
-                    : 'text-primary/70 dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10',
-                  item.disabled && 'opacity-40 cursor-not-allowed',
-                  showClubOptions && item.id === 'heartClub' && 'text-white bg-secondary'
+                    ? 'bg-secondary text-white'
+                    : 'text-primary/80 dark:text-white/80 hover:bg-gray-100 dark:hover:bg-white/10',
+                  item.disabled && 'opacity-40 cursor-not-allowed'
                 )}
                 onClick={item.onClick}
                 disabled={item.disabled}
-                title={item.label}
+                title={!isExpanded ? item.label : undefined}
               >
                 {item.icon}
                 {isExpanded && (
-                  <span className="ml-2 text-sm font-medium">{item.label}</span>
+                  <span className="ml-3 font-medium">{item.label}</span>
                 )}
               </button>
             ))}
           </nav>
+          
+          {/* Botão para expandir/recolher a barra lateral */}
+          <button 
+            className="mx-auto mt-4 w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-primary dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            onClick={() => setIsExpanded(!isExpanded)}
+          >
+            {isExpanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          </button>
         </div>
-        
-        {/* Menu de opções do clube (desktop) */}
-        {showClubOptions && (
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-50">
-            <div className="flex gap-3">
-              {clubOptions.map((option) => (
-                <button
-                  key={option.id}
-                  className={cn(
-                    'flex items-center justify-center w-10 h-10 rounded-full bg-white/10 dark:bg-[#221130] shadow-lg backdrop-blur-sm border border-gray-700',
-                    activeItem === option.id
-                      ? 'text-secondary border-secondary'
-                      : 'text-primary/70 dark:text-white/90'
-                  )}
-                  onClick={option.onClick}
-                  title={option.label}
-                >
-                  {option.icon}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Add bottom padding for mobile to prevent content being hidden behind the nav bar */}
-      <div className="h-16 md:h-0 w-full"></div>
+      {/* Padding para compensar a barra lateral no desktop */}
+      <div className="hidden md:block md:w-64 shrink-0 transition-all duration-300">
+        <div className={cn(
+          "transition-all duration-300",
+          isExpanded ? "w-64" : "w-20"
+        )}></div>
+      </div>
+
+      {/* Padding para o conteúdo no mobile */}
+      <div className="h-16 md:h-0 w-full block md:hidden"></div>
     </>
   );
 } 

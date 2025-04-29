@@ -82,6 +82,39 @@ class ConfigController extends Controller {
 			return await this.sendErrorMessage(res, err);
 		}
 	}
+
+	async getWalletTokenByClub(req: Request, res: Response) {
+		try {
+			// Obter o endereço da carteira do parâmetro ou do usuário logado
+			let walletAddress = req.params.wallet_address as string;
+			const clubId = Number(req.params.club_id);
+			
+			if (!clubId) {
+				throw Error(getErrorMessage('missingField', 'ID do clube'));
+			}
+			
+			if (!walletAddress) {
+				// Obter o endereço da carteira do usuário logado
+				const userId = Number(res.locals.jwt.user_id);
+				const userService = this.service['userService']; // Acesso ao userService
+				const user = await userService.fetch(userId);
+				
+				if (!user) {
+					throw Error(getErrorMessage('registryNotFound', 'Usuário'));
+				}
+				walletAddress = user.wallet_address;
+			}
+			
+			const tokenInfo = await this.service.getWalletTokenByClub(walletAddress, clubId);
+			
+			return this.sendSuccessResponse(res, { 
+				content: tokenInfo,
+				message: getSuccessMessage('fetch', 'Saldo de FanToken do clube') 
+			});
+		} catch (err) {
+			return await this.sendErrorMessage(res, err);
+		}
+	}
 }
 
 export default ConfigController; 

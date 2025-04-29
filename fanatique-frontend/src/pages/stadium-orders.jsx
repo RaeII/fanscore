@@ -18,7 +18,9 @@ import {
   ListTodo,
   AlertCircle,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Volleyball as Football,
+  Receipt
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { showError, showSuccess } from '../lib/toast';
@@ -29,11 +31,14 @@ import establishmentApi from '../api/establishment';
 import { useLocation } from 'react-router-dom';
 import establishmentProductApi from '../api/establishment_product';
 import { usePayment } from '../utils/web3/payment';
+import { getWalletTokensByClub } from '../api/contract';
+import contractApi from '../api/contract';
+
 
 export default function StadiumOrdersPage() {
   const navigate = useNavigate();
   const { clubId, gameId } = useParams();
-  const { isAuthenticated, getUserData } = useWalletContext();
+  const { isAuthenticated, getUserData, account } = useWalletContext();
   const { state } = useLocation();
   const { paymentSignature } = usePayment();
   // UI States
@@ -41,8 +46,6 @@ export default function StadiumOrdersPage() {
   const [currentView, setCurrentView] = useState('establishments'); // 'establishments', 'menu', 'cart', 'confirmation', 'activeOrders'
   const [placingOrder, setPlacingOrder] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [copiedHash, setCopiedHash] = useState(null);
-
   
   // Data States
   const [establishments, setEstablishments] = useState([]);
@@ -54,7 +57,19 @@ export default function StadiumOrdersPage() {
   const [gameInfo, setGameInfo] = useState(null);
   const [activeOrders, setActiveOrders] = useState([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState('all'); // 'all', '1', '2'
+  const [userTokens, setUserTokens] = useState(null);
   
+  // Nova adição: Modal de compra de tokens
+  const [showBuyTokenModal, setShowBuyTokenModal] = useState(false);
+  const [tokenQuantity, setTokenQuantity] = useState(1);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [processingTokenPayment, setProcessingTokenPayment] = useState(false);
+  const [insufficientFunds, setInsufficientFunds] = useState(false);
+  const [requiredTokens, setRequiredTokens] = useState(0);
+  
+  // Modal de confirmação para compra de tokens
+  const [showConfirmTokenBuyModal, setShowConfirmTokenBuyModal] = useState(false);
+
   // Check if user is authenticated and load data
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
@@ -84,6 +99,7 @@ export default function StadiumOrdersPage() {
         if (gameId) {
           await verifyHomeGameAndLoadData(clubId, gameId);
           await fetchActiveOrders();
+          await fetchUserTokens();
         } else {
           showError('No game specified');
           navigate(`/clubs/${clubId}`);
@@ -99,6 +115,21 @@ export default function StadiumOrdersPage() {
 
     checkAuthAndLoadData();
   }, [isAuthenticated, navigate, getUserData, clubId, gameId]);
+
+  // Buscar saldo de tokens do usuário
+  const fetchUserTokens = async () => {
+    try {
+      if (!account || !clubId) return;
+      
+      const response = await getWalletTokensByClub(account, clubId);
+      if (response && response.content) {
+        setUserTokens(response.content);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar saldo de tokens:', error);
+      // Não mostrar erro para não interromper o fluxo principal
+    }
+  };
 
   // Fetch active orders periodically
   useEffect(() => {
@@ -118,10 +149,8 @@ export default function StadiumOrdersPage() {
 
   const fetchActiveOrders = async () => {
     try {
-      console.log(gameId);
       // In a real app, this would fetch the user's active orders for this game
       const activeOrdersData = await orderApi.getActiveOrders(gameId);
-      console.log({activeOrdersData});
       setActiveOrders(activeOrdersData);
     } catch (error) {
 
@@ -284,6 +313,10 @@ export default function StadiumOrdersPage() {
     return cart.reduce((total, item) => total + (item.value_real * item.quantity), 0);
   };
 
+  const calculateFanTokenTotal = () => {
+    return cart.reduce((total, item) => total + (item.value_tokefan * item.quantity), 0);
+  };
+
   // Get order status color
   const getStatusColor = (status) => {
     switch (status) {
@@ -312,15 +345,102 @@ export default function StadiumOrdersPage() {
     }
   };
 
-  // Função para lidar com o pagamento de uma ordem
+  // Função para verificar se o usuário tem saldo suficiente para realizar a compra
+  const checkUserBalance = (totalTokens) => {
+    if (!userTokens) {
+      return false;
+    }
+    
+    return parseFloat(userTokens.balance) >= totalTokens;
+  };
+
+  // Função para lidar com a compra de tokens
+  const handleBuyTokens = async () => {
+    if (!account) {
+      showError('Conecte sua carteira para continuar com a compra');
+      return;
+    }
+    setShowQRCode(true);
+  };
+
+  // Função para fechar o modal de compra de tokens
+  const handleCloseTokenModal = () => {
+    setShowBuyTokenModal(false);
+    setShowQRCode(false);
+    setTokenQuantity(1);
+    setInsufficientFunds(false);
+  };
+
+  // Função para processar a compra de tokens
+  const processTokenPurchase = async () => {
+    try {
+      setProcessingTokenPayment(true);
+      
+      // Preparar dados para a transferência
+      const transferData = {
+        club_id: clubId,
+        to: account,
+        amount: tokenQuantity
+      };
+      
+      // Chamar a API para transferir tokens
+      await contractApi.transferTokens(transferData);
+      
+      // Atualizar tokens da carteira após a compra
+      await fetchUserTokens();
+      
+      // Fechar todos os modais
+      setShowQRCode(false);
+      setShowBuyTokenModal(false);
+      setShowConfirmTokenBuyModal(false);
+      setTokenQuantity(1);
+      showSuccess(`Compra de ${tokenQuantity} FanTokens realizada com sucesso!`);
+      
+      // Se a compra foi devido a fundos insuficientes para um pedido, agora tente realizar o pagamento do pedido
+      if (insufficientFunds && order) {
+        handlePayment(order);
+      }
+    } catch (error) {
+      console.error('Erro ao processar pagamento de tokens:', error);
+      showError('Falha ao processar o pagamento de tokens. Tente novamente.');
+    } finally {
+      setProcessingTokenPayment(false);
+      setInsufficientFunds(false);
+    }
+  };
+  
+  // Gerar QR Code aleatório
+  const getRandomQRCode = () => {
+    return `/qr.png`;
+  };
+
+  // Atualização da função de pagamento para verificar saldo
   const handlePayment = async (order) => {
     try {
+      // Verificar se o usuário tem saldo suficiente
+      const hasEnoughBalance = checkUserBalance(order.total_fantoken);
+      
+      if (!hasEnoughBalance) {
+        // Calcular quantos tokens o usuário precisa comprar
+        const currentBalance = userTokens ? parseFloat(userTokens.balance) : 0;
+        const needed = parseFloat(order.total_fantoken) - currentBalance;
+        
+        setRequiredTokens(Math.ceil(needed)); // Arredondar para cima
+        setTokenQuantity(Math.ceil(needed)); // Definir quantidade inicial para compra
+        setInsufficientFunds(true); // Indicar que estamos comprando devido a saldo insuficiente
+        setOrder(order); // Salvar o pedido atual
+        
+        // Mostrar modal de confirmação antes de abrir o modal de compra de tokens
+        setShowConfirmTokenBuyModal(true);
+        return;
+      }
+      
       setProcessingPayment(true);
       
-      // Obter assinatura do usuário usando a nova função de pagamento
+      // Obter assinatura do usuário usando a função de pagamento
       const signatureData = await paymentSignature(order.id, Number(clubId), order.total_fantoken);
       
-      // Adiciona os dados de pagamento à ordem no formato que o backend espera
+      // Adicionar os dados de pagamento à ordem no formato que o backend espera
       const paymentData = {
         order_id: order.id,
         club_id: clubId, 
@@ -332,9 +452,7 @@ export default function StadiumOrdersPage() {
         r: signatureData.r,
         s: signatureData.s
       };
-            
-      console.log('Dados de pagamento:', paymentData);
-      
+                  
       // Enviar para o backend processar o pagamento
       const paymentResult = await orderApi.paymentOrder(paymentData);
       
@@ -361,28 +479,27 @@ export default function StadiumOrdersPage() {
     }
   };
 
+  // Função para responder à confirmação de compra de tokens
+  const handleTokenBuyConfirmation = (confirmed) => {
+    setShowConfirmTokenBuyModal(false);
+    
+    if (confirmed) {
+      // Se confirmou, abre o modal de compra de tokens
+      setShowBuyTokenModal(true);
+    } else {
+      // Se recusou, limpa os estados
+      setInsufficientFunds(false);
+      setRequiredTokens(0);
+      setTokenQuantity(1);
+      showError('É necessário ter saldo suficiente para finalizar o pedido');
+    }
+  };
+
   // Filtered orders based on status filter
   const filteredActiveOrders = activeOrders.filter(order => {
     if (orderStatusFilter === 'all') return true;
     return order.status_id.toString() === orderStatusFilter;
   });
-
-  // Função para copiar o hash da transação
-  const copyTransactionHash = (hash) => {
-    navigator.clipboard.writeText(hash)
-      .then(() => {
-        setCopiedHash(hash);
-        setTimeout(() => setCopiedHash(null), 2000);
-      })
-      .catch(err => console.error('Erro ao copiar hash:', err));
-  };
-  
-  // Função para abrir o explorador de blockchain
-  const openBlockExplorer = (hash) => {
-    // URL do explorador Chiliz Chain
-    const explorerUrl = `https://chiliscan.com/tx/${hash}`;
-    window.open(explorerUrl, '_blank');
-  };
 
   if (loading) {
     return (
@@ -419,6 +536,28 @@ export default function StadiumOrdersPage() {
             
             {/* Header actions */}
             <div className="flex items-center gap-2">
+              {/* Token Balance */}
+              {userTokens && (
+                <div className="flex items-center bg-white/10 rounded-lg px-3 py-1">
+                  {userTokens.clubImage ? (
+                    <img 
+                      src={userTokens.clubImage} 
+                      alt={userTokens.tokenSymbol} 
+                      className="w-7 h-7 mr-1.5 rounded-full"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-4 h-4 mr-1.5 bg-secondary rounded-full flex items-center justify-center text-[8px] text-white font-bold">
+                      {userTokens.tokenSymbol?.charAt(0) || 'T'}
+                    </div>
+                  )}
+                  <span className="font-medium text-white">{userTokens.balance} {userTokens.tokenSymbol}</span>
+                </div>
+              )}
+              
               {/* Active orders button */}
               {activeOrders.length > 0 && currentView !== 'activeOrders' && (
                 <Button 
@@ -579,7 +718,10 @@ export default function StadiumOrdersPage() {
                         <div>
                           <h3 className="font-medium text-primary dark:text-white">{item.name}</h3>
                           <p className="text-sm text-primary/70 dark:text-white/70 mt-1">{item.description}</p>
-                          <p className="text-secondary font-medium mt-2">R$ {item.value_real.toFixed(2)}</p>
+                          <div className="mt-2">
+                            <p className="font-medium text-primary dark:text-white">{item.value_tokefan.toFixed(2)} {userTokens?.tokenSymbol || club?.symbol || ""}</p>
+                            <p className="text-sm text-primary/70 dark:text-white/70">R$ {item.value_real.toFixed(2)}</p>
+                          </div>
                         </div>
                       </div>
                       
@@ -659,14 +801,20 @@ export default function StadiumOrdersPage() {
                           </div>
                           <div>
                             <h4 className="text-primary dark:text-white">{item.name}</h4>
-                            <p className="text-sm text-secondary">R$ {item.value_real.toFixed(2)}</p>
+                            <p className="text-sm text-primary/70 dark:text-white/70">{item.value_tokefan.toFixed(2)} {userTokens?.tokenSymbol || club?.symbol || ""}</p>
+                            <p className="text-xs text-primary/50 dark:text-white/50">R$ {item.value_real.toFixed(2)}</p>
                           </div>
                         </div>
                         
                         <div className="flex items-center">
-                          <span className="font-medium text-primary dark:text-white mr-4">
-                            R$ {(item.value_real * item.quantity).toFixed(2)}
-                          </span>
+                          <div className="text-right mr-4">
+                            <p className="font-medium text-primary dark:text-white">
+                              {(item.value_tokefan * item.quantity).toFixed(2)} {userTokens?.tokenSymbol || club?.symbol || ""}
+                            </p>
+                            <p className="text-xs text-primary/50 dark:text-white/50">
+                              R$ {(item.value_real * item.quantity).toFixed(2)}
+                            </p>
+                          </div>
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -681,9 +829,16 @@ export default function StadiumOrdersPage() {
                   </div>
                   
                   <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                    <div className="flex justify-between items-center font-bold">
-                      <span className="text-primary dark:text-white">Total</span>
-                      <span className="text-primary dark:text-white">R$ {calculateTotal().toFixed(2)}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-primary dark:text-white font-bold">Total</span>
+                      <div className="text-right">
+                        <p className="font-bold text-lg text-primary dark:text-white">
+                          {calculateFanTokenTotal().toFixed(2)} {userTokens?.tokenSymbol || club?.symbol || ""}
+                        </p>
+                        <p className="font-medium text-primary/90 dark:text-white/90 text-sm">
+                          R$ {calculateTotal().toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -795,9 +950,14 @@ export default function StadiumOrdersPage() {
                           <span className="text-primary/80 dark:text-white/80">
                             {item.quantity}x {item.product_name}
                           </span>
-                          <span className="text-primary/80 dark:text-white/80">
-                            R$ {(item.value_real * item.quantity).toFixed(2)}
-                          </span>
+                          <div className="text-right">
+                            <p className="font-medium text-primary dark:text-white">
+                              {(item.value_tokefan * item.quantity).toFixed(2)} {userTokens?.tokenSymbol || club?.symbol || ""}
+                            </p>
+                            <p className="text-sm text-primary/70 dark:text-white/70">
+                              R$ {(item.value_real * item.quantity).toFixed(2)}
+                            </p>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -806,7 +966,11 @@ export default function StadiumOrdersPage() {
                       <div className="flex justify-between items-center">
                         <div>
                           <p className="text-primary/70 dark:text-white/70 text-sm">Total</p>
-                          <p className="font-bold text-primary dark:text-white">R$ {order.total_real.toFixed(2)}</p>
+                          {/* Valor em Fan Token */}
+                          <p className="font-bold text-lg text-primary dark:text-white">
+                            {order.total_fantoken.toFixed(2)} {userTokens?.tokenSymbol || club?.symbol || ""}
+                          </p>
+                          <p className="font-medium text-primary/90 dark:text-white/90 text-sm">R$ {order.total_real.toFixed(2)}</p>
                         </div>
                         
                         <div className="text-right">
@@ -838,40 +1002,36 @@ export default function StadiumOrdersPage() {
                       
                       {/* Exibir hash da transação para pedidos pagos (status 2) */}
                       {order.status_id === 2 && order.transaction_hash && (
-                        <div className="mt-4 bg-green-50 dark:bg-green-900/20 p-3 rounded-md text-sm">
-                          <p className="text-green-700 dark:text-green-300 font-medium mb-1 flex items-center">
-                            <Check size={16} className="mr-1" />
-                            Pagamento confirmado                           
-                            <span className="ml-2 mt-1 text-xs text-primary/50 dark:text-white/50">
-                              Transação confirmada na Chiliz Chain
-                            </span>
-                          </p>
-                          <div className="flex items-center justify-between bg-white dark:bg-black/20 p-2 rounded border border-gray-200 dark:border-gray-700 ">
-                            <span className="font-mono text-xs text-primary/90 dark:text-white/90 truncate ">
-                              {order.transaction_hash}
-                            </span>
-                            <div className="flex space-x-1">
-                              <button
-                                onClick={() => copyTransactionHash(order.transaction_hash)}
-                                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                                title="Copiar hash"
-                              >
-                                {copiedHash === order.transaction_hash ? (
-                                  <Check size={16} className="text-green-500" />
-                                ) : (
-                                  <Copy size={16} className="text-primary/60 dark:text-white/60" />
-                                )}
-                              </button>
-                              <button
-                                onClick={() => openBlockExplorer(order.transaction_hash)}
-                                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-                                title="Ver no explorer"
-                              >
-                                <ExternalLink size={16} className="text-primary/60 dark:text-white/60" />
-                              </button>
+                        <div className="mt-4 bg-[#071e36] dark:bg-[#071e36] p-3 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                    
+                                <div className="flex items-center text-xs text-gray-400">
+                                  <span className="inline-flex items-center">
+                                    <Receipt size={12} className="mr-1" />
+                                    {order.transaction_hash.length > 16 
+                                      ? `${order.transaction_hash.substring(0, 8)}...${order.transaction_hash.substring(order.transaction_hash.length - 8)}` 
+                                      : order.transaction_hash}
+                                  </span>
+                                  <a 
+                                    href={`https://chiliscan.com/tx/${order.transaction_hash}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="ml-2 inline-flex items-center text-blue-400 hover:text-blue-300"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <ExternalLink size={17} className="mr-1" />
+                                    Explorar
+                                  </a>
+                                </div>
+                            
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-400">
+                                {new Date().toLocaleDateString()}
+                              </p>
                             </div>
                           </div>
-
                         </div>
                       )}
                       
@@ -953,13 +1113,13 @@ export default function StadiumOrdersPage() {
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-primary/70 dark:text-white/70">Valor Fan token:</span>
-                    <span className="font-medium text-primary dark:text-white"> {club.name} {order.total_fantoken?.toFixed(2)}</span>
+                    <span className="text-primary/70 dark:text-white/70">Valor FanToken:</span>
+                    <span className="font-bold text-lg text-primary dark:text-white">{order.total_fantoken?.toFixed(2)} {userTokens?.tokenSymbol || club?.symbol || ""}</span>
                   </div>
                   
                   <div className="flex justify-between">
                     <span className="text-primary/70 dark:text-white/70">Valor Total:</span>
-                    <span className="font-medium text-primary dark:text-white">R$ {order.total_real?.toFixed(2)}</span>
+                    <span className="font-medium text-primary/90 dark:text-white/90 text-sm">R$ {order.total_real?.toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between">
@@ -1011,6 +1171,194 @@ export default function StadiumOrdersPage() {
         )}
       </div>
 
+      {/* Modal de confirmação para compra de tokens */}
+      {showConfirmTokenBuyModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-[#1c0c2e] rounded-lg w-full max-w-md overflow-hidden shadow-xl">
+            <div className="p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-primary dark:text-white">
+                  Saldo Insuficiente
+                </h3>
+                <Button variant="ghost" size="icon" onClick={() => handleTokenBuyConfirmation(false)}>
+                  <X size={18} />
+                </Button>
+              </div>
+              
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg mb-6">
+                <div className="flex items-start">
+                  <AlertCircle className="text-amber-600 dark:text-amber-400 mt-0.5 mr-2 flex-shrink-0" />
+                  <p className="text-amber-700 dark:text-amber-300">
+                    Você não tem saldo suficiente para este pedido. Deseja comprar {requiredTokens} tokens adicionais do {club?.name}?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleTokenBuyConfirmation(false)}
+                >
+                  Não, cancelar
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={() => handleTokenBuyConfirmation(true)}
+                >
+                  Sim, comprar tokens
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de compra de tokens */}
+      {showBuyTokenModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-[#1c0c2e] rounded-lg w-full max-w-md overflow-hidden shadow-xl">
+            <div className="p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-primary dark:text-white">
+                  {showQRCode ? "Realize o Pagamento" : `${insufficientFunds ? "Saldo Insuficiente" : "Comprar FanTokens"}`}
+                </h3>
+                <Button variant="ghost" size="icon" onClick={handleCloseTokenModal}>
+                  <X size={18} />
+                </Button>
+              </div>
+
+              {!showQRCode ? (
+                <>
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="w-20 h-20 rounded-full bg-white dark:bg-[#2d1248] overflow-hidden">
+                      {club?.image ? (
+                        <img 
+                          src={club.image} 
+                          alt={club.name} 
+                          className="w-full h-full object-cover" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-primary/5 dark:bg-primary/20 text-primary/50 dark:text-white/50">
+                          <Football size={32} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {insufficientFunds && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg mb-4">
+                      <div className="flex items-start">
+                        <AlertCircle size={20} className="text-amber-600 dark:text-amber-400 mt-0.5 mr-2 flex-shrink-0" />
+                        <p className="text-amber-700 dark:text-amber-300 text-sm">
+                          Você não tem saldo suficiente para este pedido. É necessário comprar pelo menos <strong>{requiredTokens} tokens</strong> adicionais.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mb-4 text-center">
+                    <p className="text-sm text-primary/70 dark:text-white/70 mb-1">Seu saldo atual</p>
+                    <p className="text-xl font-bold text-primary dark:text-white">
+                      {userTokens ? userTokens.balance : 0} {userTokens?.tokenSymbol || club?.symbol || "Tokens"}
+                    </p>
+                  </div>
+
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-primary/80 dark:text-white/80 mb-2 text-center">
+                      Quantidade de FanTokens
+                    </label>
+                    <div className="flex items-center justify-center">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => tokenQuantity > 1 && setTokenQuantity(tokenQuantity - 1)}
+                        className="px-3 mr-2 py-1 hover:bg-secondary hover:text-white transition-colors font-bold"
+                        disabled={insufficientFunds && tokenQuantity <= requiredTokens}
+                      >
+                        -
+                      </Button>
+                      <input
+                        type="number"
+                        min={insufficientFunds ? requiredTokens : 1}
+                        max="100"
+                        value={tokenQuantity}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 1;
+                          const minValue = insufficientFunds ? requiredTokens : 1;
+                          setTokenQuantity(Math.max(minValue, value));
+                        }}
+                        className="w-16 mx-2 py-2 text-center border border-primary/20 dark:border-white/20 rounded-md bg-white dark:bg-[#150924] text-primary dark:text-white focus:outline-none"
+                      />
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setTokenQuantity(tokenQuantity + 1)}
+                        className="px-3 py-1 hover:bg-secondary hover:text-white transition-colors ml-2 font-bold"
+                      >
+                        +
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="bg-primary/5 dark:bg-white/5 p-4 rounded-lg mb-6">
+                    <div className="flex justify-between mb-2">
+                      <span className="text-primary/70 dark:text-white/70">Preço por token:</span>
+                      <span className="text-primary dark:text-white font-medium">R$ 1,00</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                      <span className="text-primary/70 dark:text-white/70">Quantidade:</span>
+                      <span className="text-primary dark:text-white font-medium">{tokenQuantity}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-primary/10 dark:border-white/10">
+                      <span className="text-primary/90 dark:text-white/90 font-medium">Total:</span>
+                      <span className="text-primary dark:text-white font-bold">
+                        R$ {tokenQuantity.toFixed(2).replace('.', ',')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button 
+                    className="w-full"
+                    onClick={handleBuyTokens}
+                  >
+                    Comprar FanTokens
+                  </Button>
+                </>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <p className="text-primary/70 dark:text-white/70 mb-4 text-center">
+                    Escaneie o QR Code abaixo para realizar o pagamento via PIX
+                  </p>
+                  <div className="bg-white p-4 rounded-lg mb-4">
+                    <img 
+                      src={getRandomQRCode()} 
+                      alt="QR Code de pagamento" 
+                      className="w-48 h-48 object-contain"
+                    />
+                  </div>
+                  <p className="text-xs text-primary/60 dark:text-white/60 mb-4 text-center">
+                    Valor: R$ {tokenQuantity.toFixed(2).replace('.', ',')}
+                  </p>
+                  <Button 
+                    className="w-full"
+                    onClick={processTokenPurchase}
+                    disabled={processingTokenPayment}
+                  >
+                    {processingTokenPayment ? (
+                      <div className="flex items-center">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processando...
+                      </div>
+                    ) : (
+                      "Confirmar Pagamento"
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Cart Button */}
       {(currentView === 'menu' && cart.length > 0) && (
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#150924] p-4 shadow-lg border-t border-gray-100 dark:border-gray-800">
@@ -1026,23 +1374,6 @@ export default function StadiumOrdersPage() {
           </div>
         </div>
       )}
-
-      {/* Fixed Active Orders Button (when not in active orders view) */}
-{/*       {(activeOrders.length > 0 && currentView !== 'activeOrders' && currentView !== 'menu' && currentView !== 'cart') && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#150924] p-4 shadow-lg border-t border-gray-100 dark:border-gray-800">
-          <div className="container mx-auto">
-            <Button 
-              className="w-full" 
-              size="lg"
-              variant="secondary"
-              onClick={handleViewActiveOrders}
-            >
-              <Clock size={18} className="mr-2" />
-              Ver Meus Pedidos ({activeOrders.length})
-            </Button>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 } 
