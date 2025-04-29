@@ -27,12 +27,14 @@ class UserClubController extends Controller {
             if (!body.club_type_id) throw Error(getErrorMessage('missingField', 'Tipo de clube'));
 
             await Database.startTransaction();
+
             await this.service.create(body);
+
             await Database.commit();
             
             return this.sendSuccessResponse(res, { message: getSuccessMessage('create', 'Clube do usuário') });
         } catch (err) {
-            await Database.rollback().catch(console.log);
+            await Database.rollback()
             return await this.sendErrorMessage(res, err);
         }
     }

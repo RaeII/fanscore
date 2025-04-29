@@ -1,67 +1,49 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import mysql from 'mysql2/promise';
+import MysqlService from '@/services/MySQL.service';
+import { PoolConnection } from 'mysql2/promise';
 
-class Database {
-	private static pool: mysql.Pool;
-	private static connection: mysql.PoolConnection | null = null;
+export default class Database {
+	protected connection: PoolConnection | null = null;
+	protected isInTransaction: boolean = false;
 
-	constructor() {
-		if (!Database.pool) {
-			Database.pool = mysql.createPool({
-				host: process.env.DB_HOST || 'localhost',
-				user: process.env.DB_USER || 'root',
-				password: process.env.DB_PASSWORD || '',
-				database: process.env.DB_NAME || 'fanatique',
-				waitForConnections: true,
-				connectionLimit: 10,
-				queueLimit: 0
-			});
-		}
+	constructor() {}
+
+	async getConnection(): Promise<PoolConnection> {
+		return await MysqlService.getConnection();
 	}
 
-	protected async query(sql: string, params: any[] = []): Promise<any> {
+	protected async query(sql: string, value: any = null): Promise<any> {
+
+		let connection: PoolConnection | null = null;
 		try {
-			const connection = await Database.pool.getConnection();
-			try {
-				const [rows, fields] = await connection.query(sql, params);
-				return [rows, fields];
-			} finally {
-				connection.release();
+			connection = await this.getConnection();
+			if (value) {
+				return await connection.query(sql, value);
+			} else {
+				return await connection.query(sql);
 			}
 		} catch (error) {
-			console.error('Database error:', error);
+			console.error('Query error:', error);
+			if (await Database.isInTransaction()) await Database.rollback().catch(console.log);
 			throw error;
+		} finally {
+			if (!MysqlService.isInTransaction()) await MysqlService.release();
 		}
 	}
 
-	static async startTransaction(): Promise<void> {
-		if (Database.connection) {
-			throw new Error('Transaction already started');
-		}
-		
-		Database.connection = await Database.pool.getConnection();
-		await Database.connection.beginTransaction();
+	public static async startTransaction() {
+		return await MysqlService.beginTransaction();
 	}
 
-	static async commit(): Promise<void> {
-		if (!Database.connection) {
-			throw new Error('No transaction to commit');
-		}
-		
-		await Database.connection.commit();
-		Database.connection.release();
-		Database.connection = null;
+	public static async rollback() {
+		return await MysqlService.rollback();
 	}
 
-	static async rollback(): Promise<void> {
-		if (!Database.connection) {
-			throw new Error('No transaction to rollback');
-		}
-		
-		await Database.connection.rollback();
-		Database.connection.release();
-		Database.connection = null;
+	public static async commit() {
+		return await MysqlService.commit();
+	}
+
+	public static isInTransaction() {
+		return MysqlService.isInTransaction();
 	}
 }
-
-export default Database;

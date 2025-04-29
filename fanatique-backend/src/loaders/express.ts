@@ -9,6 +9,7 @@ import {
 import cors from "cors";
 import logger from "./logger";
 import apiRouter from "@/routes";
+import { connectionMiddleware } from "@/helpers/async_local_storage";
 
 export default (app: Application) => {
   app.use(json({ limit: '5mb' }));
@@ -25,6 +26,7 @@ export default (app: Application) => {
 
   //app.use(logger);
 
+  app.use(connectionMiddleware());
   app.use('/api', apiRouter);
 
   app.use((req: Request, res: Response, next: NextFunction) => {

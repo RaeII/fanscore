@@ -32,9 +32,12 @@ class MatchService {
 		// Verifica se o estádio existe
 		const stadium = await this.stadiumService.fetch(data.stadium_id);
 		if (!stadium) throw Error(getErrorMessage('registryNotFound', 'Estádio'));
+
+		console.log('stadium', stadium.club_id);
+		console.log('data.home_club_id', data.home_club_id);
 		
 		// Verifica se o estádio pertence ao clube mandante
-		if (stadium.club_id !== data.home_club_id) {
+		if (stadium.club_id != data.home_club_id) {
 			throw Error(getErrorMessage('stadiumNotBelongsToHomeClub'));
 		}
 
@@ -87,10 +90,6 @@ class MatchService {
 		if (!clubId) throw Error(getErrorMessage('missingField', 'Id do clube'));
 
 		const matches = await this.database.fetchByClubId(clubId);
-		
-		if (!matches.length) {
-			throw Error(getErrorMessage('registryNotFound', 'Partidas para este clube'));
-		}
 		
 		// Verifique se todos os dados necessários estão presentes
 		for (const match of matches) {

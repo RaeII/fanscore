@@ -48,7 +48,12 @@ interface ENV {
   JWT_EXPIRATION:string,
   FANTOKEN_CONTRACT_ADDRESS:string,
   FANATIQUE_CONTRACT_ADDRESS:string,
-  TREASURY_ADDRESS:string
+  TREASURY_ADDRESS:string,
+  DB_HOSTNAME:string,
+  DB_PORT:number,
+  DB_USERNAME:string,
+  DB_PASSWORD:string,
+  DB_NAME:string
 }
 const env: ENV = {
   // Application
@@ -66,6 +71,11 @@ const env: ENV = {
   FANTOKEN_CONTRACT_ADDRESS:process.env.FANTOKEN_CONTRACT_ADDRESS || '',
   FANATIQUE_CONTRACT_ADDRESS:process.env.FANATIQUE_CONTRACT_ADDRESS || '',
   TREASURY_ADDRESS:process.env.TREASURY_ADDRESS || '',
+  DB_HOSTNAME:process.env.DB_HOSTNAME || '',
+  DB_PORT:Number(process.env.DB_PORT),
+  DB_USERNAME:process.env.DB_USERNAME || '',
+  DB_PASSWORD:process.env.DB_PASSWORD || '',
+  DB_NAME:process.env.DB_NAME || ''
 };
 
 export default env;

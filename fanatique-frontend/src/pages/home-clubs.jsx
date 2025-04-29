@@ -275,6 +275,8 @@ export default function HomeClubsPage() {
       // In a real app, this would be an API call to set/unset the heart club
       // For demo purposes, we'll use local storage
       const hasHeartClub = hasUserHeartClub();
+
+      console.log('hasHeartClub', hasHeartClub);
       
       if (isHeartClub) {
         // Remove this club as heart club
@@ -297,8 +299,15 @@ export default function HomeClubsPage() {
       }
       updateUserClubsData();
     } catch (error) {
+
       console.error('Error toggling heart club:', error);
-      showError('Failed to update heart club status');
+
+      if(error?.response?.data?.message) {
+       showError(error.response.data.message);
+      } else {
+        showError('Failed to update heart club status');
+      }
+
     } finally {
       setHeartClubLoading(false);
     }
@@ -375,24 +384,29 @@ export default function HomeClubsPage() {
               
               <div className="flex flex-wrap gap-3 justify-center mt-4">
                 {/* Heart Club Button */}
-                {(hasHeartClub && isHeartClub || !hasHeartClub) && (
-                  <Button 
-                    variant={isHeartClub ? "secondary" : "default"}
-                    size="sm" 
-                    className={`${isHeartClub ? '' : 'bg-white/30 hover:bg-white/40 text-white border-none'}`}
-                    onClick={toggleHeartClub}
-                    disabled={heartClubLoading}
-                  >
-                    <Heart size={16} className={`mr-2 ${isHeartClub ? 'fill-white' : ''}`} />
-                    {heartClubLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : isHeartClub ? (
-                      "Heart Club"
-                    ) : (
-                      "Heart Club"
-                    )}
-                  </Button>
+                
+                {!isFollowing && ( 
+
+                  (hasHeartClub && isHeartClub || !hasHeartClub) && (
+                    <Button 
+                      variant={isHeartClub ? "secondary" : "default"}
+                      size="sm" 
+                      className={`${isHeartClub ? '' : 'bg-white/30 hover:bg-white/40 text-white border-none'}`}
+                      onClick={toggleHeartClub}
+                      disabled={heartClubLoading}
+                    >
+                      <Heart size={16} className={`mr-2 ${isHeartClub ? 'fill-white' : ''}`} />
+                      {heartClubLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : isHeartClub ? (
+                        "Heart Club"
+                      ) : (
+                        "Heart Club"
+                      )}
+                    </Button>
+                  )
                 )}
+
                 
                 {/* Follow Button - shows when the club is not the heart club or when heart club button is not showing */}
                 {(!isHeartClub || (hasHeartClub && !isHeartClub)) && (

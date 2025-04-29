@@ -19,6 +19,7 @@ class UserClubService {
     }
 
     async create(data: UserClubInsert): Promise<number> {
+        
         if (!data.user_id) throw Error(getErrorMessage('missingField', 'ID do usuário'));
         if (!data.club_id) throw Error(getErrorMessage('missingField', 'ID do clube'));
         if (!data.club_type_id) throw Error(getErrorMessage('missingField', 'Tipo de clube'));
