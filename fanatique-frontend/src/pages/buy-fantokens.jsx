@@ -20,7 +20,7 @@ export default function BuyFantokensPage() {
   const [showQRCode, setShowQRCode] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [walletTokens, setWalletTokens] = useState([]);
-  const [activeTab, setActiveTab] = useState('comprar'); // 'comprar' ou 'transacoes'
+  const [activeTab, setActiveTab] = useState('comprar'); // 'comprar', 'historico', ou 'stake'
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   
@@ -81,7 +81,7 @@ export default function BuyFantokensPage() {
   // Buscar transações quando a tab estiver ativa
   useEffect(() => {
     const fetchTransactions = async () => {
-      if (activeTab === 'transacoes' && account) {
+      if (activeTab === 'historico' && account) {
         try {
           setLoadingTransactions(true);
           const data = await transactionApi.getUserTransactions();
@@ -153,7 +153,7 @@ export default function BuyFantokensPage() {
       setWalletTokens(tokens);
       
       // Atualizar transações
-      if (activeTab === 'transacoes') {
+      if (activeTab === 'historico') {
         const data = await transactionApi.getUserTransactions();
         setTransactions(data);
       }
@@ -209,36 +209,37 @@ export default function BuyFantokensPage() {
           <h1 className="text-2xl font-bold text-primary dark:text-white">FanTokens</h1>
         </div>
 
-        {/* Tabs de navegação */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <Button 
-            variant={activeTab === 'comprar' ? 'default' : 'outline'}
-            size="sm"
+        {/* Nova Navegação com Ícones Conforme Imagem */}
+        <div className="flex justify-center items-center gap-8 mb-8">
+          <div 
+            className={`flex flex-col items-center justify-center cursor-pointer ${activeTab === 'comprar' ? 'text-blue-500' : 'text-gray-500'}`}
             onClick={() => setActiveTab('comprar')}
-            className={`
-              rounded-full font-medium 
-              ${activeTab === 'comprar' 
-                ? 'bg-primary text-white shadow-md' 
-                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
-            `}
           >
-            <ShoppingCart size={16} className="mr-2" />
-            Comprar Tokens
-          </Button>
-          <Button 
-            variant={activeTab === 'transacoes' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('transacoes')}
-            className={`
-              rounded-full font-medium
-              ${activeTab === 'transacoes' 
-                ? 'bg-primary text-white shadow-md' 
-                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
-            `}
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'comprar' ? 'bg-blue-500' : 'bg-blue-900'}`}>
+              <ShoppingCart size={24} className="text-white" />
+            </div>
+            <span className="mt-1 text-sm font-medium">Carregar</span>
+          </div>
+          
+          <div 
+            className={`flex flex-col items-center justify-center cursor-pointer ${activeTab === 'historico' ? 'text-blue-500' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('historico')}
           >
-            <Receipt size={16} className="mr-2" />
-            Histórico de Transações
-          </Button>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'historico' ? 'bg-blue-500' : 'bg-blue-900'}`}>
+              <Receipt size={24} className="text-white" />
+            </div>
+            <span className="mt-1 text-sm font-medium">Histórico</span>
+          </div>
+          
+          <div 
+            className={`flex flex-col items-center justify-center cursor-pointer ${activeTab === 'stake' ? 'text-blue-500' : 'text-gray-500'}`}
+            onClick={() => setActiveTab('stake')}
+          >
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'stake' ? 'bg-blue-500' : 'bg-blue-900'}`}>
+              <Wallet size={24} className="text-white" />
+            </div>
+            <span className="mt-1 text-sm font-medium">Stake</span>
+          </div>
         </div>
 
         {activeTab === 'comprar' ? (
@@ -310,7 +311,7 @@ export default function BuyFantokensPage() {
               </div>
             )}
           </div>
-        ) : (
+        ) : activeTab === 'historico' ? (
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-primary dark:text-white mb-4">
               HISTÓRICO DE TRANSAÇÕES
@@ -384,6 +385,13 @@ export default function BuyFantokensPage() {
                 ))}
               </div>
             )}
+          </div>
+        ) : (
+          <div className="mb-8 text-center py-10">
+            <Wallet size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
+            <p className="text-primary/70 dark:text-white/70">
+              Funcionalidade de Stake em desenvolvimento.
+            </p>
           </div>
         )}
       </div>
