@@ -162,7 +162,7 @@ export default function AppPage() {
   // Mostra a tela de loading
   if (loading || signing) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-secondary" />
         <p className="mt-4 text-xl text-primary/70 dark:text-white/70">
           {loading ? 'Carregando...' : signing ? 'Validando assinatura...' : ''}
@@ -174,7 +174,7 @@ export default function AppPage() {
   // Se não tiver conta conectada, mostra a interface inicial para conectar carteira
   if (!isConnected || !account) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
         <Cta11 
           heading={loginCancelled ? "Login Canceladoooo" : "Bem-vindo ao Fanatique"}
           description="Conecte sua carteira Chiliz para entrar na plataforma e aproveitar uma experiência única nos estádios."
@@ -193,8 +193,8 @@ export default function AppPage() {
   // Se o login foi cancelado mas a carteira continua conectada
   if (loginCancelled) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
-        <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
+        <div className="w-full max-w-md p-8 bg-tertiary rounded-lg shadow-md">
           <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Login Canceladoooo</h1>
           
           <p className="text-gray-600 dark:text-gray-300 mb-6">
@@ -228,8 +228,8 @@ export default function AppPage() {
   // Mostra o formulário de registro se o usuário não estiver cadastrado
   if (showRegister) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
-        <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
+        <div className="w-full max-w-md p-8 bg-tertiary rounded-lg shadow-md">
           <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Cadastre-se no Fanatique</h1>
           
           <p className="text-gray-600 dark:text-gray-300 mb-6">
@@ -288,9 +288,9 @@ export default function AppPage() {
 
   // Exibe tela para usuários não cadastrados
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
-      <div className="w-full max-w-md p-8 bg-white dark:bg-[#150924] rounded-lg shadow-md text-center">
-        <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Verificando cadastro...</h1>
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
+      <div className="w-full max-w-md p-8 bg-tertiary rounded-lg shadow-md text-center">
+        <h1 className="text-2xl font-bold mb-6">Verificando cadastro...</h1>
         <Button
           onClick={checkIfUserRegistered}
           className="bg-secondary text-white"

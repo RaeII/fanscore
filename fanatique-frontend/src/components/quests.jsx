@@ -95,13 +95,13 @@ export default function Quests({ questScope, gameId = null }) {
   }) || [];
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+    <div className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-primary dark:text-white">{questScope === QuestScope.GENERAL ? 'General' : 'Club'} Quests</h1>
+            <h1 className="text-2xl font-bold text-text-adaptive">{questScope === QuestScope.GENERAL ? 'General' : 'Club'} Quests</h1>
           </div>
-          <p className="text-primary/70 dark:text-white/70 mt-1">
+          <p className="text-text-adaptive/70 mt-1">
             Complete quests to earn points and unlock rewards for your club.
           </p>
         </div>
@@ -113,10 +113,10 @@ export default function Quests({ questScope, gameId = null }) {
             size="sm"
             onClick={() => setActiveFilter('all')}
             className={`
-              rounded-full font-medium 
+              rounded-full font-medium hover:bg-secondary
               ${activeFilter === 'all' 
-                ? 'bg-primary text-white shadow-md' 
-                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
+                ? 'bg-secondary text-white shadow-md' 
+                : 'bg-foreground/20 text-text-adaptive border-text-adaptive/20 hover:bg-secondary hover:text-white hover:border-text-adaptive/30'}
             `}
           >
             All
@@ -126,10 +126,10 @@ export default function Quests({ questScope, gameId = null }) {
             size="sm"
             onClick={() => setActiveFilter('available')}
             className={`
-              rounded-full font-medium
+              rounded-full font-medium hover:bg-blue-500
               ${activeFilter === 'available' 
                 ? 'bg-blue-500 text-white shadow-md' 
-                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
+                : 'bg-foreground/20 text-text-adaptive border-text-adaptive/20 hover:bg-blue-500 hover:text-white hover:border-text-adaptive/30'}
             `}
           >
             Available
@@ -139,10 +139,10 @@ export default function Quests({ questScope, gameId = null }) {
             size="sm"
             onClick={() => setActiveFilter('inProgress')}
             className={`
-              rounded-full font-medium
+              rounded-full font-medium hover:bg-orange-500
               ${activeFilter === 'inProgress' 
                 ? 'bg-orange-500 text-white shadow-md' 
-                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
+                : 'bg-foreground/20 text-text-adaptive border-text-adaptive/20 hover:bg-orange-500 hover:text-white hover:border-text-adaptive/30'}
             `}
           >
             In Progress
@@ -152,10 +152,10 @@ export default function Quests({ questScope, gameId = null }) {
             size="sm"
             onClick={() => setActiveFilter('completed')}
             className={`
-              rounded-full font-medium
+              rounded-full font-medium hover:bg-green-500
               ${activeFilter === 'completed' 
                 ? 'bg-green-500 text-white shadow-md' 
-                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 hover:border-white/30'}
+                : 'bg-foreground/20 text-text-adaptive border-text-adaptive/20 hover:bg-green-500 hover:text-white hover:border-text-adaptive/30'}
             `}
           >
             Completed

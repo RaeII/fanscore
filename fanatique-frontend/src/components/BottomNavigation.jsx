@@ -52,13 +52,13 @@ export default function Navigation() {
     {
       id: 'club',
       label: 'Meu Clube',
-      icon: <Heart size={20} />,
+      icon: <Heart size={20} className={activeItem === 'club' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}`) : navigate('/dashboard'),
     },
     {
       id: 'matches',
       label: 'Partidas',
-      icon: <Trophy size={20} />,
+      icon: <Trophy size={20} className={activeItem === 'matches' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/matches'),
     }
   ];
@@ -68,20 +68,20 @@ export default function Navigation() {
     {
       id: 'home',
       label: 'Home',
-      icon: <Home size={20} />,
+      icon: <Home size={20} className={activeItem === 'home' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/dashboard'),
     },
     {
       id: 'forum',
       label: 'Forum',
-      icon: <MessageCircle size={20} />,
+      icon: <MessageCircle size={20} className={activeItem === 'forum' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}/forum`) : navigate('/dashboard'),
       disabled: !heartClub,
     },
     {
       id: 'heartClub',
       label: 'Meu Clube',
-      icon: <Heart size={20} />,
+      icon: <Heart size={20} className={(activeItem === 'club' || activeItem === 'matches') ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => {
         setShowClubOptions(!showClubOptions);
       },
@@ -90,13 +90,13 @@ export default function Navigation() {
     {
       id: 'wallet',
       label: 'Carteira',
-      icon: <Wallet size={20} />,
+      icon: <Wallet size={20} className={activeItem === 'wallet' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/buy-fantokens'),
     },
     {
       id: 'profile',
       label: 'Perfil',
-      icon: <User size={20} />,
+      icon: <User size={20} className={activeItem === 'profile' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/profile'),
     },
   ];
@@ -106,39 +106,39 @@ export default function Navigation() {
     {
       id: 'home',
       label: 'Home',
-      icon: <Home size={20} />,
+      icon: <Home size={20} className={activeItem === 'home' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/dashboard'),
     },
     {
       id: 'club',
       label: 'Meu Clube',
-      icon: <Heart size={20} />,
+      icon: <Heart size={20} className={activeItem === 'club' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}`) : navigate('/dashboard'),
       disabled: !heartClub,
     },
     {
       id: 'matches',
       label: 'Partidas',
-      icon: <Trophy size={20} />,
+      icon: <Trophy size={20} className={activeItem === 'matches' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/matches'),
     },
     {
       id: 'forum',
       label: 'Forum',
-      icon: <MessageCircle size={20} />,
+      icon: <MessageCircle size={20} className={activeItem === 'forum' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}/forum`) : navigate('/dashboard'),
       disabled: !heartClub,
     },
     {
       id: 'wallet',
       label: 'Carteira',
-      icon: <Wallet size={20} />,
+      icon: <Wallet size={20} className={activeItem === 'wallet' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/buy-fantokens'),
     },
     {
       id: 'profile',
       label: 'Perfil',
-      icon: <User size={20} />,
+      icon: <User size={20} className={activeItem === 'profile' ? 'text-white' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/profile'),
     },
   ];
@@ -202,7 +202,8 @@ export default function Navigation() {
                       size={16} 
                       className={cn(
                         "ml-auto transition-transform",
-                        showClubOptions && "rotate-90"
+                        showClubOptions && "rotate-90",
+                        (activeItem === 'club' || activeItem === 'matches') ? "text-white" : "text-black dark:text-white/80"
                       )} 
                     />
                   )}
@@ -306,7 +307,7 @@ export default function Navigation() {
             className="mx-auto mt-4 w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-primary dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-            {isExpanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+            {isExpanded ? <ChevronLeft size={20} className="text-black dark:text-white/80" /> : <ChevronRight size={20} className="text-black dark:text-white/80" />}
           </button>
         </div>
       </div>
