@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Volleyball as Football, ArrowLeft, Search, Wallet, X, ChevronRight, Receipt, ShoppingCart, Loader2, ExternalLink } from 'lucide-react';
+import { Volleyball as Football, ArrowLeft, Search, BanknoteArrowUp, X, ChevronRight, History, HandCoins, Loader2,Receipt,ExternalLink } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import clubApi from '../api/club';
 import contractApi from '../api/contract';
@@ -206,7 +206,7 @@ export default function BuyFantokensPage() {
           >
             <ArrowLeft size={18} />
           </Button>
-          <h1 className="text-2xl font-bold text-primary dark:text-white">FanTokens</h1>
+          <h1 className="text-2xl font-bold text-primary  dark:text-white">FanTokens</h1>
         </div>
 
         {/* Nova Navegação com Ícones Conforme Imagem */}
@@ -215,18 +215,18 @@ export default function BuyFantokensPage() {
             className={`flex flex-col items-center justify-center cursor-pointer ${activeTab === 'comprar' ? 'text-blue-500' : 'text-gray-500'}`}
             onClick={() => setActiveTab('comprar')}
           >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'comprar' ? 'bg-blue-500' : 'bg-blue-900'}`}>
-              <ShoppingCart size={24} className="text-white" />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'comprar' ? 'bg-primary' : 'bg-primary/50'}`}>
+              <HandCoins size={24} className="text-black" />
             </div>
-            <span className="mt-1 text-sm font-medium">Carregar</span>
+            <span className="mt-1 text-sm font-medium">Comprar</span>
           </div>
           
           <div 
             className={`flex flex-col items-center justify-center cursor-pointer ${activeTab === 'historico' ? 'text-blue-500' : 'text-gray-500'}`}
             onClick={() => setActiveTab('historico')}
           >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'historico' ? 'bg-blue-500' : 'bg-blue-900'}`}>
-              <Receipt size={24} className="text-white" />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'historico' ? 'bg-primary' : 'bg-primary/50'}`}>
+              <History size={24} className="text-black" />
             </div>
             <span className="mt-1 text-sm font-medium">Histórico</span>
           </div>
@@ -235,8 +235,8 @@ export default function BuyFantokensPage() {
             className={`flex flex-col items-center justify-center cursor-pointer ${activeTab === 'stake' ? 'text-blue-500' : 'text-gray-500'}`}
             onClick={() => setActiveTab('stake')}
           >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'stake' ? 'bg-blue-500' : 'bg-blue-900'}`}>
-              <Wallet size={24} className="text-white" />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'stake' ? 'bg-primary' : 'bg-primary/50'}`}>
+              <BanknoteArrowUp size={24} className="text-black" />
             </div>
             <span className="mt-1 text-sm font-medium">Stake</span>
           </div>
@@ -268,7 +268,7 @@ export default function BuyFantokensPage() {
                 <div 
                   key={club.id}
                   onClick={() => handleSelectClub(club)}
-                  className="bg-[#071e36] dark:bg-[#071e36] p-4 rounded-lg flex items-center justify-between cursor-pointer hover:bg-[#0a2846] dark:hover:bg-[#0a2846] transition-colors"
+                  className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-background-dark/60 dark:hover:bg-background-dark/60 transition-colors backdrop-blur-md border border-white/10"
                 >
                   <div className="flex items-center">
                     <div className="w-12 h-12 rounded-full bg-white overflow-hidden mr-4 flex-shrink-0">
@@ -333,7 +333,7 @@ export default function BuyFantokensPage() {
                 {transactions.map(transaction => (
                   <div 
                     key={transaction.id}
-                    className="bg-[#071e36] dark:bg-[#071e36] p-4 rounded-lg flex items-center justify-between transition-colors"
+                    className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between transition-colors backdrop-blur-md border border-white/10"
                   >
                     <div className="flex items-center">
                       <div className="w-12 h-12 rounded-full bg-white overflow-hidden mr-4 flex-shrink-0">
@@ -387,11 +387,128 @@ export default function BuyFantokensPage() {
             )}
           </div>
         ) : (
-          <div className="mb-8 text-center py-10">
-            <Wallet size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
-            <p className="text-primary/70 dark:text-white/70">
-              Funcionalidade de Stake em desenvolvimento.
-            </p>
+          <div className="mb-8">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-primary dark:text-white mb-4">
+                Fixed Staking
+              </h2>
+              
+              <div className="flex mb-4 space-x-4">
+                <button 
+                  className={`px-4 py-2 rounded-lg text-primary dark:text-white`}
+                >
+                  Active
+                </button>
+                <button className="px-4 py-2 rounded-lg text-gray-500">
+                  Ended
+                </button>
+              </div>
+              
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <div className="w-5 h-5 flex items-center mr-2">
+                    <input 
+                      type="checkbox" 
+                      className="rounded-full bg-primary h-4 w-4" 
+                    />
+                  </div>
+                  <span className="text-sm text-primary dark:text-white">Staked Only</span>
+                </div>
+                
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search size={16} className="text-primary/50 dark:text-white/50" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    className="pl-10 pr-4 py-2 text-sm border border-primary/20 dark:border-white/20 rounded-lg bg-white dark:bg-[#150924] text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              {/* Grid de cards de staking usando os dados dos clubes */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {loading ? (
+                  <div className="col-span-3 flex justify-center items-center py-12">
+                    <Loader2 size={36} className="animate-spin text-primary dark:text-white" />
+                  </div>
+                ) : filteredClubs.length === 0 ? (
+                  <div className="col-span-3 text-center py-10 bg-white/5 dark:bg-white/5 rounded-lg">
+                    <Football size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
+                    <p className="text-primary/70 dark:text-white/70">
+                      Nenhum clube encontrado para stake.
+                    </p>
+                  </div>
+                ) : (
+                  filteredClubs.map(club => {
+                    // Gerar um APR aleatório entre 2% e 18% para cada clube
+                    const apr = (Math.random() * 16 + 2).toFixed(2);
+                    // Gerar valores fictícios para o stake
+                    const tvl = (Math.random() * 100).toFixed(2);
+                    const totalTokens = (Math.random() * 1000 + 100).toFixed(1);
+                    // Usar o saldo real do usuário
+                    const userBalance = getClubTokenBalance(club.id);
+                    // Calcular um valor fictício de ganhos baseado no saldo
+                    const earned = userBalance > 0 ? (userBalance * Math.random() * 0.2).toFixed(2) : "0.00";
+                    
+                    return (
+                      <div key={club.id} className="bg-background-dark/40 dark:bg-background-dark/40 rounded-xl p-5 backdrop-blur-md border border-white/10 shadow-lg">
+                        <div className="flex items-center mb-2">
+                          <div className="w-8 h-8 rounded-full bg-white overflow-hidden mr-3 flex-shrink-0">
+                            {club.image ? (
+                              <img 
+                                src={club.image} 
+                                alt={club.name} 
+                                className="w-full h-full object-cover" 
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/50">
+                                <Football size={16} />
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-white font-medium">Earn {club.symbol}</span>
+                        </div>
+                        
+                        <div className="mb-4">
+                          <span className="text-white text-2xl font-bold">{apr}%</span>
+                          <span className="text-gray-400 text-xs ml-1">APR</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-1 mb-3 text-sm">
+                          <div>
+                            <p className="text-gray-400 text-xs">TVL</p>
+                            <p className="text-white font-bold">${tvl}k</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-gray-400 text-xs">Total {club.symbol}</p>
+                            <p className="text-white font-bold">{totalTokens}k</p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-1 mb-4 text-sm">
+                          <div>
+                            <p className="text-gray-400 text-xs">Your Deposits</p>
+                            <p className="text-white font-bold">{userBalance} {club.symbol}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-gray-400 text-xs">Earned {club.symbol}</p>
+                            <p className="text-white font-bold">{earned} {club.symbol}</p>
+                          </div>
+                        </div>
+                        
+                        <button className="w-full py-2 bg-indigo-500 bg-opacity-80 text-white rounded-xl font-medium text-sm hover:bg-opacity-100 transition-colors">
+                          View More
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
