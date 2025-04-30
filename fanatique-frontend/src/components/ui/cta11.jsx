@@ -1,4 +1,4 @@
-import { Button } from "./button";
+import { Button } from "../ui-v2/Button";
 
 /**
  * @typedef {Object} Cta11Props
@@ -40,11 +40,11 @@ const Cta11 = ({
   return (
     <section className={`py-12 md:py-20 lg:py-32 ${className}`}>
       <div className="container flex items-center justify-center bg-tertiary">
-        <div className="flex flex-col items-center rounded-lg bg-tertiary p-8 text-center md:rounded-xl lg:p-16 shadow-md w-full max-w-4xl">
+        <div className="flex flex-col items-center rounded-lg bg-secondary p-8 text-center md:rounded-xl lg:p-16 shadow-md w-full max-w-4xl">
           <h3 className="mb-3 max-w-3xl text-2xl font-semibold md:mb-4 md:text-4xl lg:mb-6 dark:text-white">
             {heading}
           </h3>
-          <p className="mb-8 max-w-3xl text-text-adaptive/70 dark:text-white/70 lg:text-lg">
+          <p className="mb-8 max-w-3xl text-text-adaptive/80 dark:text-white/80 lg:text-lg">
             {description}
           </p>
           <div className="flex w-full flex-col justify-center gap-2 sm:flex-row">
@@ -53,23 +53,16 @@ const Cta11 = ({
                 variant="outline" 
                 className="w-full sm:w-auto"
                 onClick={buttons.secondary.onClick}
-              >
-                {buttons.secondary.icon && (
-                  <span className="mr-2 text-white">{buttons.secondary.icon}</span>
-                )}
-                {buttons.secondary.text}
-              </Button>
+                text={buttons.secondary.text}
+                icon={buttons.secondary.icon}
+              />
             )}
             {buttons.primary && (
               <Button 
-                className="w-full sm:w-auto bg-secondary"
                 onClick={buttons.primary.onClick}
-              >
-                {buttons.primary.icon && (
-                  <span className="mr-2 text-white">{buttons.primary.icon}</span>
-                )}
-                {buttons.primary.text}
-              </Button>
+                text={buttons.primary.text}
+                icon={buttons.primary.icon}
+              />
             )}
           </div>
         </div>

@@ -9,7 +9,7 @@ export default {
       colors: {
         primary: '#C5F232',
         secondary: '#9BB641',
-        tertiary: 'var(--tertiary)',
+        tertiary: '#683f8a',
         'background-dark': '#0d0117',
         'background-light': '#fafafa',
         'text-adaptive': "var(--text-adaptive)",

@@ -1,6 +1,6 @@
 import { Trophy, Star, Award, Users, Ticket, Coffee, Timer, CreditCard, ShoppingBag, ChevronRight, Check, Smartphone } from 'lucide-react'
 import { WalletConnect } from '../components/wallet-connect'
-import { Button } from '../components/ui/button'
+import { Button } from '../components/ui-v2/Button'
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useWalletContext } from '../hooks/useWalletContext'
@@ -58,7 +58,7 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-8 md:mb-0">
               <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-                Revolucione sua experiência de torcedor com <span className="text-secondary">Fanatique</span>
+                Revolucione sua experiência de torcedor com <span className="text-tertiary">Fanatique</span>
               </h1>
               <p className="text-lg md:text-xl mb-8">
                 Transforme sua paixão pelo futebol em uma experiência completa com blockchain, Fan Tokens e benefícios exclusivos.
@@ -66,12 +66,10 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
                   size="lg" 
-                  className="bg-secondary text-white hover:bg-secondary/90"
                   onClick={handleGetStarted}
-                >
-                  Comece Agora
-                  <ChevronRight size={16} className="ml-2" />
-                </Button>
+                  text="Comece Agora"
+                  icon={<ChevronRight size={16} />}
+                />
                 <WalletConnect className="w-full sm:w-auto" />
               </div>
             </div>
@@ -91,7 +89,7 @@ export default function HomePage() {
                   <div className="space-y-3 mt-6">
                     {['Faça check-in no estádio', 'Compartilhe sua experiência', 'Complete sua primeira compra'].map((quest, i) => (
                       <div key={i} className="flex items-center gap-3 bg-white/30 p-3 rounded-lg">
-                        <div className="bg-primary/80 p-1.5 rounded-full">
+                        <div className="bg-tertiary/70 p-1.5 rounded-full">
                           <Check size={16} className="text-foreground" />
                         </div>
                         <span className="text-sm">{quest}</span>
@@ -100,9 +98,9 @@ export default function HomePage() {
                   </div>
                 </div>
                 
-                <div className="absolute -right-4 -bottom-4 bg-tertiary p-4 rounded-xl shadow-lg max-w-[200px]">
+                <div className="absolute -right-4 -bottom-4 bg-background p-4 rounded-xl shadow-lg max-w-[200px]">
                   <div className="flex items-center gap-2 mb-2">
-                    <Ticket size={20} className="text-secondary" />
+                    <Ticket size={20} className="text-foreground" />
                     <span className="font-bold">Fan Tokens</span>
                   </div>
                   <div className="text-sm text-text-adaptive">
@@ -250,7 +248,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="bg-primary/80 dark:bg-primary/20 py-16">
         <div className="container mx-auto px-4">
-          <div className="bg-white dark:bg-tertiary rounded-2xl p-8 md:p-12 shadow-lg">
+          <div className="bg-white dark:bg-secondary rounded-2xl p-8 md:p-12 shadow-lg">
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="mb-6 md:mb-0 md:w-2/3">
                 <h2 className="text-2xl md:text-3xl font-bold text-text-adaptive dark:text-white mb-4">
@@ -262,12 +260,10 @@ export default function HomePage() {
               </div>
               <Button 
                 size="lg" 
-                className="bg-secondary text-white hover:bg-secondary/90 md:w-auto w-full"
                 onClick={handleGetStarted}
-              >
-                Começar Agora
-                <ChevronRight size={16} className="ml-2" />
-              </Button>
+                text="Começar Agora"
+                icon={<ChevronRight size={16} className="ml-2" />}
+              />
             </div>
           </div>
         </div>
@@ -315,26 +311,26 @@ function FeatureRow({ icon, title, description, details, position, delay, number
       {position === 'left' ? (
         <>
           <div className="col-span-2 animate-fadeInLeft" style={{ animationDelay: `${delay}s` }}>
-            <div className="bg-tertiary p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
+            <div className="bg-primary/80 p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
               {/* Background decoration */}
-              <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-secondary/5 group-hover:bg-secondary/10 transition-all duration-500"></div>
+              <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-secondary/10 group-hover:bg-secondary/10 transition-all duration-500"></div>
               
               {/* Number indicator */}
               <div className="absolute top-4 right-4 font-bold text-4xl text-secondary/40 group-hover:text-secondary/20 transition-all duration-500">
                 {number}
               </div>
               
-              <div className="p-3 rounded-full bg-secondary/40 dark:bg-primary/20 w-fit mb-4 relative z-10">
+              <div className="p-3 rounded-full bg-tertiary/70 w-fit mb-4 relative z-10">
                 {icon}
               </div>
-              <h3 className="text-xl font-bold dark:text-white mb-3 relative z-10">{title}</h3>
-              <p className="text-text-adaptive mb-5 relative z-10">{description}</p>
+              <h3 className="text-xl font-bold mb-3 relative z-10">{title}</h3>
+              <p className="mb-5 relative z-10">{description}</p>
               
               {/* Feature details bullets */}
               <ul className="space-y-2 relative z-10">
                 {details.map((detail, index) => (
                   <li key={index} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-tertiary"></div>
                     <span className="text-sm">{detail}</span>
                   </li>
                 ))}
@@ -349,16 +345,16 @@ function FeatureRow({ icon, title, description, details, position, delay, number
           <div className="col-span-2"></div>
           <div className="col-span-1"></div>
           <div className="col-span-2 animate-fadeInRight" style={{ animationDelay: `${delay}s` }}>
-            <div className="bg-tertiary p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
+            <div className="bg-primary/80 p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
               {/* Background decoration */}
-              <div className="absolute -top-12 -left-12 w-24 h-24 rounded-full bg-secondary/5 group-hover:bg-secondary/10 transition-all duration-500"></div>
+              <div className="absolute -top-12 -left-12 w-24 h-24 rounded-full bg-secondary/10 group-hover:bg-secondary/10 transition-all duration-500"></div>
               
               {/* Number indicator */}
               <div className="absolute top-4 left-4 font-bold text-4xl text-secondary/40 group-hover:text-secondary/20 transition-all duration-500">
                 {number}
               </div>
               
-              <div className="p-3 rounded-full bg-secondary/40 dark:bg-primary/20 w-fit mb-4 relative z-10">
+              <div className="p-3 rounded-full bg-tertiary/70 w-fit mb-4 relative z-10">
                 {icon}
               </div>
               <h3 className="text-xl font-bold dark:text-white mb-3 relative z-10">{title}</h3>
@@ -368,7 +364,7 @@ function FeatureRow({ icon, title, description, details, position, delay, number
               <ul className="space-y-2 relative z-10">
                 {details.map((detail, index) => (
                   <li key={index} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-secondary"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-tertiary"></div>
                     <span className="text-sm">{detail}</span>
                   </li>
                 ))}

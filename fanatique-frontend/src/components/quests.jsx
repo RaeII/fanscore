@@ -116,7 +116,7 @@ export default function Quests({ questScope, gameId = null }) {
               rounded-full font-medium hover:bg-secondary
               ${activeFilter === 'all' 
                 ? 'bg-secondary text-white shadow-md' 
-                : 'bg-foreground/20 text-text-adaptive border-text-adaptive/20 hover:bg-secondary hover:text-white hover:border-text-adaptive/30'}
+                : 'bg-foreground/20 text-text-adaptive hover:bg-secondary hover:text-white border-background'}
             `}
           >
             All
@@ -129,7 +129,7 @@ export default function Quests({ questScope, gameId = null }) {
               rounded-full font-medium hover:bg-blue-500
               ${activeFilter === 'available' 
                 ? 'bg-blue-500 text-white shadow-md' 
-                : 'bg-foreground/20 text-text-adaptive border-text-adaptive/20 hover:bg-blue-500 hover:text-white hover:border-text-adaptive/30'}
+                : 'bg-foreground/20 text-text-adaptive hover:bg-blue-500 hover:text-white border-background'}
             `}
           >
             Available
@@ -142,7 +142,7 @@ export default function Quests({ questScope, gameId = null }) {
               rounded-full font-medium hover:bg-orange-500
               ${activeFilter === 'inProgress' 
                 ? 'bg-orange-500 text-white shadow-md' 
-                : 'bg-foreground/20 text-text-adaptive border-text-adaptive/20 hover:bg-orange-500 hover:text-white hover:border-text-adaptive/30'}
+                : 'bg-foreground/20 text-text-adaptive hover:bg-orange-500 hover:text-white border-background'}
             `}
           >
             In Progress
@@ -155,7 +155,7 @@ export default function Quests({ questScope, gameId = null }) {
               rounded-full font-medium hover:bg-green-500
               ${activeFilter === 'completed' 
                 ? 'bg-green-500 text-white shadow-md' 
-                : 'bg-foreground/20 text-text-adaptive border-text-adaptive/20 hover:bg-green-500 hover:text-white hover:border-text-adaptive/30'}
+                : 'bg-foreground/20 text-text-adaptive hover:bg-green-500 hover:text-white border-background'}
             `}
           >
             Completed

@@ -262,7 +262,7 @@ export default function Navigation() {
       {/* Desktop side navigation */}
       <div 
         className={cn(
-          "fixed top-0 left-0 bottom-0 bg-white/90 dark:bg-[#0d0117]/90 shadow-lg backdrop-blur-sm border-r border-gray-200 dark:border-gray-800 z-50 transition-all duration-300 hidden md:block",
+          "fixed top-0 left-0 bottom-0 bg-background/90 shadow-lg backdrop-blur-sm border-r border-gray-200 dark:border-gray-800 z-50 transition-all duration-300 hidden md:block",
           isExpanded ? "w-64" : "w-20"
         )}
       >
