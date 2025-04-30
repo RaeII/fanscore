@@ -7,10 +7,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: '#2a1b49',
-        secondary: '#f24952',
+        primary: '#C5F232',
+        secondary: '#9BB641',
+        tertiary: 'var(--tertiary)',
         'background-dark': '#0d0117',
         'background-light': '#fafafa',
+        'text-adaptive': "var(--text-adaptive)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

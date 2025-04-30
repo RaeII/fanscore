@@ -70,14 +70,14 @@ export default function DashboardPage() {
   console.log('userClubsData', userClubsData);
   //CONTEÚDO PRINCIPAL DO DASHBOARD
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+    <div className="min-h-[calc(100vh-4rem)] bg-background">
       {/* Conteúdo principal */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-primary dark:text-white">Seus Clubes</h1>
+          <h1 className="text-2xl font-bold">Seus Clubes</h1>
           <Button 
             variant="outline"
-            className="text-primary border-primary hover:bg-primary/10 dark:text-white dark:border-white dark:hover:bg-white/10"
+            className="text-text-adaptive border-text-adaptive hover:bg-primary/10 dark:text-white dark:border-white dark:hover:bg-white/10"
             onClick={() => disconnectWallet()}
           >
             <LogOut size={16} className="mr-2" />
@@ -85,7 +85,7 @@ export default function DashboardPage() {
           </Button>
         </div>
 
-        <p className="text-primary/70 dark:text-white/70 mb-5">
+        <p className="text-text-adaptive/70 mb-5">
           Clubes que você segue. Selecione um para ver detalhes, eventos e notícias.
         </p>
 
@@ -121,7 +121,7 @@ export default function DashboardPage() {
                         </div>
                       )}
                     </div>
-                    <p className="text-sm font-medium text-primary dark:text-white text-center w-24 truncate mt-2">
+                    <p className="text-sm font-medium text-text-adaptive text-center w-24 truncate mt-2">
                       {club.name}
                     </p>
                   </div>
@@ -131,11 +131,11 @@ export default function DashboardPage() {
                   onClick={handleAddTeams}
                 >
                   <div className="w-20 h-20">
-                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 origin-center border-2 border-dashed border-primary/50 dark:border-white/50 flex items-center justify-center">
-                      <Plus size={30} className="text-primary/70 dark:text-white/70" />
+                    <div className="w-full h-full rounded-full bg-background shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 origin-center border-2 border-dashed border-secondary/50 flex items-center justify-center">
+                      <Plus size={30} className="text-secondary/70" />
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-primary dark:text-white text-center w-24 truncate mt-2">
+                  <p className="text-sm font-medium text-text-adaptive text-center w-24 truncate mt-2">
                     Ver Todos
                   </p>
                 </div>
@@ -143,8 +143,8 @@ export default function DashboardPage() {
             ) : (
               <>
                 <div className="w-full py-8 text-center mr-4">
-                  <Football size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
-                  <p className="text-primary/70 dark:text-white/70">
+                  <Football size={36} className="mx-auto text-background/30" />
+                  <p className="text-text-adaptive/70">
                     Você ainda não segue nenhum clube
                   </p>
                 </div>

@@ -13,7 +13,7 @@ export function ThemeToggle({ className }) {
     <button
       onClick={toggleTheme}
       className={cn(
-        "w-10 h-10 rounded-full flex items-center justify-center bg-[#fafafa] dark:bg-primary/20 text-primary dark:text-white transition-colors",
+        "w-10 h-10 rounded-full flex items-center justify-center bg-[#fafafa] dark:bg-primary/20 text-foreground dark:text-white transition-colors",
         className
       )}
       aria-label={`Alternar para modo ${theme === 'light' ? 'escuro' : 'claro'}`}

@@ -88,7 +88,7 @@ export function WalletConnect({ className }) {
       <Button
         onClick={connectWallet}
         disabled={connecting || signing}
-        className="bg-primary text-white"
+        className="bg-primary text-text-adaptive"
       >
         {connecting ? 'Conectando...' : signing ? 'Validando...' : 'Conectar Carteira'}
       </Button>

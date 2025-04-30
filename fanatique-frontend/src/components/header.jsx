@@ -20,11 +20,11 @@ export function Header({ className }) {
   // };
 
   return (
-    <header className={cn("border-b border-primary/10 dark:border-white/10 bg-[#fafafa] dark:bg-[#0d0117] sticky top-0 z-50", className)}>
+    <header className={cn("border-b border-primary/10 dark:border-white/10 bg-background sticky top-0 z-50", className)}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-primary dark:text-white">
           <Ticket size={24} className="text-secondary" />
-          <span className="font-bold text-xl">Fanatique</span>
+          <span className="font-bold text-text-adaptive text-xl">Fanatique</span>
         </Link>
         
         <div className="flex items-center gap-4">
