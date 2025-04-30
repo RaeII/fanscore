@@ -8,6 +8,13 @@ import transactionApi from '../api/transaction';
 import toast from 'react-hot-toast';
 import { WalletContext } from '../contexts/WalletContextDef';
 
+// Estilos personalizados
+const cardInnerShadow = {
+  boxShadow: "rgb(255 255 255 / 4%) 1px 1px 30px 2px inset",
+  WebkitBoxShadow: "rgb(255 255 255 / 4%) 1px 1px 30px 2px inset",
+  MozBoxShadow: "rgb(255 255 255 / 4%) 1px 1px 30px 2px inset"
+};
+
 export default function BuyFantokensPage() {
   const navigate = useNavigate();
   const { account, isConnected, connectWallet } = useContext(WalletContext);
@@ -269,6 +276,7 @@ export default function BuyFantokensPage() {
                   key={club.id}
                   onClick={() => handleSelectClub(club)}
                   className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-background-dark/60 dark:hover:bg-background-dark/60 transition-colors backdrop-blur-md border border-white/10"
+                  style={cardInnerShadow}
                 >
                   <div className="flex items-center">
                     <div className="w-12 h-12 rounded-full bg-white overflow-hidden mr-4 flex-shrink-0">
@@ -334,6 +342,7 @@ export default function BuyFantokensPage() {
                   <div 
                     key={transaction.id}
                     className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between transition-colors backdrop-blur-md border border-white/10"
+                    style={cardInnerShadow}
                   >
                     <div className="flex items-center">
                       <div className="w-12 h-12 rounded-full bg-white overflow-hidden mr-4 flex-shrink-0">
@@ -389,43 +398,43 @@ export default function BuyFantokensPage() {
         ) : (
           <div className="mb-8">
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-primary dark:text-white mb-4">
+              <h2 className="text-xl font-bold text-white mb-6">
                 Fixed Staking
               </h2>
               
-              <div className="flex mb-4 space-x-4">
-                <button 
-                  className={`px-4 py-2 rounded-lg text-primary dark:text-white`}
-                >
-                  Active
-                </button>
-                <button className="px-4 py-2 rounded-lg text-gray-500">
-                  Ended
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center">
-                  <div className="w-5 h-5 flex items-center mr-2">
-                    <input 
-                      type="checkbox" 
-                      className="rounded-full bg-primary h-4 w-4" 
-                    />
-                  </div>
-                  <span className="text-sm text-primary dark:text-white">Staked Only</span>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-6 gap-4">
+                <div className="flex space-x-2 bg-background-dark/60 rounded-full p-1 w-fit">
+                  <button 
+                    className="px-6 py-2 rounded-full text-white bg-indigo-600/90 text-sm font-medium"
+                  >
+                    Active
+                  </button>
+                  <button className="px-6 py-2 rounded-full text-gray-400 hover:text-white text-sm font-medium">
+                    Ended
+                  </button>
                 </div>
                 
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search size={16} className="text-primary/50 dark:text-white/50" />
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center">
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input type="checkbox" className="sr-only peer" />
+                      <div className="relative w-11 h-6 bg-background-dark/60 peer-focus:outline-none rounded-full peer dark:bg-background-dark/60 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600/80"></div>
+                      <span className="ms-3 text-sm font-medium text-white">Staked Only</span>
+                    </label>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Search"
-                    className="pl-10 pr-4 py-2 text-sm border border-primary/20 dark:border-white/20 rounded-lg bg-white dark:bg-[#150924] text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                  
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search size={16} className="text-white/50" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      className="pl-10 pr-4 py-2 text-sm border-none rounded-full bg-background-dark/60 text-white focus:outline-none focus:ring-1 focus:ring-indigo-600/50 w-48"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
               
@@ -455,7 +464,9 @@ export default function BuyFantokensPage() {
                     const earned = userBalance > 0 ? (userBalance * Math.random() * 0.2).toFixed(2) : "0.00";
                     
                     return (
-                      <div key={club.id} className="bg-background-dark/40 dark:bg-background-dark/40 rounded-xl p-5 backdrop-blur-md border border-white/10 shadow-lg">
+                      <div key={club.id} className="bg-background-dark/40 dark:bg-background-dark/40 rounded-xl p-5 backdrop-blur-md border border-white/10 shadow-lg"
+                        style={cardInnerShadow}
+                      >
                         <div className="flex items-center mb-2">
                           <div className="w-8 h-8 rounded-full bg-white overflow-hidden mr-3 flex-shrink-0">
                             {club.image ? (
