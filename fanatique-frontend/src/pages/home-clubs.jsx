@@ -10,41 +10,6 @@ import { useUserContext } from '../hooks/useUserContext';
 import matchApi from '../api/match';
 import MatchCard from '../components/MatchCard';
 
-// QuestStatusChip component
-const QuestStatusChip = ({ status }) => {
-  switch (status) {
-    case 'AVAILABLE':
-      return (
-        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/80 text-white">
-          Available
-        </div>
-      );
-    case 'IN_PROGRESS':
-      return (
-        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/80 text-white">
-          <Clock size={12} className="mr-1" />
-          In Progress
-        </div>
-      );
-    case 'COMPLETED':
-      return (
-        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500/80 text-white">
-          <CheckCircle size={12} className="mr-1" />
-          Completed
-        </div>
-      );
-    case 'LOCKED':
-      return (
-        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/80 text-white">
-          <Lock size={12} className="mr-1" />
-          Locked
-        </div>
-      );
-    default:
-      return null;
-  }
-};
-
 export default function HomeClubsPage() {
   const navigate = useNavigate();
   const { clubId } = useParams();
@@ -329,9 +294,9 @@ export default function HomeClubsPage() {
   }
   console.log('liveGame', liveGame);
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+    <div className="min-h-[calc(100vh-4rem)] bg-background">
       {/* Club Header */}
-      <div className="relative bg-primary overflow-hidden">
+      <div className="relative bg-primary/80 overflow-hidden">
         {/* Blurred logo background */}
         {selectedClub && selectedClub.image && (
           <div
@@ -441,25 +406,25 @@ export default function HomeClubsPage() {
       <div className="container mx-auto px-4 -mt-6 relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard
-            icon={<Trophy size={24} className="text-secondary" />}
+            icon={<Trophy size={24} className="text-foreground" />}
             title="Points"
             value={userClubStats?.points || "0"}
             label="accumulated points"
           />
           <StatCard
-            icon={<Star size={24} className="text-secondary" />}
+            icon={<Star size={24} className="text-foreground" />}
             title="Quests"
             value={userClubStats?.quests || "0"}
             label="completed"
           />
           <StatCard
-            icon={<ShoppingBag size={24} className="text-secondary" />}
+            icon={<ShoppingBag size={24} className="text-foreground" />}
             title="Orders"
             value={userClubStats?.orders || "0"}
             label="made"
           />
           <StatCard
-            icon={<Ticket size={24} className="text-secondary" />}
+            icon={<Ticket size={24} className="text-foreground" />}
             title="Tickets"
             value={userClubStats?.tickets || "0"}
             label="purchased"
@@ -470,15 +435,15 @@ export default function HomeClubsPage() {
       {/* Sports Filter - Only show if club has multiple sports */}
       {clubSports.length > 1 && (
         <div className="container mx-auto px-4 mt-6">
-          <div className="dark:bg-[#150924] rounded-lg overflow-hidden shadow-md">
+          <div className="bg-background-overlay rounded-lg overflow-hidden shadow-md">
             <div className="flex overflow-x-auto scrollbar-none">
               {clubSports.map((sport) => (
                 <button
                   key={sport.id}
                   className={`px-6 py-4 flex flex-1 justify-center items-center transition-all border-b-2 ${
                     activeSport === sport.id 
-                      ? 'border-secondary text-secondary font-medium' 
-                      : 'border-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'border-tertiary text-secondary font-medium' 
+                      : 'border-transparent text-text-adaptive/60 dark:text-white/60 hover:text-text-adaptive dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5'
                   }`}
                   onClick={() => {
                     setActiveSport(sport.id);
@@ -508,8 +473,8 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'overview'
-                ? 'border-secondary text-secondary font-semibold'
-                : 'border-transparent text-primary/70 dark:text-white/70'
+                ? 'border-tertiary text-foreground font-semibold'
+                : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
               setActiveTab('overview');
@@ -523,8 +488,8 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'events'
-                ? 'border-secondary text-secondary font-semibold'
-                : 'border-transparent text-primary/70 dark:text-white/70'
+                ? 'border-tertiary text-foreground font-semibold'
+                : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
               setActiveTab('events');
@@ -538,8 +503,8 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'news'
-                ? 'border-secondary text-secondary font-semibold'
-                : 'border-transparent text-primary/70 dark:text-white/70'
+                ? 'border-tertiary text-foreground font-semibold'
+                : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
               setActiveTab('news');
@@ -553,7 +518,7 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'forum'
-                ? 'border-secondary text-secondary font-semibold'
+                ? 'border-tertiary text-foreground font-semibold'
                 : 'border-transparent text-primary/70 dark:text-white/70'
             }`}
             onClick={() => {
@@ -571,7 +536,7 @@ export default function HomeClubsPage() {
         {/* Sport-specific message */}
         {activeSport !== 'all' && activeSport !== 'football' && (
           <div className="bg-secondary/10 rounded-lg p-3 mb-4 border border-secondary/20">
-            <p className="text-sm text-primary dark:text-white">
+            <p className="text-sm text-text-adaptive dark:text-white">
               Showing {clubSports.find(s => s.id === activeSport)?.name || activeSport} content for {selectedClub?.name}
             </p>
           </div>
@@ -594,11 +559,11 @@ export default function HomeClubsPage() {
             {/* Upcoming Events */}
             <section className="mb-8">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-primary dark:text-white">Upcoming Events</h2>
+                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">Upcoming Events</h2>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-secondary"
+                  className="text-foreground"
                   onClick={() => setActiveTab('events')}
                 >
                   View All <ChevronRight size={16} className="ml-1" />
@@ -610,14 +575,14 @@ export default function HomeClubsPage() {
                   {upcomingEvents.slice(0, 2).map((event) => (
                     <div
                       key={event.id}
-                      className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm"
+                      className="bg-background-overlay rounded-lg p-4 shadow-sm"
                     >
-                      <h3 className="font-medium text-primary dark:text-white">{event.title}</h3>
-                      <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-2">
+                      <h3 className="font-medium text-text-adaptive dark:text-white">{event.title}</h3>
+                      <div className="flex items-center text-sm text-text-adaptive/70 dark:text-white/70 mt-2">
                         <Calendar size={16} className="mr-1" />
                         <span>{new Date(event.date).toLocaleDateString()}</span>
                       </div>
-                      <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-1">
+                      <div className="flex items-center text-sm text-text-adaptive/70 dark:text-white/70 mt-1">
                         <MapPin size={16} className="mr-1" />
                         <span>{event.location}</span>
                       </div>
@@ -633,8 +598,8 @@ export default function HomeClubsPage() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
-                  <p className="text-primary/70 dark:text-white/70">No upcoming events for this club</p>
+                <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
+                  <p className="text-text-adaptive/70 dark:text-white/70">No upcoming events for this club</p>
                 </div>
               )}
             </section>
@@ -642,32 +607,32 @@ export default function HomeClubsPage() {
             {/* Fan Activities */}
             <section className="mb-8">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-primary dark:text-white">Fan Activities</h2>
+                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">Fan Activities</h2>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div
-                  className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm flex flex-col items-center text-center cursor-pointer"
+                  className="bg-background-overlay rounded-lg p-4 shadow-sm flex flex-col items-center text-center cursor-pointer"
                   onClick={() => {
                     setActiveTab('quests');
                     navigate(`/clubs/${clubId}?tab=quests`);
                   }}
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-2">
-                    <Star size={24} className="text-secondary" />
+                  <div className="w-12 h-12 rounded-full bg-tertiary/10 dark:bg-tertiary flex items-center justify-center mb-2">
+                    <Star size={24} className="text-foreground" />
                   </div>
-                  <h3 className="font-medium text-primary dark:text-white">Quests</h3>
-                  <p className="text-sm text-primary/70 dark:text-white/70 mt-1">Complete challenges and earn rewards</p>
+                  <h3 className="font-medium text-text-adaptive dark:text-white">Quests</h3>
+                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">Complete challenges and earn rewards</p>
                 </div>
 
                 <div
-                  className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm flex flex-col items-center text-center cursor-pointer"
+                  className="bg-background-overlay rounded-lg p-4 shadow-sm flex flex-col items-center text-center cursor-pointer"
                   onClick={() => navigate(`/pedidos?clubId=${selectedClub.id}`)}
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mb-2">
-                    <ShoppingBag size={24} className="text-secondary" />
+                  <div className="w-12 h-12 rounded-full bg-tertiary/10 dark:bg-tertiary flex items-center justify-center mb-2">
+                    <ShoppingBag size={24} className="text-foreground" />
                   </div>
-                  <h3 className="font-medium text-primary dark:text-white">Stadium Orders</h3>
-                  <p className="text-sm text-primary/70 dark:text-white/70 mt-1">Order food and drinks without waiting in line</p>
+                  <h3 className="font-medium text-text-adaptive dark:text-white">Stadium Orders</h3>
+                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">Order food and drinks without waiting in line</p>
                 </div>
               </div>
             </section>
@@ -675,11 +640,11 @@ export default function HomeClubsPage() {
             {/* Club News */}
             <section>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-primary dark:text-white">Latest News</h2>
+                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">Latest News</h2>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="text-secondary"
+                  className="text-foreground"
                   onClick={() => setActiveTab('news')}
                 >
                   View All <ChevronRight size={16} className="ml-1" />
@@ -691,7 +656,7 @@ export default function HomeClubsPage() {
                   selectedClub.news.slice(0, 2).map((item, index) => (
                     <div
                       key={index}
-                      className="bg-white dark:bg-[#150924] rounded-lg overflow-hidden shadow-sm"
+                      className="bg-background-overlay rounded-lg overflow-hidden shadow-sm"
                     >
                       {item.image && (
                         <img
@@ -701,12 +666,12 @@ export default function HomeClubsPage() {
                         />
                       )}
                       <div className="p-4">
-                        <h3 className="font-medium text-primary dark:text-white">{item.title}</h3>
-                        <p className="text-sm text-primary/70 dark:text-white/70 mt-1 line-clamp-2">
+                        <h3 className="font-medium text-text-adaptive dark:text-white">{item.title}</h3>
+                        <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1 line-clamp-2">
                           {item.summary}
                         </p>
                         <div className="flex justify-between items-center mt-3">
-                          <span className="text-xs text-primary/60 dark:text-white/60">
+                          <span className="text-xs text-text-adaptive/60 dark:text-white/60">
                             {new Date(item.date).toLocaleDateString()}
                           </span>
                           <Button
@@ -722,8 +687,8 @@ export default function HomeClubsPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
-                    <p className="text-primary/70 dark:text-white/70">No news available for this club</p>
+                  <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
+                    <p className="text-text-adaptive/70 dark:text-white/70">No news available for this club</p>
                   </div>
                 )}
               </div>
@@ -736,12 +701,12 @@ export default function HomeClubsPage() {
                   <MessageCircle size={24} className="text-indigo-300" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-1">Club Forum Now Available!</h3>
-                  <p className="text-sm text-gray-300 mb-2">Join the conversation with other fans of {selectedClub.name}</p>
+                  <h3 className="text-lg font-semibold mb-1 text-text-adaptive dark:text-white">Club Forum Now Available!</h3>
+                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mb-2">Join the conversation with other fans of {selectedClub.name}</p>
                   <Button 
                     size="sm" 
                     variant="outline"
-                    className="border-indigo-500/50 hover:bg-indigo-500/20 text-white font-medium"
+                    className="border-indigo-500/50 hover:bg-indigo-500/20 text-text-adaptive dark:text-white font-medium"
                     onClick={() => navigate(`/clubs/${clubId}/forum`)}
                   >
                     Visit Forum
@@ -756,8 +721,8 @@ export default function HomeClubsPage() {
         {activeTab === 'quests' && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-primary dark:text-white">Club Quests</h2>
-              <p className="text-primary/70 dark:text-white/70 mt-1">
+              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">Club Quests</h2>
+              <p className="text-text-adaptive/70 dark:text-white/70 mt-1">
                 Complete quests to earn points and unlock rewards for your club.
               </p>
             </div>
@@ -771,8 +736,8 @@ export default function HomeClubsPage() {
                 className={`
                   rounded-full font-medium 
                   ${activeFilter === 'all' 
-                    ? 'bg-primary text-white shadow-md' 
-                    : 'border-primary/20 dark:border-white/20 text-primary dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
+                    ? 'bg-primary text-text-adaptive shadow-md' 
+                    : 'border-text-adaptive/20 dark:border-white/20 text-text-adaptive dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
                 `}
               >
                 All
@@ -785,7 +750,7 @@ export default function HomeClubsPage() {
                   rounded-full font-medium
                   ${activeFilter === 'available' 
                     ? 'bg-blue-500 text-white shadow-md' 
-                    : 'border-primary/20 dark:border-white/20 text-primary dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
+                    : 'border-text-adaptive/20 dark:border-white/20 text-text-adaptive dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
                 `}
               >
                 Available
@@ -798,7 +763,7 @@ export default function HomeClubsPage() {
                   rounded-full font-medium
                   ${activeFilter === 'inProgress' 
                     ? 'bg-orange-500 text-white shadow-md' 
-                    : 'border-primary/20 dark:border-white/20 text-primary dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
+                    : 'border-text-adaptive/20 dark:border-white/20 text-text-adaptive dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
                 `}
               >
                 In Progress
@@ -811,7 +776,7 @@ export default function HomeClubsPage() {
                   rounded-full font-medium
                   ${activeFilter === 'completed' 
                     ? 'bg-green-500 text-white shadow-md' 
-                    : 'border-primary/20 dark:border-white/20 text-primary dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
+                    : 'border-text-adaptive/20 dark:border-white/20 text-text-adaptive dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
                 `}
               >
                 Completed
@@ -824,8 +789,8 @@ export default function HomeClubsPage() {
         {activeTab === 'events' && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-primary dark:text-white">All Events</h2>
-              <p className="text-primary/70 dark:text-white/70 mt-1">
+              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">All Events</h2>
+              <p className="text-text-adaptive/70 dark:text-white/70 mt-1">
                 View all upcoming events for {selectedClub?.name}.
               </p>
             </div>
@@ -835,14 +800,14 @@ export default function HomeClubsPage() {
                 {upcomingEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="bg-white dark:bg-[#150924] rounded-lg p-4 shadow-sm"
+                    className="bg-background-overlay rounded-lg p-4 shadow-sm"
                   >
-                    <h3 className="font-medium text-primary dark:text-white">{event.title}</h3>
-                    <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-2">
+                    <h3 className="font-medium text-text-adaptive dark:text-white">{event.title}</h3>
+                    <div className="flex items-center text-sm text-text-adaptive/70 dark:text-white/70 mt-2">
                       <Calendar size={16} className="mr-1" />
                       <span>{new Date(event.date).toLocaleDateString()}</span>
                     </div>
-                    <div className="flex items-center text-sm text-primary/70 dark:text-white/70 mt-1">
+                    <div className="flex items-center text-sm text-text-adaptive/70 dark:text-white/70 mt-1">
                       <MapPin size={16} className="mr-1" />
                       <span>{event.location}</span>
                     </div>
@@ -859,7 +824,7 @@ export default function HomeClubsPage() {
               </div>
             ) : (
               <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
-                <p className="text-primary/70 dark:text-white/70">No upcoming events for this club</p>
+                <p className="text-text-adaptive/70 dark:text-white/70">No upcoming events for this club</p>
               </div>
             )}
           </div>
@@ -869,8 +834,8 @@ export default function HomeClubsPage() {
         {activeTab === 'news' && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-primary dark:text-white">All News</h2>
-              <p className="text-primary/70 dark:text-white/70 mt-1">
+              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">All News</h2>
+              <p className="text-text-adaptive/70 dark:text-white/70 mt-1">
                 Latest news and updates from {selectedClub?.name}.
               </p>
             </div>
@@ -890,12 +855,12 @@ export default function HomeClubsPage() {
                       />
                     )}
                     <div className="p-4">
-                      <h3 className="font-medium text-primary dark:text-white">{item.title}</h3>
-                      <p className="text-sm text-primary/70 dark:text-white/70 mt-1 line-clamp-3">
+                      <h3 className="font-medium text-text-adaptive dark:text-white">{item.title}</h3>
+                      <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1 line-clamp-3">
                         {item.summary}
                       </p>
                       <div className="flex justify-between items-center mt-3">
-                        <span className="text-xs text-primary/60 dark:text-white/60">
+                        <span className="text-xs text-text-adaptive/60 dark:text-white/60">
                           {new Date(item.date).toLocaleDateString()}
                         </span>
                         <Button
@@ -912,7 +877,7 @@ export default function HomeClubsPage() {
                 ))
               ) : (
                 <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
-                  <p className="text-primary/70 dark:text-white/70">No news available for this club</p>
+                  <p className="text-text-adaptive/70 dark:text-white/70">No news available for this club</p>
                 </div>
               )}
             </div>
@@ -925,15 +890,15 @@ export default function HomeClubsPage() {
 
 function StatCard({ icon, title, value, label }) {
   return (
-    <div className="bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm">
+    <div className="bg-background-overlay p-4 rounded-lg shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-full bg-primary/5 dark:bg-primary/20">
+        <div className="p-2 rounded-full bg-tertiary/10 dark:bg-tertiary">
           {icon}
         </div>
         <div>
-          <h3 className="text-xs font-medium text-primary/60 dark:text-white/60">{title}</h3>
-          <p className="text-xl font-bold text-primary dark:text-white">{value}</p>
-          <p className="text-xs text-primary/60 dark:text-white/60">{label}</p>
+          <h3 className="text-xs font-medium text-text-adaptive/60 dark:text-white/60">{title}</h3>
+          <p className="text-xl font-bold text-text-adaptive dark:text-white">{value}</p>
+          <p className="text-xs text-text-adaptive/60 dark:text-white/60">{label}</p>
         </div>
       </div>
     </div>

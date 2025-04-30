@@ -12,6 +12,7 @@ export default {
         tertiary: '#683f8a',
         'background-dark': '#0d0117',
         'background-light': '#fafafa',
+        'background-overlay': 'var(--background-overlay)',
         'text-adaptive': "var(--text-adaptive)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

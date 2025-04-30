@@ -12,6 +12,7 @@
 
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
+    --background-overlay: #fafafafa;
     /* --text-adaptive: #434343; */
     --text-adaptive: #28133a;
     --tertiary: #ffffff;
@@ -29,6 +30,7 @@
   .dark {
     --background: 300 3% 8%;
     --foreground: 0 0% 98%;
+    --background-overlay: #1a1a1a;
     --text-adaptive: #ffffff;
     --tertiary: #242424;
     --muted-foreground: 240 5% 64.9%;
