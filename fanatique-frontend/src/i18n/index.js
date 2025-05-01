@@ -32,7 +32,7 @@ i18n
     },
     
     // List all namespaces for convenient reference
-    ns: ['common', 'quests', 'matches'],
+    ns: ['common', 'quests', 'matches', 'home'],
     defaultNS: 'common',
     
     react: {
