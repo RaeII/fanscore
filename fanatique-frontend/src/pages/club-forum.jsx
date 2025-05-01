@@ -19,8 +19,8 @@ const NavItem = ({ icon, label, active, onClick }) => (
   <button
     className={`flex items-center gap-2 px-4 py-3 transition-colors ${
       active 
-        ? 'font-bold border-b-4 border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' 
-        : 'text-gray-800 dark:text-gray-100 border-b-4 border-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-500 dark:hover:text-blue-400'
+        ? 'font-bold border-b-4 border-tertiary text-tertiary dark:text-blue-400 bg-tertiary/10 dark:bg-blue-900/30' 
+        : 'text-text-adaptive dark:text-gray-100 border-b-4 border-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-tertiary dark:hover:text-blue-400'
     }`}
     onClick={onClick}
   >
@@ -46,8 +46,8 @@ const CategoryBadge = ({ category, active, onClick }) => {
     <button 
       className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
         active 
-          ? 'bg-primary text-white shadow-md' 
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
+          ? 'bg-secondary text-text-adaptive shadow-md' 
+          : 'bg-gray-100 dark:bg-gray-800 text-text-adaptive dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
       }`}
       onClick={() => onClick(category)}
     >
@@ -228,7 +228,7 @@ export default function ClubForumPage() {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-950">
+      <div className="min-h-screen bg-background">
         <div className="flex justify-center items-center h-screen">
           <div className="relative">
             <div className="animate-spin w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full"></div>
@@ -240,64 +240,29 @@ export default function ClubForumPage() {
   }
   
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Twitter-style fixed header */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 backdrop-blur-sm bg-white/80 dark:bg-gray-900/80">
-        {/* <div className="flex justify-between items-center px-4 py-2">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="normal" 
-              size="icon"
-              className="rounded-full"
-              onClick={() => navigate(`/clubs/${clubId}`)}
-            >
-              <ArrowLeft size={20} />
-            </Button>
-            
-            {clubData && (
-              <div className="flex items-center gap-2">
-                <img 
-                  src={clubData.image || 'https://via.placeholder.com/40'} 
-                  alt={clubData.name} 
-                  className="w-8 h-8 rounded-full object-cover"
-                />
-                <div>
-                  <h1 className="font-bold">{clubData.name}</h1>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{posts.length} posts</p>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-1">
-            <Button variant="normal" size="icon" className="rounded-full">
-              <Settings size={20} />
-            </Button>
-          </div>
-        </div> */}
-        
-        {/* Tab navigation - Twitter/X style */}
+    <div className="min-h-screen bg-background">
+      {/* <header className="sticky top-0 z-10 bg-background-overlay dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 backdrop-blur-sm bg-white/80 dark:bg-gray-900/80">
         <div className="flex overflow-x-auto border-b-2 border-gray-200 dark:border-gray-700">
           <NavItem 
-            icon={<Home size={18} className={activeTab === 'latest' ? 'text-blue-600 dark:text-blue-400' : ''} />} 
+            icon={<Home size={18} className={activeTab === 'latest' ? 'text-tertiary dark:text-blue-400' : ''} />} 
             label="Latest" 
             active={activeTab === 'latest'} 
             onClick={() => setActiveTab('latest')}
           />
           <NavItem 
-            icon={<TrendingUp size={18} className={activeTab === 'trending' ? 'text-blue-600 dark:text-blue-400' : ''} />} 
+            icon={<TrendingUp size={18} className={activeTab === 'trending' ? 'text-tertiary dark:text-blue-400' : ''} />} 
             label="Trending" 
             active={activeTab === 'trending'} 
             onClick={() => setActiveTab('trending')}
           />
           <NavItem 
-            icon={<MessageCircle size={18} className={activeTab === 'mine' ? 'text-blue-600 dark:text-blue-400' : ''} />} 
+            icon={<MessageCircle size={18} className={activeTab === 'mine' ? 'text-tertiary dark:text-blue-400' : ''} />} 
             label="My Discussions" 
             active={activeTab === 'mine'} 
             onClick={() => setActiveTab('mine')}
           />
         </div>
-      </header>
+      </header> */}
       
       <div className="container mx-auto max-w-screen-xl">
         <div className="grid grid-cols-1 lg:grid-cols-12 min-h-screen">
@@ -306,22 +271,22 @@ export default function ClubForumPage() {
             <div className="sticky top-20 space-y-6">
               <div className="flex flex-col space-y-1">
                 <Button 
-                  variant="ghost" 
-                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
+                  variant="normal" 
+                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-tertiary"
                 >
                   <Bell size={20} className="mr-4" />
                   <span>Notifications</span>
                 </Button>
                 <Button 
-                  variant="ghost" 
-                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-primary"
+                  variant="normal" 
+                  className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-tertiary"
                 >
                   <Bookmark size={20} className="mr-4" />
                   <span>Bookmarks</span>
                 </Button>
               </div>
               
-              <Button className="w-full rounded-full py-6 bg-primary hover:bg-primary/90 text-white">
+              <Button className="w-full rounded-full py-6 bg-secondary hover:bg-secondary/90 text-text-adaptive">
                 New Post
               </Button>
               
@@ -354,7 +319,7 @@ export default function ClubForumPage() {
                     <div className="flex flex-col gap-2">
                       <button 
                         onClick={() => setExpandedCreatePost(true)}
-                        className="text-left text-gray-600 dark:text-gray-300 hover:text-primary font-medium"
+                        className="text-left text-gray-600 dark:text-gray-300 hover:text-tertiary font-medium"
                       >
                         What's happening?
                       </button>
@@ -378,9 +343,9 @@ export default function ClubForumPage() {
                           {categories.map(category => (
                             <Button 
                               key={category} 
-                              variant="ghost" 
+                              variant="normal" 
                               size="sm" 
-                              className="rounded-full text-xs text-gray-700 dark:text-gray-200 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800"
+                              className="rounded-full text-xs text-text-adaptive dark:text-gray-200 hover:text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
                             >
                               {category !== 'all' ? category.charAt(0).toUpperCase() + category.slice(1) : 'General'}
                             </Button>
@@ -395,7 +360,7 @@ export default function ClubForumPage() {
                               setNewPostTitle('');
                               setNewPostContent('');
                             }}
-                            className="rounded-full border-gray-400 dark:border-gray-500 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+                            className="rounded-full border-gray-400 dark:border-gray-500 text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
                           >
                             Cancel
                           </Button>
@@ -403,7 +368,7 @@ export default function ClubForumPage() {
                             size="sm"
                             onClick={handleSubmitPost}
                             disabled={submitLoading || !newPostTitle.trim() || !newPostContent.trim()}
-                            className="rounded-full bg-primary hover:bg-primary/90 text-white"
+                            className="rounded-full bg-primary hover:bg-primary/90 text-text-adaptive"
                           >
                             {submitLoading ? (
                               <span className="flex items-center gap-2">
@@ -454,7 +419,7 @@ export default function ClubForumPage() {
                     <p className="text-gray-500 dark:text-gray-400 mb-6">Try a different category or create the first post</p>
                     <Button 
                       onClick={() => setActiveCategory('all')}
-                      className="rounded-full"
+                      className="rounded-full bg-tertiary hover:bg-tertiary/90"
                     >
                       Show All Posts
                     </Button>
@@ -587,7 +552,7 @@ export default function ClubForumPage() {
                             <p className="text-xs text-gray-500 dark:text-gray-400">@{['johnfan', 'marysupporter', 'alextrue'][index]}</p>
                           </div>
                         </div>
-                        <Button size="sm" className="rounded-full bg-primary hover:bg-primary/90 text-white">
+                        <Button size="sm" className="rounded-full bg-secondary hover:bg-secondary/90 text-text-adaptive">
                           Follow
                         </Button>
                       </div>

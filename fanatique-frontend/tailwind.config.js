@@ -9,9 +9,10 @@ export default {
       colors: {
         primary: '#C5F232',
         secondary: '#9BB641',
-        tertiary: 'var(--tertiary)',
+        tertiary: '#683f8a',
         'background-dark': '#0d0117',
         'background-light': '#fafafa',
+        'background-overlay': 'var(--background-overlay)',
         'text-adaptive': "var(--text-adaptive)",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

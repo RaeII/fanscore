@@ -12,8 +12,9 @@
 
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
+    --background-overlay: #fafafafa;
     /* --text-adaptive: #434343; */
-    --text-adaptive: #000000;
+    --text-adaptive: #28133a;
     --tertiary: #ffffff;
     --muted-foreground: 240 3.8% 46.1%;
     --border: 240 5.9% 90%;
@@ -29,6 +30,7 @@
   .dark {
     --background: 300 3% 8%;
     --foreground: 0 0% 98%;
+    --background-overlay: #1a1a1a;
     --text-adaptive: #ffffff;
     --tertiary: #242424;
     --muted-foreground: 240 5% 64.9%;
@@ -43,11 +45,11 @@
   }
 
   body {
-    @apply bg-[#fafafa] text-primary transition-colors duration-300 min-h-screen;
+    @apply bg-background text-primary transition-colors duration-300 min-h-screen;
   }
 
   .dark body {
-    @apply bg-[#0d0117] text-white;
+    @apply bg-background text-white;
   }
   
   h1, h2, h3, h4, h5, h6, p, span {

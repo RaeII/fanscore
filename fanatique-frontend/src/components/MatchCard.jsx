@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Calendar, CheckCircle } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from './ui-v2/Button';
 
 export default function MatchCard({ 
   match, 
@@ -18,17 +18,17 @@ export default function MatchCard({
       onClick={onClick}
     >
       {/* Stadium image background */}
-      {match?.stadium?.image && (
         <div className="absolute inset-0">
-          <img 
-            src={match.stadium.image} 
-            alt={match.stadium.name} 
-            className="w-full h-full object-cover"
-          />
+          {match?.stadium?.image && (
+            <img 
+              src={match.stadium.image} 
+              alt={match.stadium.name} 
+              className="w-full h-full object-cover"
+            />
+          )}
           {/* Gradient overlay to ensure text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-secondary/90"></div>
+          <div className="absolute inset-0 bg-gradient-to-r dark:from-background-dark/90 dark:to-primary/90 from-background-light/90 to-primary/90"></div>
         </div>
-      )}
       <div className="flex items-center justify-between relative z-10">
         <div>
           <div className="flex items-center">
@@ -65,21 +65,19 @@ export default function MatchCard({
               e.stopPropagation();
               navigate(`/game/${club.id}/${match.id}`, { state: { club } });
             }}
-          >
-            View Game
-          </Button>
+            text="View Game"
+          />
           {!isPast && (
             <Button
               variant="outline"
               size="sm"
-              className="bg-white/10 hover:bg-white/20 text-white"
+              className="text-white border-tertiary hover:border-tertiary/70"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/stadium-orders/${club.id}/${match.id}`, { state: { club } });
               }}
-            >
-              Order Food & Drinks
-            </Button>
+              text="Order Food & Drinks"
+            />
           )}
         </div>
       </div>

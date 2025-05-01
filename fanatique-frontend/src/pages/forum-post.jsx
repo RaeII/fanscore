@@ -215,7 +215,7 @@ export default function ForumPostPage() {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-950 pt-16">
+      <div className="min-h-screen bg-background dark:bg-gray-950 pt-16">
         <div className="container mx-auto px-4 flex flex-col items-center justify-center">
           <div className="relative">
             <div className="animate-spin w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full"></div>
@@ -227,9 +227,9 @@ export default function ForumPostPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-12">
+    <div className="min-h-screen bg-background dark:bg-gray-950 pb-12">
       {/* Top navigation */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <div className="sticky top-0 z-10 bg-background-overlay dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex items-center h-16">
             <Button 
@@ -269,9 +269,9 @@ export default function ForumPostPage() {
                 />
                 
                 {/* Comments section */}
-                <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+                <div className="bg-background-overlay dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
                   <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <MessageSquare size={18} className="text-primary" />
+                    <MessageSquare size={18} className="text-tertiary" />
                     Comments ({post.comments})
                   </h2>
                   
@@ -296,7 +296,7 @@ export default function ForumPostPage() {
           <div className="md:col-span-4">
             <div className="space-y-4 sticky top-20">
               {/* Post actions card */}
-              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+              <div className="bg-background-overlay dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
                 <h3 className="font-medium text-sm text-gray-500 dark:text-gray-400 mb-3 uppercase">Post Actions</h3>
                 
                 <div className="grid grid-cols-2 gap-2 mb-2">
@@ -330,7 +330,7 @@ export default function ForumPostPage() {
               </div>
               
               {/* Community info card */}
-              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+              <div className="bg-background-overlay dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
                 <h3 className="font-medium text-sm text-gray-500 dark:text-gray-400 mb-3 uppercase">About Community</h3>
                 
                 {clubData && (
@@ -341,7 +341,7 @@ export default function ForumPostPage() {
                       className="w-10 h-10 rounded-full object-cover"
                     />
                     <div>
-                      <h4 className="font-semibold">{clubData.name}</h4>
+                      <h4 className="font-semibold text-text-adaptive dark:text-white">{clubData.name}</h4>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Official club forum</p>
                     </div>
                   </div>
@@ -351,7 +351,7 @@ export default function ForumPostPage() {
                   <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
                     <Users size={16} className="text-gray-500" />
                     <div>
-                      <div className="font-semibold">5.2k</div>
+                      <div className="font-semibold text-text-adaptive dark:text-white">5.2k</div>
                       <div className="text-xs text-gray-500">Members</div>
                     </div>
                   </div>
@@ -359,7 +359,7 @@ export default function ForumPostPage() {
                   <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded">
                     <TrendingUp size={16} className="text-gray-500" />
                     <div>
-                      <div className="font-semibold">241</div>
+                      <div className="font-semibold text-text-adaptive dark:text-white">241</div>
                       <div className="text-xs text-gray-500">Online</div>
                     </div>
                   </div>
@@ -372,11 +372,11 @@ export default function ForumPostPage() {
                   <span>Community created Sep 2023</span>
                 </div>
                 
-                <Button className="w-full">Join Discussion</Button>
+                <Button className="w-full bg-primary hover:bg-primary/90 text-text-adaptive">Join Discussion</Button>
               </div>
               
               {/* Related discussions */}
-              <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
+              <div className="bg-background-overlay dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4">
                 <h3 className="font-medium text-sm text-gray-500 dark:text-gray-400 mb-3 uppercase">Related Discussions</h3>
                 
                 <div className="space-y-3">
@@ -386,7 +386,7 @@ export default function ForumPostPage() {
                       className="group cursor-pointer"
                       onClick={() => navigate(`/clubs/${clubId}/forum/post/${index + 1}`)}
                     >
-                      <h4 className="font-medium text-sm group-hover:text-primary transition-colors">
+                      <h4 className="font-medium text-sm text-text-adaptive dark:text-white group-hover:text-tertiary transition-colors">
                         {index === 0 
                           ? "Latest team news for the upcoming match" 
                           : index === 1 

@@ -153,11 +153,11 @@ export default function DashboardPage() {
                   onClick={handleAddTeams}
                 >
                   <div className="w-20 h-20">
-                    <div className="w-full h-full rounded-full bg-white dark:bg-[#150924] shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 origin-center border-2 border-dashed border-primary/50 dark:border-white/50 flex items-center justify-center">
-                      <Plus size={30} className="text-primary/70 dark:text-white/70" />
+                    <div className="w-full h-full rounded-full bg-white dark:bg-background shadow-sm overflow-hidden mb-2 transition-transform hover:scale-110 origin-center border-2 border-dashed border-foreground dark:border-primary/70 flex items-center justify-center">
+                      <Plus size={30} className="text-foreground dark:text-primary" />
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-primary dark:text-white text-center w-24 truncate mt-2">
+                  <p className="text-sm font-medium text-foreground text-center w-24 truncate mt-2">
                     Explorar
                   </p>
                 </div>

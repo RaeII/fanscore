@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
-import { Button } from '../components/ui/button';
+import { Button } from '../components/ui-v2/Button';
 import { Input } from '../components/ui/input';
 import { Loader2, Wallet } from 'lucide-react';
 import { showError, showSuccess } from '../lib/toast';
@@ -289,14 +289,13 @@ export default function AppPage() {
   // Exibe tela para usuários não cadastrados
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
-      <div className="w-full max-w-md p-8 bg-tertiary rounded-lg shadow-md text-center">
+      <div className="w-full max-w-md p-8 bg-secondary rounded-lg shadow-md text-center">
         <h1 className="text-2xl font-bold mb-6">Verificando cadastro...</h1>
+
         <Button
           onClick={checkIfUserRegistered}
-          className="bg-secondary text-white"
-        >
-          Continuar
-        </Button>
+          text="Continuar"
+        />
       </div>
     </div>
   );

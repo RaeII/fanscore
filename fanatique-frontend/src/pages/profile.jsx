@@ -12,15 +12,15 @@ import clubApi from '../api/club';
 // StatCard component for displaying user metrics
 function StatCard({ icon, title, value, label }) {
   return (
-    <div className="bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm">
+    <div className="bg-background-overlay p-4 rounded-lg shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-full bg-primary/5 dark:bg-primary/20">
+        <div className="p-2 rounded-full bg-tertiary/10 dark:bg-tertiary">
           {icon}
         </div>
         <div>
-          <h3 className="text-xs font-medium text-primary/60 dark:text-white/60">{title}</h3>
-          <p className="text-xl font-bold text-primary dark:text-white">{value}</p>
-          <p className="text-xs text-primary/60 dark:text-white/60">{label}</p>
+          <h3 className="text-xs font-medium text-text-adaptive/60 dark:text-white/60">{title}</h3>
+          <p className="text-xl font-bold text-text-adaptive dark:text-white">{value}</p>
+          <p className="text-xs text-text-adaptive/60 dark:text-white/60">{label}</p>
         </div>
       </div>
     </div>
@@ -30,7 +30,7 @@ function StatCard({ icon, title, value, label }) {
 // Club Card component for displaying clubs the user follows
 function ClubCard({ club, isHeartClub }) {
   return (
-    <div className="bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm flex items-center gap-4">
+    <div className="bg-background-overlay p-4 rounded-lg shadow-sm flex items-center gap-4">
       <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0">
         {club.image ? (
           <img src={club.image} alt={club.club_name} className="h-full w-full object-cover" />
@@ -42,7 +42,7 @@ function ClubCard({ club, isHeartClub }) {
       </div>
       <div className="flex-grow">
         <div className="flex items-center gap-2">
-          <h3 className="text-base font-semibold text-primary dark:text-white">{club.name}</h3>
+          <h3 className="text-base font-semibold text-text-adaptive dark:text-white">{club.name}</h3>
           {isHeartClub && (
             <div className="p-0.5 rounded-full bg-red-100 dark:bg-red-900/20">
               <Heart size={14} className="text-red-500 fill-red-500" />
@@ -60,7 +60,7 @@ function ClubCard({ club, isHeartClub }) {
 // Achievement Card component
 function AchievementCard({ achievement, isPinned, onPinClick }) {
   return (
-    <div className={`bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm border ${achievement.completed ? 'border-green-500/30' : 'border-gray-300/30 dark:border-white/10'} ${isPinned ? 'ring-2 ring-primary' : ''}`}>
+    <div className={`bg-background-overlay p-4 rounded-lg shadow-sm border ${achievement.completed ? 'border-green-500/30' : 'border-gray-300/30 dark:border-white/10'} ${isPinned ? 'ring-2 ring-primary' : ''}`}>
       <div className="flex items-start gap-4">
         <div className={`h-16 w-16 rounded-lg flex-shrink-0 flex items-center justify-center ${achievement.completed ? 'bg-green-100 dark:bg-green-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
           <div className="relative">
@@ -79,10 +79,10 @@ function AchievementCard({ achievement, isPinned, onPinClick }) {
         <div className="flex-grow">
           <div className="flex justify-between items-start">
             <div>
-              <h3 className={`text-base font-semibold ${achievement.completed ? 'text-primary dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+              <h3 className={`text-base font-semibold ${achievement.completed ? 'text-text-adaptive dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
                 {achievement.title}
               </h3>
-              <p className={`text-xs ${achievement.completed ? 'text-primary/60 dark:text-white/60' : 'text-gray-500 dark:text-gray-400'}`}>
+              <p className={`text-xs ${achievement.completed ? 'text-text-adaptive/60 dark:text-white/60' : 'text-gray-500 dark:text-gray-400'}`}>
                 {achievement.description}
               </p>
             </div>
@@ -131,21 +131,21 @@ function AchievementCard({ achievement, isPinned, onPinClick }) {
 // Quest Card Component
 function QuestCard({ quest, isPinned, onPinClick }) {
   return (
-    <div className={`bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm border border-primary/20 dark:border-white/10 ${isPinned ? 'ring-2 ring-primary' : ''}`}>
+    <div className={`bg-background-overlay p-4 rounded-lg shadow-sm border border-primary/20 dark:border-white/10 ${isPinned ? 'ring-2 ring-primary' : ''}`}>
       <div className="flex items-start gap-4">
-        <div className="h-16 w-16 rounded-lg flex-shrink-0 flex items-center justify-center bg-primary/10 dark:bg-primary/20">
+        <div className="h-16 w-16 rounded-lg flex-shrink-0 flex items-center justify-center bg-tertiary/10 dark:bg-tertiary">
           <Star size={28} className="text-white" />
         </div>
         <div className="flex-grow">
-          <h3 className="text-base font-semibold text-primary dark:text-white">
+          <h3 className="text-base font-semibold text-text-adaptive dark:text-white">
             {quest.title}
           </h3>
-          <p className="text-xs text-primary/60 dark:text-white/60 mb-2">
+          <p className="text-xs text-text-adaptive/60 dark:text-white/60 mb-2">
             {quest.description}
           </p>
           
           <div className="flex items-center justify-between">
-            <span className="text-xs text-primary/60 dark:text-white/60">
+            <span className="text-xs text-text-adaptive/60 dark:text-white/60">
               Completed: {quest.completedDate}
             </span>
             <Button 
@@ -169,19 +169,19 @@ function FeaturedItemCard({ item, type }) {
   if (!item) return null;
   
   return (
-    <div className="bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm border border-primary">
+    <div className="bg-background-overlay p-4 rounded-lg shadow-sm border border-primary">
       {/* <div className="flex items-center gap-2 mb-2">
         <Pin size={16} className="text-white fill-white" />
         <h3 className="text-sm font-medium text-white">Featured {type}</h3>
       </div> */}
       
       <div className="flex items-start gap-4">
-        <div className="h-12 w-12 rounded-lg flex-shrink-0 flex items-center justify-center bg-primary/10 dark:bg-primary/20">
+        <div className="h-12 w-12 rounded-lg flex-shrink-0 flex items-center justify-center bg-tertiary/10 dark:bg-tertiary">
           {type === 'Achievement' ? item.icon : <Star size={24} className="text-white" />}
         </div>
         <div>
-          <h4 className="text-sm font-semibold text-primary dark:text-white">{item.title}</h4>
-          <p className="text-xs text-primary/60 dark:text-white/60">{item.description}</p>
+          <h4 className="text-sm font-semibold text-text-adaptive dark:text-white">{item.title}</h4>
+          <p className="text-xs text-text-adaptive/60 dark:text-white/60">{item.description}</p>
         </div>
       </div>
     </div>
@@ -552,62 +552,62 @@ export default function ProfilePage() {
   const registrationDate = userData.register_date ? new Date(userData.register_date).toLocaleDateString() : 'N/A';
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
+    <div className="container max-w-4xl mx-auto py-8 px-4 min-h-[calc(100vh-4rem)]">
       {/* Profile Header */}
       <div className="mb-8">
         <div className="rounded-xl overflow-hidden mb-6 bg-gradient-to-r from-primary to-secondary/80 p-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             <div className="h-24 w-24 rounded-full bg-white/20 flex items-center justify-center text-white">
-              <User size={48} />
+              <User size={48} className="text-black" />
             </div>
             
             <div className="flex-grow text-center md:text-left">
               {editMode ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="name" className="block text-xs text-white/80 mb-1">Name</label>
+                    <label htmlFor="name" className="block text-xs text-black/80 mb-1">Name</label>
                     <input
                       type="text"
                       id="name"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full p-2 rounded-md border border-white/20 bg-white/10 text-white"
+                      className="w-full p-2 rounded-md border border-white/20 bg-white/10 text-black"
                       placeholder="Your name"
                     />
                   </div>
                   
                   <div className="flex gap-2">
                     <Button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="bg-white text-primary hover:bg-white/90"
-                    >
-                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Save
-                    </Button>
-                    <Button 
                       type="button" 
                       variant="outline"
                       onClick={() => setEditMode(false)}
-                      className="border-white text-white hover:bg-white/10"
+                      className="border-black text-black hover:bg-white/10"
                     >
                       Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="bg-tertiary/90 text-white hover:bg-tertiary/90"
+                    >
+                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Save
                     </Button>
                   </div>
                 </form>
               ) : (
                 <>
-                  <h1 className="text-2xl font-bold text-white mb-1">{userData.name}</h1>
-                  <p className="text-sm text-white/80 mb-4">{userData.wallet_address}</p>
+                  <h1 className="text-2xl font-bold mb-1 text-black">{userData.name}</h1>
+                  <p className="text-sm text-black/80 mb-4">{userData.wallet_address}</p>
                   
                   <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center text-white/80 text-sm">
+                    <div className="flex items-center text-black/80 text-sm">
                       <Calendar size={16} className="mr-2" />
                       Joined: {registrationDate}
                     </div>
                     {userData.update_date && (
-                      <div className="flex items-center text-white/80 text-sm">
+                      <div className="flex items-center text-black/80 text-sm">
                         <Clock size={16} className="mr-2" />
                         Last updated: {new Date(userData.update_date).toLocaleDateString()}
                       </div>
@@ -616,10 +616,10 @@ export default function ProfilePage() {
                   
                   <Button 
                     variant="outline" 
-                    className="mt-4 border-white text-white hover:bg-white/10"
+                    className="mt-4 border-foreground text-black hover:bg-tertiary/10 dark:border-black dark:text-black dark:hover:bg-black/10"
                     onClick={() => setEditMode(true)}
                   >
-                    <Edit size={16} className="mr-2" />
+                    <Edit size={16} className="mr-2 text-black" />
                     Edit Profile
                   </Button>
                 </>
@@ -632,25 +632,25 @@ export default function ProfilePage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <StatCard
-          icon={<Trophy size={24} className="text-secondary" />}
+          icon={<Trophy size={24} className="text-foreground" />}
           title="Points"
           value={totalStats.points || "0"}
           label="total points"
         />
         <StatCard
-          icon={<Star size={24} className="text-secondary" />}
+          icon={<Star size={24} className="text-foreground" />}
           title="Quests"
           value={totalStats.quests || "0"}
           label="completed"
         />
         <StatCard
-          icon={<ShoppingBag size={24} className="text-secondary" />}
+          icon={<ShoppingBag size={24} className="text-foreground" />}
           title="Orders"
           value={totalStats.orders || "0"}
           label="made"
         />
         <StatCard
-          icon={<Ticket size={24} className="text-secondary" />}
+          icon={<Ticket size={24} className="text-foreground" />}
           title="Tickets"
           value={totalStats.tickets || "0"}
           label="purchased"
@@ -670,21 +670,21 @@ export default function ProfilePage() {
       </div>
       
       {/* Achievement Progress */}
-      <div className="mb-8 bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm">
+      <div className="mb-8 bg-background-overlay p-4 rounded-lg shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/5 dark:bg-primary/20">
-              <Award size={24} className="text-secondary" />
+            <div className="p-2 rounded-full bg-tertiary/10 dark:bg-tertiary">
+              <Award size={24} className="text-foreground" />
             </div>
             <div>
-              <h3 className="text-xs font-medium text-primary/60 dark:text-white/60">Achievements</h3>
-              <p className="text-xl font-bold text-primary dark:text-white">{achievementStats.completed}/{achievementStats.total}</p>
+              <h3 className="text-xs font-medium text-text-adaptive/60 dark:text-white/60">Achievements</h3>
+              <p className="text-xl font-bold text-text-adaptive dark:text-white">{achievementStats.completed}/{achievementStats.total}</p>
             </div>
           </div>
           <div className="flex-grow max-w-md">
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-primary/70 dark:text-white/70">Progress</span>
-              <span className="text-primary/70 dark:text-white/70">{achievementStats.percentage}%</span>
+              <span className="text-text-adaptive/70 dark:text-white/70">Progress</span>
+              <span className="text-text-adaptive/70 dark:text-white/70">{achievementStats.percentage}%</span>
             </div>
             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <div 
@@ -708,40 +708,40 @@ export default function ProfilePage() {
         
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
-            <div className="bg-white dark:bg-[#150924] p-6 rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold text-primary dark:text-white mb-4">Account Information</h2>
+            <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
+              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">Account Information</h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-primary/60 dark:text-white/60">Name</h3>
-                    <p className="text-primary dark:text-white">{userData.name}</p>
+                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">Name</h3>
+                    <p className="text-text-adaptive dark:text-white">{userData.name}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-primary/60 dark:text-white/60">Wallet Address</h3>
-                    <p className="text-primary dark:text-white font-mono text-sm truncate">{userData.wallet_address}</p>
+                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">Wallet Address</h3>
+                    <p className="text-text-adaptive dark:text-white font-mono text-sm truncate">{userData.wallet_address}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-primary/60 dark:text-white/60">Registration Date</h3>
-                    <p className="text-primary dark:text-white">{registrationDate}</p>
+                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">Registration Date</h3>
+                    <p className="text-text-adaptive dark:text-white">{registrationDate}</p>
                   </div>
                   {userData.update_date && (
                     <div>
-                      <h3 className="text-sm font-medium text-primary/60 dark:text-white/60">Last Updated</h3>
-                      <p className="text-primary dark:text-white">{new Date(userData.update_date).toLocaleDateString()}</p>
+                      <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">Last Updated</h3>
+                      <p className="text-text-adaptive dark:text-white">{new Date(userData.update_date).toLocaleDateString()}</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
             
-            <div className="bg-white dark:bg-[#150924] p-6 rounded-lg shadow-sm">
+            <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-primary dark:text-white">Heart Club</h2>
+                <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">Heart Club</h2>
                 <Button 
                   variant="outline" 
-                  className="text-white hover:bg-primary/80"
+                  className="border-foreground text-foreground hover:bg-tertiary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
                   size="sm" 
                   onClick={() => navigate('/clubs')}
                 >
@@ -755,8 +755,8 @@ export default function ProfilePage() {
                   isHeartClub={true}
                 />
               ) : (
-                <div className="p-4 rounded-lg border border-dashed border-primary/20 dark:border-white/20 text-center">
-                  <p className="text-primary/70 dark:text-white/70 mb-3">You haven't selected a Heart Club yet</p>
+                <div className="p-4 rounded-lg border border-dashed border-foreground/20 dark:border-white/20 text-center">
+                  <p className="text-text-adaptive/70 dark:text-white/70 mb-3">You haven't selected a Heart Club yet</p>
                   <Button
                     variant="outline"
                     size="sm"
@@ -772,9 +772,9 @@ export default function ProfilePage() {
         </TabsContent>
         
         <TabsContent value="achievements" className="space-y-6">
-          <div className="bg-white dark:bg-[#150924] p-6 rounded-lg shadow-sm">
+          <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold text-primary dark:text-white">Achievements</h2>
+              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">Achievements</h2>
               <div className="flex items-center gap-2">
                 <div className="w-40 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div 
@@ -782,7 +782,7 @@ export default function ProfilePage() {
                     style={{ width: `${achievementStats.percentage}%` }}
                   ></div>
                 </div>
-                <span className="text-sm text-primary/70 dark:text-white/70">
+                <span className="text-sm text-text-adaptive/70 dark:text-white/70">
                   {achievementStats.completed}/{achievementStats.total}
                 </span>
               </div>
@@ -791,10 +791,10 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 gap-4">
               {/* Rarity filter buttons */}
               <div className="flex flex-wrap gap-2 mb-4">
-                <Button variant="outline" size="sm" className="bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/60 text-primary dark:text-white font-medium">
+                <Button variant="outline" size="sm" className="bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/60 text-text-adaptive dark:text-white font-medium">
                   All
                 </Button>
-                <Button variant="outline" size="sm" className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Common</Button>
+                <Button variant="outline" size="sm" className="border-gray-300 dark:border-gray-600 text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Common</Button>
                 <Button variant="outline" size="sm" className="border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20">Uncommon</Button>
                 <Button variant="outline" size="sm" className="border-purple-300 dark:border-purple-600 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20">Rare</Button>
                 <Button variant="outline" size="sm" className="border-pink-300 dark:border-pink-600 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20">Epic</Button>
@@ -816,8 +816,8 @@ export default function ProfilePage() {
           </div>
           
           {/* Recent achievements */}
-          <div className="bg-white dark:bg-[#150924] p-6 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold text-primary dark:text-white mb-4">Recently Unlocked</h2>
+          <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">Recently Unlocked</h2>
             
             {achievements.filter(a => a.completed).length > 0 ? (
               <div className="space-y-4">
@@ -831,16 +831,16 @@ export default function ProfilePage() {
                         {achievement.icon}
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-primary dark:text-white">{achievement.title}</h4>
-                        <p className="text-xs text-primary/60 dark:text-white/60">Unlocked on {achievement.completedDate}</p>
+                        <h4 className="text-sm font-medium text-text-adaptive dark:text-white">{achievement.title}</h4>
+                        <p className="text-xs text-text-adaptive/60 dark:text-white/60">Unlocked on {achievement.completedDate}</p>
                       </div>
                     </div>
                   ))
                 }
               </div>
             ) : (
-              <div className="p-4 rounded-lg border border-dashed border-primary/20 dark:border-white/20 text-center">
-                <p className="text-primary/70 dark:text-white/70">You haven't unlocked any achievements yet</p>
+              <div className="p-4 rounded-lg border border-dashed border-foreground/20 dark:border-white/20 text-center">
+                <p className="text-text-adaptive/70 dark:text-white/70">You haven't unlocked any achievements yet</p>
               </div>
             )}
           </div>
@@ -848,10 +848,10 @@ export default function ProfilePage() {
         
         {/* New Quests Tab */}
         <TabsContent value="quests" className="space-y-6">
-          <div className="bg-white dark:bg-[#150924] p-6 rounded-lg shadow-sm">
+          <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold text-primary dark:text-white">Completed Quests</h2>
-              <span className="text-sm bg-primary/10 px-2 py-1 rounded-full text-primary">
+              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">Completed Quests</h2>
+              <span className="text-sm bg-primary/10 px-2 py-1 rounded-full text-text-adaptive">
                 {completedQuests.length} quests
               </span>
             </div>
@@ -870,12 +870,12 @@ export default function ProfilePage() {
         </TabsContent>
         
         <TabsContent value="clubs" className="space-y-6">
-          <div className="bg-white dark:bg-[#150924] p-6 rounded-lg shadow-sm">
+          <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-primary dark:text-white">My Clubs</h2>
+              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">My Clubs</h2>
               <Button 
                 variant="outline" 
-                className="text-white hover:bg-primary/80"
+                className="border-foreground text-foreground hover:bg-tertiary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
                 size="sm"
                 onClick={() => navigate('/clubs')}
               >
@@ -894,8 +894,8 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : (
-              <div className="p-4 rounded-lg border border-dashed border-primary/20 dark:border-white/20 text-center">
-                <p className="text-primary/70 dark:text-white/70 mb-3">You're not following any clubs yet</p>
+              <div className="p-4 rounded-lg border border-dashed border-foreground/20 dark:border-white/20 text-center">
+                <p className="text-text-adaptive/70 dark:text-white/70 mb-3">You're not following any clubs yet</p>
                 <Button
                   variant="outline"
                   size="sm"
@@ -910,12 +910,12 @@ export default function ProfilePage() {
         </TabsContent>
         
         <TabsContent value="settings" className="space-y-6">
-          <div className="bg-white dark:bg-[#150924] p-6 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold text-primary dark:text-white mb-4">Account Settings</h2>
+          <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">Account Settings</h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="settings-name" className="block text-sm font-medium text-primary/80 dark:text-white/80 mb-1">
+                <label htmlFor="settings-name" className="block text-sm font-medium text-foreground/80 mb-1">
                   Display Name
                 </label>
                 <input
@@ -924,7 +924,7 @@ export default function ProfilePage() {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full p-2 rounded-md border border-primary/20 dark:border-white/20 bg-white dark:bg-[#0D0718]"
+                  className="w-full p-2 rounded-md border border-foreground/20 dark:border-white/20 bg-background dark:bg-[#0D0718] text-foreground"
                   placeholder="Your display name"
                 />
               </div>
@@ -932,7 +932,7 @@ export default function ProfilePage() {
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="mt-2"
+                className="mt-2 bg-tertiary/90 text-white hover:bg-tertiary/90"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Settings size={16} className="mr-2" />}
                 Save Changes

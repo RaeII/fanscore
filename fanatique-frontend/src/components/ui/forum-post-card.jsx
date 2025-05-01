@@ -89,7 +89,7 @@ export function ForumPostCard({ post, onLike, onClickComments }) {
             </Avatar>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold">{post.author.name}</span>
+                <span className="font-semibold text-text-adaptive dark:text-white">{post.author.name}</span>
                 {post.category && (
                   <span className={`text-xs px-2 py-0.5 rounded-full flex items-center gap-1 ${getCategoryColor(post.category)}`}>
                     <Tag size={10} />
@@ -117,12 +117,12 @@ export function ForumPostCard({ post, onLike, onClickComments }) {
       
       {/* Post title */}
       <div className="px-4 pb-3">
-        <h3 className="text-xl font-bold">{post.title}</h3>
+        <h3 className="text-xl font-bold text-text-adaptive dark:text-white">{post.title}</h3>
       </div>
       
       {/* Post content */}
       <div className="px-4 pb-4">
-        <p className="text-gray-700 dark:text-gray-300">{post.content}</p>
+        <p className="text-text-adaptive dark:text-gray-300">{post.content}</p>
       </div>
       
       {/* Post stats - likes and comments count */}
@@ -144,7 +144,7 @@ export function ForumPostCard({ post, onLike, onClickComments }) {
           variant="ghost" 
           size="sm"
           className={`flex-1 flex items-center justify-center gap-1 ${
-            post.userLiked ? 'text-rose-500 dark:text-rose-500' : 'text-gray-700 dark:text-gray-300'
+            post.userLiked ? 'text-rose-500 dark:text-rose-500' : 'text-text-adaptive dark:text-gray-300'
           }`}
           onClick={handleLike}
           disabled={post.userLiked}
@@ -159,7 +159,7 @@ export function ForumPostCard({ post, onLike, onClickComments }) {
         <Button
           variant="ghost"
           size="sm"
-          className="flex-1 flex items-center justify-center gap-1 text-gray-700 dark:text-gray-300"
+          className="flex-1 flex items-center justify-center gap-1 text-text-adaptive dark:text-gray-300"
           onClick={handleClickComments}
         >
           <MessageCircle size={18} />
@@ -169,7 +169,7 @@ export function ForumPostCard({ post, onLike, onClickComments }) {
         <Button
           variant="ghost"
           size="sm"
-          className="flex-1 flex items-center justify-center gap-1 text-gray-700 dark:text-gray-300"
+          className="flex-1 flex items-center justify-center gap-1 text-text-adaptive dark:text-gray-300"
           onClick={handleAction}
         >
           <Share2 size={18} />
@@ -179,7 +179,7 @@ export function ForumPostCard({ post, onLike, onClickComments }) {
         <Button
           variant="ghost"
           size="sm"
-          className="flex-1 flex items-center justify-center gap-1 text-gray-700 dark:text-gray-300"
+          className="flex-1 flex items-center justify-center gap-1 text-text-adaptive dark:text-gray-300"
           onClick={handleAction}
         >
           <Bookmark size={18} />
