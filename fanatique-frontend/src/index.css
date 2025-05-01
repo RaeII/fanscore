@@ -45,11 +45,11 @@
   }
 
   body {
-    @apply bg-[#fafafa] text-primary transition-colors duration-300 min-h-screen;
+    @apply bg-background text-primary transition-colors duration-300 min-h-screen;
   }
 
   .dark body {
-    @apply bg-[#0d0117] text-white;
+    @apply bg-background text-white;
   }
   
   h1, h2, h3, h4, h5, h6, p, span {

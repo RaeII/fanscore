@@ -75,15 +75,6 @@ export default function MatchesPage() {
     fetchMatches();
   }, [heartClub]);
 
-  const handleBackButton = () => {
-    // Go back to previous page if available, otherwise go to dashboard
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate('/dashboard');
-    }
-  };
-
   const handleMatchClick = (match) => {
     navigate(`/clubs/${heartClub.id}/game/${match.id}`);
   };
@@ -115,7 +106,7 @@ export default function MatchesPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+    <div className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center mb-6">
           {/* <Button
@@ -130,12 +121,12 @@ export default function MatchesPage() {
         </div>
 
         <Tabs defaultValue="upcoming">
-          <TabsList className="w-full mb-6">
+          <TabsList className="w-full mb-6 bg-background-overlay">
             <TabsTrigger value="upcoming" className="flex-1">
               <Clock className="mr-2 h-4 w-4" />
               Upcoming
             </TabsTrigger>
-            <TabsTrigger value="past" className="flex-1">
+            <TabsTrigger value="past" className="flex-1 bg-background-overlay">
               <Trophy className="mr-2 h-4 w-4" />
               Past
             </TabsTrigger>

@@ -18,17 +18,17 @@ export default function MatchCard({
       onClick={onClick}
     >
       {/* Stadium image background */}
-      {match?.stadium?.image && (
         <div className="absolute inset-0">
-          <img 
-            src={match.stadium.image} 
-            alt={match.stadium.name} 
-            className="w-full h-full object-cover"
-          />
+          {match?.stadium?.image && (
+            <img 
+              src={match.stadium.image} 
+              alt={match.stadium.name} 
+              className="w-full h-full object-cover"
+            />
+          )}
           {/* Gradient overlay to ensure text readability */}
           <div className="absolute inset-0 bg-gradient-to-r dark:from-background-dark/90 dark:to-primary/90 from-background-light/90 to-primary/90"></div>
         </div>
-      )}
       <div className="flex items-center justify-between relative z-10">
         <div>
           <div className="flex items-center">
