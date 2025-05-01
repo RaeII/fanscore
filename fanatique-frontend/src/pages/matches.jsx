@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useUserContext } from '../hooks/useUserContext';
 import { 
   Calendar,
@@ -18,6 +19,7 @@ import MatchCard from '../components/MatchCard';
 
 export default function MatchesPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation('matches');
   const { userClubsData } = useUserContext();
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState({
@@ -66,14 +68,14 @@ export default function MatchesPage() {
         });
       } catch (error) {
         console.error('Error fetching matches:', error);
-        showError('Failed to load matches');
+        showError(t('matches.errors.failedToLoad', 'Failed to load matches'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchMatches();
-  }, [heartClub]);
+  }, [heartClub, t]);
 
   const handleMatchClick = (match) => {
     navigate(`/clubs/${heartClub.id}/game/${match.id}`);
@@ -84,7 +86,7 @@ export default function MatchesPage() {
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <div className="flex flex-col items-center">
           <Loader2 className="h-12 w-12 animate-spin text-secondary" />
-          <p className="mt-4 text-primary/70 dark:text-white/70">Loading matches...</p>
+          <p className="mt-4 text-primary/70 dark:text-white/70">{t('matches.loading', 'Loading matches...')}</p>
         </div>
       </div>
     );
@@ -94,12 +96,12 @@ export default function MatchesPage() {
     return (
       <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117] flex flex-col items-center justify-center p-4">
         <Trophy size={64} className="text-primary/30 dark:text-white/30 mb-4" />
-        <h1 className="text-xl font-bold text-primary dark:text-white mb-2">No Heart Club Selected</h1>
+        <h1 className="text-xl font-bold text-primary dark:text-white mb-2">{t('matches.noHeartClub.title', 'No Heart Club Selected')}</h1>
         <p className="text-center text-primary/70 dark:text-white/70 mb-6">
-          You need to select a heart club to view matches.
+          {t('matches.noHeartClub.description', 'You need to select a heart club to view matches.')}
         </p>
         <Button onClick={() => navigate('/dashboard')}>
-          Go to Dashboard
+          {t('matches.noHeartClub.goToDashboard', 'Go to Dashboard')}
         </Button>
       </div>
     );
@@ -117,18 +119,20 @@ export default function MatchesPage() {
           >
             <ArrowLeft size={20} />
           </Button> */}
-          <h1 className="text-2xl font-bold text-primary dark:text-white">{heartClub.name} Matches</h1>
+          <h1 className="text-2xl font-bold text-primary dark:text-white">
+            {t('matches.title', '{{clubName}} Matches', { clubName: heartClub.name })}
+          </h1>
         </div>
 
         <Tabs defaultValue="upcoming">
           <TabsList className="w-full mb-6 bg-background-overlay">
             <TabsTrigger value="upcoming" className="flex-1">
               <Clock className="mr-2 h-4 w-4" />
-              Upcoming
+              {t('matches.tabs.upcoming', 'Upcoming')}
             </TabsTrigger>
             <TabsTrigger value="past" className="flex-1 bg-background-overlay">
               <Trophy className="mr-2 h-4 w-4" />
-              Past
+              {t('matches.tabs.past', 'Past')}
             </TabsTrigger>
           </TabsList>
           
@@ -136,7 +140,7 @@ export default function MatchesPage() {
             {matches.upcoming.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar size={48} className="mx-auto text-primary/30 dark:text-white/30 mb-4" />
-                <p className="text-primary/70 dark:text-white/70">No upcoming matches found</p>
+                <p className="text-primary/70 dark:text-white/70">{t('matches.noUpcoming', 'No upcoming matches found')}</p>
               </div>
             ) : (
               <div>
@@ -158,7 +162,7 @@ export default function MatchesPage() {
             {matches.past.length === 0 ? (
               <div className="text-center py-12">
                 <Calendar size={48} className="mx-auto text-primary/30 dark:text-white/30 mb-4" />
-                <p className="text-primary/70 dark:text-white/70">No past matches found</p>
+                <p className="text-primary/70 dark:text-white/70">{t('matches.noPast', 'No past matches found')}</p>
               </div>
             ) : (
               <div>

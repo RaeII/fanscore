@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useWalletContext } from '../hooks/useWalletContext';
 import { ChevronRight, Star, Calendar, MapPin, Loader2, ShoppingBag, Trophy, Ticket, ArrowLeft, Heart, UserPlus, UserCheck, CheckCircle, Clock, Lock, MessageCircle } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -14,6 +15,7 @@ export default function HomeClubsPage() {
   const navigate = useNavigate();
   const { clubId } = useParams();
   const location = useLocation();
+  const { t } = useTranslation(['common', 'club']);
   const { isAuthenticated, getUserData } = useWalletContext();
   const [loading, setLoading] = useState(true);
   const [userClubStats, setUserClubStats] = useState(null);
@@ -287,7 +289,7 @@ export default function HomeClubsPage() {
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <div className="flex flex-col items-center">
           <Loader2 className="h-12 w-12 animate-spin text-secondary" />
-          <p className="mt-4 text-primary/70 dark:text-white/70">Loading club data...</p>
+          <p className="mt-4 text-primary/70 dark:text-white/70">{t('club:clubPage.messages.loadingClub')}</p>
         </div>
       </div>
     );
@@ -334,7 +336,7 @@ export default function HomeClubsPage() {
                 {liveGame && (
                   <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center animate-pulse shadow-md">
                     <div className="h-2 w-2 rounded-full bg-white mr-1"></div>
-                    LIVE
+                    {t('club:clubPage.gameStatus.live')}
                   </div>
                 )}
               </div>
@@ -342,7 +344,7 @@ export default function HomeClubsPage() {
                 <h1 className="text-3xl font-bold">{selectedClub.name}</h1>
                 <div className="flex items-center justify-center mt-2">
                   <Star size={18} className="text-yellow-400 mr-1" />
-                  <span>{selectedClub.fanCount || 0} fans</span>
+                  <span>{selectedClub.fanCount || 0} {t('club:clubPage.fans')}</span>
                 </div>
               </div>
               <p className="mt-4 text-white/80 max-w-2xl mx-auto">{selectedClub.description || ''}</p>
@@ -363,10 +365,8 @@ export default function HomeClubsPage() {
                       <Heart size={16} className={`mr-2 ${isHeartClub ? 'fill-white' : ''}`} />
                       {heartClubLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : isHeartClub ? (
-                        "Heart Club"
                       ) : (
-                        "Heart Club"
+                        t('club:clubPage.actions.heartClub')
                       )}
                     </Button>
                   )
@@ -390,9 +390,9 @@ export default function HomeClubsPage() {
                     {followLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : isFollowing ? (
-                      "Following"
+                      t('club:clubPage.actions.following')
                     ) : (
-                      "Follow"
+                      t('club:clubPage.actions.follow')
                     )}
                   </Button>
                 )}
@@ -407,27 +407,27 @@ export default function HomeClubsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard
             icon={<Trophy size={24} className="text-foreground" />}
-            title="Points"
+            title={t('club:clubPage.stats.points')}
             value={userClubStats?.points || "0"}
-            label="accumulated points"
+            label={t('club:clubPage.stats.accumulated')}
           />
           <StatCard
             icon={<Star size={24} className="text-foreground" />}
-            title="Quests"
+            title={t('club:clubPage.stats.quests')}
             value={userClubStats?.quests || "0"}
-            label="completed"
+            label={t('club:clubPage.stats.completed')}
           />
           <StatCard
             icon={<ShoppingBag size={24} className="text-foreground" />}
-            title="Orders"
+            title={t('club:clubPage.stats.orders')}
             value={userClubStats?.orders || "0"}
-            label="made"
+            label={t('club:clubPage.stats.made')}
           />
           <StatCard
             icon={<Ticket size={24} className="text-foreground" />}
-            title="Tickets"
+            title={t('club:clubPage.stats.tickets')}
             value={userClubStats?.tickets || "0"}
-            label="purchased"
+            label={t('club:clubPage.stats.purchased')}
           />
         </div>
       </div>
@@ -481,7 +481,7 @@ export default function HomeClubsPage() {
               navigate(`/clubs/${clubId}${activeSport !== 'all' ? `?sport=${activeSport}` : ''}`);
             }}
           >
-            Overview
+            {t('club:clubPage.tabs.overview')}
           </Button>
           <Button 
             variant="ghost" 
@@ -496,7 +496,7 @@ export default function HomeClubsPage() {
               navigate(`/clubs/${clubId}?tab=events${activeSport !== 'all' ? `&sport=${activeSport}` : ''}`);
             }}
           >
-            Events
+            {t('club:clubPage.tabs.events')}
           </Button>
           <Button 
             variant="ghost" 
@@ -511,7 +511,7 @@ export default function HomeClubsPage() {
               navigate(`/clubs/${clubId}?tab=news${activeSport !== 'all' ? `&sport=${activeSport}` : ''}`);
             }}
           >
-            News
+            {t('club:clubPage.tabs.news')}
           </Button>
           {/* <Button
             variant="ghost" 
@@ -537,7 +537,7 @@ export default function HomeClubsPage() {
         {activeSport !== 'all' && activeSport !== 'football' && (
           <div className="bg-secondary/10 rounded-lg p-3 mb-4 border border-secondary/20">
             <p className="text-sm text-text-adaptive dark:text-white">
-              Showing {clubSports.find(s => s.id === activeSport)?.name || activeSport} content for {selectedClub?.name}
+              {t('club:clubPage.sports.showing')} {clubSports.find(s => s.id === activeSport)?.name || activeSport} {t('club:clubPage.sports.contentFor')} {selectedClub?.name}
             </p>
           </div>
         )}
@@ -559,14 +559,14 @@ export default function HomeClubsPage() {
             {/* Upcoming Events */}
             <section className="mb-8">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">Upcoming Events</h2>
+                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">{t('club:clubPage.sections.upcomingEvents')}</h2>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className="text-foreground"
                   onClick={() => setActiveTab('events')}
                 >
-                  View All <ChevronRight size={16} className="ml-1" />
+                  {t('club:clubPage.actions.viewAll')} <ChevronRight size={16} className="ml-1" />
                 </Button>
               </div>
 
@@ -592,14 +592,14 @@ export default function HomeClubsPage() {
                         className="mt-3 w-full"
                         onClick={() => navigate(`/events/${event.id}`)}
                       >
-                        View Details
+                        {t('club:clubPage.actions.viewDetails')}
                       </Button>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
-                  <p className="text-text-adaptive/70 dark:text-white/70">No upcoming events for this club</p>
+                  <p className="text-text-adaptive/70 dark:text-white/70">{t('club:clubPage.messages.noUpcomingEvents')}</p>
                 </div>
               )}
             </section>
@@ -607,7 +607,7 @@ export default function HomeClubsPage() {
             {/* Fan Activities */}
             <section className="mb-8">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">Fan Activities</h2>
+                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">{t('club:clubPage.sections.fanActivities')}</h2>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div
@@ -620,8 +620,8 @@ export default function HomeClubsPage() {
                   <div className="w-12 h-12 rounded-full bg-tertiary/10 dark:bg-tertiary flex items-center justify-center mb-2">
                     <Star size={24} className="text-foreground" />
                   </div>
-                  <h3 className="font-medium text-text-adaptive dark:text-white">Quests</h3>
-                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">Complete challenges and earn rewards</p>
+                  <h3 className="font-medium text-text-adaptive dark:text-white">{t('club:clubPage.stats.quests')}</h3>
+                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">{t('club:clubPage.messages.completeQuestsDescription')}</p>
                 </div>
 
                 <div
@@ -631,8 +631,8 @@ export default function HomeClubsPage() {
                   <div className="w-12 h-12 rounded-full bg-tertiary/10 dark:bg-tertiary flex items-center justify-center mb-2">
                     <ShoppingBag size={24} className="text-foreground" />
                   </div>
-                  <h3 className="font-medium text-text-adaptive dark:text-white">Stadium Orders</h3>
-                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">Order food and drinks without waiting in line</p>
+                  <h3 className="font-medium text-text-adaptive dark:text-white">{t('club:clubPage.stats.orders')}</h3>
+                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">{t('club:clubPage.messages.stadiumOrdersDescription')}</p>
                 </div>
               </div>
             </section>
@@ -640,14 +640,14 @@ export default function HomeClubsPage() {
             {/* Club News */}
             <section>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">Latest News</h2>
+                <h2 className="text-xl font-bold text-text-adaptive dark:text-white">{t('club:clubPage.sections.latestNews')}</h2>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className="text-foreground"
                   onClick={() => setActiveTab('news')}
                 >
-                  View All <ChevronRight size={16} className="ml-1" />
+                  {t('club:clubPage.actions.viewAll')} <ChevronRight size={16} className="ml-1" />
                 </Button>
               </div>
 
@@ -680,7 +680,7 @@ export default function HomeClubsPage() {
                             className="p-0 h-auto text-secondary"
                             onClick={() => navigate(`/news/${item.id}`)}
                           >
-                            Read More
+                            {t('common:actions.readMore', 'Read More')}
                           </Button>
                         </div>
                       </div>
@@ -688,7 +688,7 @@ export default function HomeClubsPage() {
                   ))
                 ) : (
                   <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
-                    <p className="text-text-adaptive/70 dark:text-white/70">No news available for this club</p>
+                    <p className="text-text-adaptive/70 dark:text-white/70">{t('club:clubPage.messages.noNewsAvailable')}</p>
                   </div>
                 )}
               </div>
@@ -701,15 +701,15 @@ export default function HomeClubsPage() {
                   <MessageCircle size={24} className="text-indigo-300" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold mb-1 text-text-adaptive dark:text-white">Club Forum Now Available!</h3>
-                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mb-2">Join the conversation with other fans of {selectedClub.name}</p>
+                  <h3 className="text-lg font-semibold mb-1 text-text-adaptive dark:text-white">{t('club:clubPage.messages.forumAvailable')}</h3>
+                  <p className="text-sm text-text-adaptive/70 dark:text-white/70 mb-2">{t('club:clubPage.messages.joinConversation')} {selectedClub.name}</p>
                   <Button 
                     size="sm" 
                     variant="outline"
                     className="border-indigo-500/50 hover:bg-indigo-500/20 text-text-adaptive dark:text-white font-medium"
                     onClick={() => navigate(`/clubs/${clubId}/forum`)}
                   >
-                    Visit Forum
+                    {t('club:clubPage.actions.visitForum')}
                   </Button>
                 </div>
               </div>
@@ -721,9 +721,9 @@ export default function HomeClubsPage() {
         {activeTab === 'quests' && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">Club Quests</h2>
+              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">{t('club:clubPage.sections.clubQuests')}</h2>
               <p className="text-text-adaptive/70 dark:text-white/70 mt-1">
-                Complete quests to earn points and unlock rewards for your club.
+                {t('club:clubPage.messages.questsDescription')}
               </p>
             </div>
 
@@ -740,7 +740,7 @@ export default function HomeClubsPage() {
                     : 'border-text-adaptive/20 dark:border-white/20 text-text-adaptive dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
                 `}
               >
-                All
+                {t('club:clubPage.filters.all')}
               </Button>
               <Button 
                 variant={activeFilter === 'available' ? 'default' : 'outline'}
@@ -753,7 +753,7 @@ export default function HomeClubsPage() {
                     : 'border-text-adaptive/20 dark:border-white/20 text-text-adaptive dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
                 `}
               >
-                Available
+                {t('club:clubPage.filters.available')}
               </Button>
               <Button 
                 variant={activeFilter === 'inProgress' ? 'default' : 'outline'}
@@ -766,7 +766,7 @@ export default function HomeClubsPage() {
                     : 'border-text-adaptive/20 dark:border-white/20 text-text-adaptive dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
                 `}
               >
-                In Progress
+                {t('club:clubPage.filters.inProgress')}
               </Button>
               <Button 
                 variant={activeFilter === 'completed' ? 'default' : 'outline'}
@@ -779,7 +779,7 @@ export default function HomeClubsPage() {
                     : 'border-text-adaptive/20 dark:border-white/20 text-text-adaptive dark:text-white/70 hover:bg-primary/10 dark:hover:bg-white/10'}
                 `}
               >
-                Completed
+                {t('club:clubPage.filters.completed')}
               </Button>
             </div>
           </div>
@@ -789,9 +789,9 @@ export default function HomeClubsPage() {
         {activeTab === 'events' && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">All Events</h2>
+              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">{t('club:clubPage.sections.allEvents')}</h2>
               <p className="text-text-adaptive/70 dark:text-white/70 mt-1">
-                View all upcoming events for {selectedClub?.name}.
+                {t('club:clubPage.messages.eventsDescription')} {selectedClub?.name}.
               </p>
             </div>
 
@@ -817,14 +817,14 @@ export default function HomeClubsPage() {
                       className="mt-3 w-full"
                       onClick={() => navigate(`/events/${event.id}`)}
                     >
-                      View Details
+                      {t('club:clubPage.actions.viewDetails')}
                     </Button>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
-                <p className="text-text-adaptive/70 dark:text-white/70">No upcoming events for this club</p>
+              <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
+                <p className="text-text-adaptive/70 dark:text-white/70">{t('club:clubPage.messages.noUpcomingEvents')}</p>
               </div>
             )}
           </div>
@@ -834,9 +834,9 @@ export default function HomeClubsPage() {
         {activeTab === 'news' && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">All News</h2>
+              <h2 className="text-xl font-bold text-text-adaptive dark:text-white">{t('club:clubPage.sections.allNews')}</h2>
               <p className="text-text-adaptive/70 dark:text-white/70 mt-1">
-                Latest news and updates from {selectedClub?.name}.
+                {t('club:clubPage.messages.newsDescription')} {selectedClub?.name}.
               </p>
             </div>
 
@@ -845,7 +845,7 @@ export default function HomeClubsPage() {
                 selectedClub.news.map((item, index) => (
                   <div
                     key={index}
-                    className="bg-white dark:bg-[#150924] rounded-lg overflow-hidden shadow-sm"
+                    className="bg-background-overlay rounded-lg overflow-hidden shadow-sm"
                   >
                     {item.image && (
                       <img
@@ -869,15 +869,15 @@ export default function HomeClubsPage() {
                           className="p-0 h-auto text-secondary"
                           onClick={() => navigate(`/news/${item.id}`)}
                         >
-                          Read More
+                          {t('common:actions.readMore', 'Read More')}
                         </Button>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="bg-white dark:bg-[#150924] rounded-lg p-6 text-center shadow-sm">
-                  <p className="text-text-adaptive/70 dark:text-white/70">No news available for this club</p>
+                <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
+                  <p className="text-text-adaptive/70 dark:text-white/70">{t('club:clubPage.messages.noNewsAvailable')}</p>
                 </div>
               )}
             </div>

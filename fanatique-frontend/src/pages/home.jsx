@@ -4,9 +4,12 @@ import { Button } from '../components/ui-v2/Button'
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useWalletContext } from '../hooks/useWalletContext'
+import { useTranslation } from 'react-i18next'
+import { LanguageSwitcher } from '../components/LanguageSwitcher'
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation(['home', 'common']);
 
   const handleGetStarted = () => {
     navigate('/app');
@@ -58,16 +61,16 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-8 md:mb-0">
               <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-                Revolucione sua experiência de torcedor com <span className="text-tertiary">Fanatique</span>
+                {t('home:hero.title')} <span className="text-tertiary">{t('common:app.name')}</span>
               </h1>
               <p className="text-lg md:text-xl mb-8">
-                Transforme sua paixão pelo futebol em uma experiência completa com blockchain, Fan Tokens e benefícios exclusivos.
+                {t('home:hero.subtitle')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
                   size="lg" 
                   onClick={handleGetStarted}
-                  text="Comece Agora"
+                  text={t('home:hero.getStartedButton')}
                   icon={<ChevronRight size={16} />}
                 />
                 <WalletConnect className="w-full sm:w-auto" />
@@ -81,13 +84,17 @@ export default function HomePage() {
                       <Trophy className='text-foreground' size={28} />
                     </div>
                     <div>
-                      <h3 className="font-bold text-xl">Quests Disponíveis</h3>
-                      <p className="text-sm">Ganhe recompensas e Fan Tokens</p>
+                      <h3 className="font-bold text-xl">{t('home:quests.title')}</h3>
+                      <p className="text-sm">{t('home:quests.subtitle')}</p>
                     </div>
                   </div>
                   
                   <div className="space-y-3 mt-6">
-                    {['Faça check-in no estádio', 'Compartilhe sua experiência', 'Complete sua primeira compra'].map((quest, i) => (
+                    {[
+                      t('home:quests.examples.stadium'), 
+                      t('home:quests.examples.share'), 
+                      t('home:quests.examples.purchase')
+                    ].map((quest, i) => (
                       <div key={i} className="flex items-center gap-3 bg-white/30 p-3 rounded-lg">
                         <div className="bg-tertiary/70 p-1.5 rounded-full">
                           <Check size={16} className="text-foreground" />
@@ -101,10 +108,10 @@ export default function HomePage() {
                 <div className="absolute -right-4 -bottom-4 bg-background p-4 rounded-xl shadow-lg max-w-[200px]">
                   <div className="flex items-center gap-2 mb-2">
                     <Ticket size={20} className="text-foreground" />
-                    <span className="font-bold">Fan Tokens</span>
+                    <span className="font-bold">{t('home:fanTokens.title')}</span>
                   </div>
                   <div className="text-sm text-text-adaptive">
-                    Use seus tokens para compras e experiências exclusivas!
+                    {t('home:fanTokens.description')}
                   </div>
                 </div>
               </div>
@@ -147,12 +154,12 @@ export default function HomePage() {
         
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1 bg-secondary/30 text-secondary rounded-full text-sm font-semibold mb-3">RECURSOS EXCLUSIVOS</span>
+            <span className="inline-block px-4 py-1 bg-secondary/30 text-secondary rounded-full text-sm font-semibold mb-3">{t('home:features.badge')}</span>
             <h2 className="text-3xl md:text-4xl font-bold dark:text-white mb-3">
-              Transformando sua Experiência como Torcedor
+              {t('home:features.title')}
             </h2>
             <p className="text-lg max-w-2xl mx-auto">
-              Descubra como a Fanatique está revolucionando a experiência dos torcedores dentro e fora dos estádios.
+              {t('home:features.subtitle')}
             </p>
           </div>
           
@@ -172,54 +179,78 @@ export default function HomePage() {
             <div className="space-y-28">
               <FeatureRow 
                 icon={<ShoppingBag size={28} className="text-foreground" />}
-                title="Consumação Inteligente"
-                description="Compre alimentos e bebidas sem sair do seu assento, utilizando Fan Tokens como pagamento."
-                details={["Pagamento com Fan Tokens", "Entrega no assento", "Pedidos antecipados"]}
+                title={t('home:features.items.shopping.title')}
+                description={t('home:features.items.shopping.description')}
+                details={[
+                  t('home:features.items.shopping.details.0'),
+                  t('home:features.items.shopping.details.1'),
+                  t('home:features.items.shopping.details.2')
+                ]}
                 position="left"
                 delay={0}
                 number="01"
               />
               <FeatureRow 
                 icon={<Check size={28} className="text-foreground" />}
-                title="Check-in & Histórico"
-                description="Registre sua presença e construa seu histórico como torcedor fiel do seu time."
-                details={["Registro automático", "Histórico de presença", "Recordes pessoais"]}
+                title={t('home:features.items.checkin.title')}
+                description={t('home:features.items.checkin.description')}
+                details={[
+                  t('home:features.items.checkin.details.0'),
+                  t('home:features.items.checkin.details.1'),
+                  t('home:features.items.checkin.details.2')
+                ]}
                 position="right"
                 delay={0.3}
                 number="02"
               />
               <FeatureRow 
                 icon={<Trophy size={28} className="text-foreground" />}
-                title="Quests Gamificadas"
-                description="Complete missões exclusivas e ganhe recompensas valiosas e reconhecimento."
-                details={["Missões exclusivas", "Recompensas especiais", "Ranking de torcedores"]}
+                title={t('home:features.items.quests.title')}
+                description={t('home:features.items.quests.description')}
+                details={[
+                  t('home:features.items.quests.details.0'),
+                  t('home:features.items.quests.details.1'),
+                  t('home:features.items.quests.details.2')
+                ]}
                 position="left"
                 delay={0.6}
                 number="03"
               />
               <FeatureRow 
                 icon={<Smartphone size={28} className="text-foreground" />}
-                title="Gestão de Fan Tokens"
-                description="Controle completo dos seus Fan Tokens diretamente no aplicativo, com segurança blockchain."
-                details={["Carteira integrada", "Transações seguras", "Compra fácil de tokens"]}
+                title={t('home:features.items.tokens.title')}
+                description={t('home:features.items.tokens.description')}
+                details={[
+                  t('home:features.items.tokens.details.0'),
+                  t('home:features.items.tokens.details.1'),
+                  t('home:features.items.tokens.details.2')
+                ]}
                 position="right"
                 delay={0.9}
                 number="04"
               />
               <FeatureRow 
                 icon={<Award size={28} className="text-foreground" />}
-                title="Experiências VIP"
-                description="Acesse experiências exclusivas disponíveis apenas para usuários da plataforma."
-                details={["Eventos exclusivos", "Acesso a bastidores", "Encontros com jogadores"]}
+                title={t('home:features.items.vip.title')}
+                description={t('home:features.items.vip.description')}
+                details={[
+                  t('home:features.items.vip.details.0'),
+                  t('home:features.items.vip.details.1'),
+                  t('home:features.items.vip.details.2')
+                ]}
                 position="left"
                 delay={1.2}
                 number="05"
               />
               <FeatureRow 
                 icon={<Users size={28} className="text-foreground" />}
-                title="Comunidade Engajada"
-                description="Conecte-se com outros torcedores e amplie sua experiência social nos jogos."
-                details={["Grupos exclusivos", "Compartilhamento de momentos", "Atividades em grupo"]}
+                title={t('home:features.items.community.title')}
+                description={t('home:features.items.community.description')}
+                details={[
+                  t('home:features.items.community.details.0'),
+                  t('home:features.items.community.details.1'),
+                  t('home:features.items.community.details.2')
+                ]}
                 position="right"
                 delay={1.5}
                 number="06"
@@ -252,16 +283,16 @@ export default function HomePage() {
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="mb-6 md:mb-0 md:w-2/3">
                 <h2 className="text-2xl md:text-3xl font-bold text-text-adaptive dark:text-white mb-4">
-                  Pronto para transformar sua experiência nos estádios?
+                  {t('home:cta.title')}
                 </h2>
                 <p className="text-text-adaptive">
-                  Junte-se a milhares de torcedores que já estão aproveitando todos os benefícios da Fanatique.
+                  {t('home:cta.description')}
                 </p>
               </div>
               <Button 
                 size="lg" 
                 onClick={handleGetStarted}
-                text="Começar Agora"
+                text={t('home:cta.button')}
                 icon={<ChevronRight size={16} className="ml-2" />}
               />
             </div>
@@ -275,12 +306,12 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
               <Ticket size={20} className="text-text-adaptive" />
-              <span className="font-bold text-lg">Fanatique</span>
+              <span className="font-bold text-lg">{t('common:app.name')}</span>
             </div>
             
             <div className="text-center md:text-right">
-              <p className="text-text-adaptive/70 dark:text-white/70">&copy; {new Date().getFullYear()} Fanatique - Todos os direitos reservados</p>
-              <p className="mt-1 text-text-adaptive/60 dark:text-white/60">Desenvolvido para a rede Chiliz</p>
+              <p className="text-text-adaptive/70 dark:text-white/70">&copy; {new Date().getFullYear()} {t('common:app.name')} - {t('home:footer.rights')}</p>
+              <p className="mt-1 text-text-adaptive/60 dark:text-white/60">{t('home:footer.chiliz')}</p>
               
               <div className="mt-4 flex items-center justify-center md:justify-end gap-4">
                 <div className="w-8 h-8 rounded-full bg-primary/10 dark:bg-white/10 flex items-center justify-center hover:bg-secondary/20 transition-colors cursor-pointer">

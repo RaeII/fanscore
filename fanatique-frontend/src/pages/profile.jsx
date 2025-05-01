@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useUserContext } from '../hooks/useUserContext';
 import { useWalletContext } from '../hooks/useWalletContext';
 import { User, Trophy, Star, ShoppingBag, Ticket, Heart, UserCheck, Calendar, Clock, Settings, Edit, Loader2, Award, BadgeCheck, Lock, CheckCircle2, Medal, Target, Crown, Gift, Pin } from 'lucide-react';
@@ -59,6 +60,7 @@ function ClubCard({ club, isHeartClub }) {
 
 // Achievement Card component
 function AchievementCard({ achievement, isPinned, onPinClick }) {
+  const { t } = useTranslation(['common', 'achievements']);
   return (
     <div className={`bg-background-overlay p-4 rounded-lg shadow-sm border ${achievement.completed ? 'border-green-500/30' : 'border-gray-300/30 dark:border-white/10'} ${isPinned ? 'ring-2 ring-primary' : ''}`}>
       <div className="flex items-start gap-4">
@@ -118,7 +120,7 @@ function AchievementCard({ achievement, isPinned, onPinClick }) {
                 disabled={!achievement.completed}
               >
                 <Pin size={14} className={`mr-1 ${isPinned ? 'fill-primary' : ''}`} />
-                {isPinned ? 'Featured' : 'Set as Featured'}
+                {isPinned ? t('profile.featured') : t('profile.setAsFeatured')}
               </Button>
             </div>
           )}
@@ -130,6 +132,7 @@ function AchievementCard({ achievement, isPinned, onPinClick }) {
 
 // Quest Card Component
 function QuestCard({ quest, isPinned, onPinClick }) {
+  const { t } = useTranslation(['common', 'quests']);
   return (
     <div className={`bg-background-overlay p-4 rounded-lg shadow-sm border border-primary/20 dark:border-white/10 ${isPinned ? 'ring-2 ring-primary' : ''}`}>
       <div className="flex items-start gap-4">
@@ -146,7 +149,7 @@ function QuestCard({ quest, isPinned, onPinClick }) {
           
           <div className="flex items-center justify-between">
             <span className="text-xs text-text-adaptive/60 dark:text-white/60">
-              Completed: {quest.completedDate}
+              {t('profile.completed')}: {quest.completedDate}
             </span>
             <Button 
               variant="outline" 
@@ -155,7 +158,7 @@ function QuestCard({ quest, isPinned, onPinClick }) {
               onClick={() => onPinClick(quest.id)}
             >
               <Pin size={14} className={`mr-1 ${isPinned ? 'fill-primary' : ''}`} />
-              {isPinned ? 'Featured' : 'Set as Featured'}
+              {isPinned ? t('profile.featured') : t('profile.setAsFeatured')}
             </Button>
           </div>
         </div>
@@ -166,18 +169,14 @@ function QuestCard({ quest, isPinned, onPinClick }) {
 
 // Featured Item Display component
 function FeaturedItemCard({ item, type }) {
+  const { t } = useTranslation(['common']);
   if (!item) return null;
   
   return (
-    <div className="bg-background-overlay p-4 rounded-lg shadow-sm border border-primary">
-      {/* <div className="flex items-center gap-2 mb-2">
-        <Pin size={16} className="text-white fill-white" />
-        <h3 className="text-sm font-medium text-white">Featured {type}</h3>
-      </div> */}
-      
+    <div className="bg-background-overlay p-4 rounded-lg shadow-sm border border-primary">      
       <div className="flex items-start gap-4">
         <div className="h-12 w-12 rounded-lg flex-shrink-0 flex items-center justify-center bg-tertiary/10 dark:bg-tertiary">
-          {type === 'Achievement' ? item.icon : <Star size={24} className="text-white" />}
+          {type === t('profile.achievement') ? item.icon : <Star size={24} className="text-white" />}
         </div>
         <div>
           <h4 className="text-sm font-semibold text-text-adaptive dark:text-white">{item.title}</h4>
@@ -189,6 +188,7 @@ function FeaturedItemCard({ item, type }) {
 }
 
 export default function ProfilePage() {
+  const { t } = useTranslation(['common', 'achievements', 'quests']);
   const navigate = useNavigate();
   const { userData, loading, error, userClubsData, updateUserData } = useUserContext();
   const { isAuthenticated } = useWalletContext();
@@ -213,8 +213,8 @@ export default function ProfilePage() {
   const achievements = [
     {
       id: 1,
-      title: "First Steps",
-      description: "Complete your first quest",
+      title: t('achievements:firstSteps.title', "First Steps"),
+      description: t('achievements:firstSteps.description', "Complete your first quest"),
       completed: true,
       completedDate: "Jan 15, 2023",
       icon: <CheckCircle2 size={28} className="text-green-500" />,
@@ -222,8 +222,8 @@ export default function ProfilePage() {
     },
     {
       id: 2,
-      title: "Club Explorer",
-      description: "Follow 3 different clubs",
+      title: t('achievements:clubExplorer.title', "Club Explorer"),
+      description: t('achievements:clubExplorer.description', "Follow 3 different clubs"),
       completed: true,
       completedDate: "Feb 3, 2023",
       icon: <Heart size={28} className="text-red-500" />,
@@ -231,8 +231,8 @@ export default function ProfilePage() {
     },
     {
       id: 3,
-      title: "Quest Master",
-      description: "Complete 10 quests",
+      title: t('achievements:questMaster.title', "Quest Master"),
+      description: t('achievements:questMaster.description', "Complete 10 quests"),
       completed: false,
       progress: {
         current: 7,
@@ -243,8 +243,8 @@ export default function ProfilePage() {
     },
     {
       id: 4,
-      title: "Ticket Collector",
-      description: "Purchase 5 tickets to events",
+      title: t('achievements:ticketCollector.title', "Ticket Collector"),
+      description: t('achievements:ticketCollector.description', "Purchase 5 tickets to events"),
       completed: false,
       progress: {
         current: 2,
@@ -255,8 +255,8 @@ export default function ProfilePage() {
     },
     {
       id: 5,
-      title: "Loyal Fan",
-      description: "Follow the same heart club for 30 days",
+      title: t('achievements:loyalFan.title', "Loyal Fan"),
+      description: t('achievements:loyalFan.description', "Follow the same heart club for 30 days"),
       completed: true,
       completedDate: "Mar 10, 2023",
       icon: <Medal size={28} className="text-yellow-500" />,
@@ -264,8 +264,8 @@ export default function ProfilePage() {
     },
     {
       id: 6,
-      title: "Early Supporter",
-      description: "Be one of the first 1000 users to join the platform",
+      title: t('achievements:earlySupporter.title', "Early Supporter"),
+      description: t('achievements:earlySupporter.description', "Be one of the first 1000 users to join the platform"),
       completed: true,
       completedDate: "Dec 1, 2022",
       icon: <Trophy size={28} className="text-amber-500" />,
@@ -273,8 +273,8 @@ export default function ProfilePage() {
     },
     {
       id: 7,
-      title: "Point Hoarder",
-      description: "Accumulate 10,000 points across all clubs",
+      title: t('achievements:pointHoarder.title', "Point Hoarder"),
+      description: t('achievements:pointHoarder.description', "Accumulate 10,000 points across all clubs"),
       completed: false,
       progress: {
         current: 3250,
@@ -285,8 +285,8 @@ export default function ProfilePage() {
     },
     {
       id: 8,
-      title: "Merch Enthusiast",
-      description: "Purchase 3 different merchandise items",
+      title: t('achievements:merchEnthusiast.title', "Merch Enthusiast"),
+      description: t('achievements:merchEnthusiast.description', "Purchase 3 different merchandise items"),
       completed: false,
       progress: {
         current: 1,
@@ -297,16 +297,16 @@ export default function ProfilePage() {
     },
     {
       id: 9,
-      title: "Royalty",
-      description: "Reach the highest fan tier in any club",
+      title: t('achievements:royalty.title', "Royalty"),
+      description: t('achievements:royalty.description', "Reach the highest fan tier in any club"),
       completed: false,
       icon: <Crown size={28} className="text-amber-500" />,
       rarity: "legendary"
     },
     {
       id: 10,
-      title: "Lucky Winner",
-      description: "Win a giveaway or contest",
+      title: t('achievements:luckyWinner.title', "Lucky Winner"),
+      description: t('achievements:luckyWinner.description', "Win a giveaway or contest"),
       completed: true,
       completedDate: "Apr 5, 2023",
       icon: <Gift size={28} className="text-pink-500" />,
@@ -318,29 +318,29 @@ export default function ProfilePage() {
   const completedQuests = [
     {
       id: 1,
-      title: "Daily Login",
-      description: "Log in 7 days in a row",
+      title: t('quests:dailyLogin.title', "Daily Login"),
+      description: t('quests:dailyLogin.description', "Log in 7 days in a row"),
       completedDate: "May 15, 2023",
       points: 50
     },
     {
       id: 2,
-      title: "Match Prediction",
-      description: "Correctly predict the outcome of a match",
+      title: t('quests:matchPrediction.title', "Match Prediction"),
+      description: t('quests:matchPrediction.description', "Correctly predict the outcome of a match"),
       completedDate: "May 12, 2023",
       points: 100
     },
     {
       id: 3,
-      title: "First Purchase",
-      description: "Make your first merchandise purchase",
+      title: t('quests:firstPurchase.title', "First Purchase"),
+      description: t('quests:firstPurchase.description', "Make your first merchandise purchase"),
       completedDate: "Apr 30, 2023",
       points: 150
     },
     {
       id: 4,
-      title: "Social Share",
-      description: "Share club content on social media",
+      title: t('quests:socialShare.title', "Social Share"),
+      description: t('quests:socialShare.description', "Share club content on social media"),
       completedDate: "Apr 28, 2023",
       points: 75
     }
@@ -526,13 +526,13 @@ export default function ProfilePage() {
     return (
       <div className="container max-w-4xl mx-auto py-8 px-4">
         <div className="p-4 rounded-lg bg-destructive/10 border border-destructive text-destructive">
-          <p className="font-semibold">Error loading profile</p>
+          <p className="font-semibold">{t('profile.errorLoading')}</p>
           <p className="text-sm">{error}</p>
           <Button 
             className="mt-4"
             onClick={updateUserData}
           >
-            Retry
+            {t('actions.retry')}
           </Button>
         </div>
       </div>
@@ -543,13 +543,13 @@ export default function ProfilePage() {
     return (
       <div className="container max-w-4xl mx-auto py-8 px-4">
         <div className="p-4 rounded-lg bg-background/50 border border-border">
-          <p className="text-muted-foreground">User profile not available</p>
+          <p className="text-muted-foreground">{t('profile.notAvailable')}</p>
         </div>
       </div>
     );
   }
 
-  const registrationDate = userData.register_date ? new Date(userData.register_date).toLocaleDateString() : 'N/A';
+  const registrationDate = userData.register_date ? new Date(userData.register_date).toLocaleDateString() : t('common.notAvailable');
 
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4 min-h-[calc(100vh-4rem)]">
@@ -565,7 +565,7 @@ export default function ProfilePage() {
               {editMode ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="name" className="block text-xs text-black/80 mb-1">Name</label>
+                    <label htmlFor="name" className="block text-xs text-black/80 mb-1">{t('profile.name')}</label>
                     <input
                       type="text"
                       id="name"
@@ -573,7 +573,7 @@ export default function ProfilePage() {
                       value={formData.name}
                       onChange={handleInputChange}
                       className="w-full p-2 rounded-md border border-white/20 bg-white/10 text-black"
-                      placeholder="Your name"
+                      placeholder={t('profile.yourName')}
                     />
                   </div>
                   
@@ -584,7 +584,7 @@ export default function ProfilePage() {
                       onClick={() => setEditMode(false)}
                       className="border-black text-black hover:bg-white/10"
                     >
-                      Cancel
+                      {t('actions.cancel')}
                     </Button>
                     <Button 
                       type="submit" 
@@ -592,7 +592,7 @@ export default function ProfilePage() {
                       className="bg-tertiary/90 text-white hover:bg-tertiary/90"
                     >
                       {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      Save
+                      {t('actions.save')}
                     </Button>
                   </div>
                 </form>
@@ -604,12 +604,12 @@ export default function ProfilePage() {
                   <div className="flex flex-wrap gap-4">
                     <div className="flex items-center text-black/80 text-sm">
                       <Calendar size={16} className="mr-2" />
-                      Joined: {registrationDate}
+                      {t('profile.joined')}: {registrationDate}
                     </div>
                     {userData.update_date && (
                       <div className="flex items-center text-black/80 text-sm">
                         <Clock size={16} className="mr-2" />
-                        Last updated: {new Date(userData.update_date).toLocaleDateString()}
+                        {t('profile.lastUpdated')}: {new Date(userData.update_date).toLocaleDateString()}
                       </div>
                     )}
                   </div>
@@ -620,7 +620,7 @@ export default function ProfilePage() {
                     onClick={() => setEditMode(true)}
                   >
                     <Edit size={16} className="mr-2 text-black" />
-                    Edit Profile
+                    {t('profile.editProfile')}
                   </Button>
                 </>
               )}
@@ -633,27 +633,27 @@ export default function ProfilePage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <StatCard
           icon={<Trophy size={24} className="text-foreground" />}
-          title="Points"
-          value={totalStats.points || "0"}
-          label="total points"
+          title={t('profile.points')}
+          value={totalStats.points.toLocaleString()}
+          label={t('profile.earnedPoints')}
         />
         <StatCard
           icon={<Star size={24} className="text-foreground" />}
-          title="Quests"
-          value={totalStats.quests || "0"}
-          label="completed"
+          title={t('profile.completedQuests')}
+          value={totalStats.quests.toLocaleString()}
+          label={t('profile.quests')}
         />
         <StatCard
           icon={<ShoppingBag size={24} className="text-foreground" />}
-          title="Orders"
-          value={totalStats.orders || "0"}
-          label="made"
+          title={t('profile.orders')}
+          value={totalStats.orders.toLocaleString()}
+          label={t('profile.placedOrders')}
         />
         <StatCard
           icon={<Ticket size={24} className="text-foreground" />}
-          title="Tickets"
-          value={totalStats.tickets || "0"}
-          label="purchased"
+          title={t('profile.tickets')}
+          value={totalStats.tickets.toLocaleString()}
+          label={t('profile.purchasedTickets')}
         />
       </div>
       
@@ -661,11 +661,11 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <FeaturedItemCard 
           item={featuredAchievement} 
-          type="Achievement" 
+          type={t('profile.achievement')} 
         />
         <FeaturedItemCard 
           item={featuredQuest} 
-          type="Quest" 
+          type={t('profile.quest')} 
         />
       </div>
       
@@ -677,13 +677,13 @@ export default function ProfilePage() {
               <Award size={24} className="text-foreground" />
             </div>
             <div>
-              <h3 className="text-xs font-medium text-text-adaptive/60 dark:text-white/60">Achievements</h3>
+              <h3 className="text-xs font-medium text-text-adaptive/60 dark:text-white/60">{t('profile.achievements')}</h3>
               <p className="text-xl font-bold text-text-adaptive dark:text-white">{achievementStats.completed}/{achievementStats.total}</p>
             </div>
           </div>
           <div className="flex-grow max-w-md">
             <div className="flex justify-between text-xs mb-1">
-              <span className="text-text-adaptive/70 dark:text-white/70">Progress</span>
+              <span className="text-text-adaptive/70 dark:text-white/70">{t('profile.progress')}</span>
               <span className="text-text-adaptive/70 dark:text-white/70">{achievementStats.percentage}%</span>
             </div>
             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -699,36 +699,36 @@ export default function ProfilePage() {
       {/* Tabs for different sections */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full mb-6">
-          <TabsTrigger value="overview" className="flex-grow">Overview</TabsTrigger>
-          <TabsTrigger value="achievements" className="flex-grow">Achievements</TabsTrigger>
-          <TabsTrigger value="quests" className="flex-grow">Quests</TabsTrigger>
-          <TabsTrigger value="clubs" className="flex-grow">My Clubs</TabsTrigger>
-          <TabsTrigger value="settings" className="flex-grow">Settings</TabsTrigger>
+          <TabsTrigger value="overview" className="flex-grow">{t('profile.overview')}</TabsTrigger>
+          <TabsTrigger value="achievements" className="flex-grow">{t('profile.achievements')}</TabsTrigger>
+          <TabsTrigger value="quests" className="flex-grow">{t('profile.quests')}</TabsTrigger>
+          <TabsTrigger value="clubs" className="flex-grow">{t('profile.myClubs')}</TabsTrigger>
+          <TabsTrigger value="settings" className="flex-grow">{t('profile.settings')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 gap-6">
             <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
-              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">Account Information</h2>
+              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">{t('profile.accountInfo')}</h2>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">Name</h3>
+                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">{t('profile.name')}</h3>
                     <p className="text-text-adaptive dark:text-white">{userData.name}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">Wallet Address</h3>
+                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">{t('profile.wallet')}</h3>
                     <p className="text-text-adaptive dark:text-white font-mono text-sm truncate">{userData.wallet_address}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">Registration Date</h3>
+                    <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">{t('profile.registrationDate')}</h3>
                     <p className="text-text-adaptive dark:text-white">{registrationDate}</p>
                   </div>
                   {userData.update_date && (
                     <div>
-                      <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">Last Updated</h3>
+                      <h3 className="text-sm font-medium text-text-adaptive/60 dark:text-white/60">{t('profile.lastUpdated')}</h3>
                       <p className="text-text-adaptive dark:text-white">{new Date(userData.update_date).toLocaleDateString()}</p>
                     </div>
                   )}
@@ -738,14 +738,14 @@ export default function ProfilePage() {
             
             <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">Heart Club</h2>
+                <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">{t('clubs.heartClub')}</h2>
                 <Button 
                   variant="outline" 
                   className="border-foreground text-foreground hover:bg-tertiary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
                   size="sm" 
                   onClick={() => navigate('/clubs')}
                 >
-                  Manage Clubs
+                  {t('clubs.manageClubs')}
                 </Button>
               </div>
               
@@ -756,14 +756,14 @@ export default function ProfilePage() {
                 />
               ) : (
                 <div className="p-4 rounded-lg border border-dashed border-foreground/20 dark:border-white/20 text-center">
-                  <p className="text-text-adaptive/70 dark:text-white/70 mb-3">You haven't selected a Heart Club yet</p>
+                  <p className="text-text-adaptive/70 dark:text-white/70 mb-3">{t('clubs.noHeartClub')}</p>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate('/clubs')}
                   >
                     <Heart size={16} className="mr-2" />
-                    Select Heart Club
+                    {t('clubs.selectHeartClub')}
                   </Button>
                 </div>
               )}
@@ -774,7 +774,7 @@ export default function ProfilePage() {
         <TabsContent value="achievements" className="space-y-6">
           <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">Achievements</h2>
+              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">{t('profile.achievements')}</h2>
               <div className="flex items-center gap-2">
                 <div className="w-40 h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div 
@@ -792,13 +792,13 @@ export default function ProfilePage() {
               {/* Rarity filter buttons */}
               <div className="flex flex-wrap gap-2 mb-4">
                 <Button variant="outline" size="sm" className="bg-primary/10 dark:bg-primary/30 border-primary/40 dark:border-primary/60 text-text-adaptive dark:text-white font-medium">
-                  All
+                  {t('profile.all')}
                 </Button>
-                <Button variant="outline" size="sm" className="border-gray-300 dark:border-gray-600 text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">Common</Button>
-                <Button variant="outline" size="sm" className="border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20">Uncommon</Button>
-                <Button variant="outline" size="sm" className="border-purple-300 dark:border-purple-600 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20">Rare</Button>
-                <Button variant="outline" size="sm" className="border-pink-300 dark:border-pink-600 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20">Epic</Button>
-                <Button variant="outline" size="sm" className="border-amber-300 dark:border-amber-600 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20">Legendary</Button>
+                <Button variant="outline" size="sm" className="border-gray-300 dark:border-gray-600 text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800">{t('profile.common')}</Button>
+                <Button variant="outline" size="sm" className="border-blue-300 dark:border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20">{t('profile.uncommon')}</Button>
+                <Button variant="outline" size="sm" className="border-purple-300 dark:border-purple-600 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20">{t('profile.rare')}</Button>
+                <Button variant="outline" size="sm" className="border-pink-300 dark:border-pink-600 text-pink-600 dark:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20">{t('profile.epic')}</Button>
+                <Button variant="outline" size="sm" className="border-amber-300 dark:border-amber-600 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20">{t('profile.legendary')}</Button>
               </div>
               
               {/* Achievement cards */}
@@ -817,7 +817,7 @@ export default function ProfilePage() {
           
           {/* Recent achievements */}
           <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">Recently Unlocked</h2>
+            <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">{t('profile.recentlyUnlocked')}</h2>
             
             {achievements.filter(a => a.completed).length > 0 ? (
               <div className="space-y-4">
@@ -832,7 +832,7 @@ export default function ProfilePage() {
                       </div>
                       <div>
                         <h4 className="text-sm font-medium text-text-adaptive dark:text-white">{achievement.title}</h4>
-                        <p className="text-xs text-text-adaptive/60 dark:text-white/60">Unlocked on {achievement.completedDate}</p>
+                        <p className="text-xs text-text-adaptive/60 dark:text-white/60">{t('profile.unlockedOn')} {achievement.completedDate}</p>
                       </div>
                     </div>
                   ))
@@ -840,7 +840,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="p-4 rounded-lg border border-dashed border-foreground/20 dark:border-white/20 text-center">
-                <p className="text-text-adaptive/70 dark:text-white/70">You haven't unlocked any achievements yet</p>
+                <p className="text-text-adaptive/70 dark:text-white/70">{t('profile.noAchievementsYet')}</p>
               </div>
             )}
           </div>
@@ -850,9 +850,9 @@ export default function ProfilePage() {
         <TabsContent value="quests" className="space-y-6">
           <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">Completed Quests</h2>
+              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">{t('profile.completedQuests')}</h2>
               <span className="text-sm bg-primary/10 px-2 py-1 rounded-full text-text-adaptive">
-                {completedQuests.length} quests
+                {completedQuests.length} {t('profile.quests').toLowerCase()}
               </span>
             </div>
             
@@ -872,14 +872,14 @@ export default function ProfilePage() {
         <TabsContent value="clubs" className="space-y-6">
           <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">My Clubs</h2>
+              <h2 className="text-lg font-semibold text-text-adaptive dark:text-white">{t('profile.myClubs')}</h2>
               <Button 
                 variant="outline" 
                 className="border-foreground text-foreground hover:bg-tertiary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
                 size="sm"
                 onClick={() => navigate('/clubs')}
               >
-                Browse Clubs
+                {t('profile.browseClubs')}
               </Button>
             </div>
             
@@ -895,14 +895,14 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="p-4 rounded-lg border border-dashed border-foreground/20 dark:border-white/20 text-center">
-                <p className="text-text-adaptive/70 dark:text-white/70 mb-3">You're not following any clubs yet</p>
+                <p className="text-text-adaptive/70 dark:text-white/70 mb-3">{t('profile.notFollowingClubs')}</p>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => navigate('/clubs')}
                 >
                   <UserCheck size={16} className="mr-2" />
-                  Follow Clubs
+                  {t('profile.followClubs')}
                 </Button>
               </div>
             )}
@@ -911,12 +911,12 @@ export default function ProfilePage() {
         
         <TabsContent value="settings" className="space-y-6">
           <div className="bg-background-overlay p-6 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">Account Settings</h2>
+            <h2 className="text-lg font-semibold text-text-adaptive dark:text-white mb-4">{t('profile.accountSettings')}</h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="settings-name" className="block text-sm font-medium text-foreground/80 mb-1">
-                  Display Name
+                  {t('profile.displayName')}
                 </label>
                 <input
                   type="text"
@@ -925,7 +925,7 @@ export default function ProfilePage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   className="w-full p-2 rounded-md border border-foreground/20 dark:border-white/20 bg-background dark:bg-[#0D0718] text-foreground"
-                  placeholder="Your display name"
+                  placeholder={t('profile.yourDisplayName')}
                 />
               </div>
               
@@ -935,7 +935,7 @@ export default function ProfilePage() {
                 className="mt-2 bg-tertiary/90 text-white hover:bg-tertiary/90"
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Settings size={16} className="mr-2" />}
-                Save Changes
+                {t('actions.saveChanges')}
               </Button>
             </form>
           </div>

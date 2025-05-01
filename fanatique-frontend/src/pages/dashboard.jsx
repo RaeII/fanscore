@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useWalletContext } from '../hooks/useWalletContext';
 import { Volleyball as Football, LogOut, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -8,6 +9,7 @@ import Quests from '../components/quests';
 import { useUserContext } from '../hooks/useUserContext';
 
 export default function DashboardPage() {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const { 
     account, 
@@ -74,19 +76,19 @@ export default function DashboardPage() {
       {/* Conteúdo principal */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Seus Clubes</h1>
+          <h1 className="text-2xl font-bold">{t('dashboard.yourClubs')}</h1>
           <Button 
             variant="outline"
             className="text-text-adaptive border-text-adaptive hover:bg-primary/10 dark:text-white dark:border-white dark:hover:bg-white/10"
             onClick={() => disconnectWallet()}
           >
             <LogOut size={16} className="mr-2" />
-            Sair
+            {t('actions.logout')}
           </Button>
         </div>
 
         <p className="text-text-adaptive/70 mb-5">
-          Clubes que você segue. Selecione um para ver detalhes, eventos e notícias.
+          {t('dashboard.clubsDescription')}
         </p>
 
         {/* Horizontal scrollable clubs */}
@@ -136,7 +138,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <p className="text-sm font-medium text-text-adaptive text-center w-24 truncate mt-2">
-                    Ver Todos
+                    {t('actions.viewAll')}
                   </p>
                 </div>
               </>
@@ -145,7 +147,7 @@ export default function DashboardPage() {
                 <div className="w-full py-8 text-center mr-4">
                   <Football size={36} className="mx-auto text-background/30" />
                   <p className="text-text-adaptive/70">
-                    Você ainda não segue nenhum clube
+                    {t('dashboard.noClubsFollowed')}
                   </p>
                 </div>
                 <div 
@@ -158,7 +160,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <p className="text-sm font-medium text-foreground text-center w-24 truncate mt-2">
-                    Explorar
+                    {t('actions.explore')}
                   </p>
                 </div>
               </>
@@ -167,7 +169,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Featured Clubs
-        <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Clubes em Destaque</h2>
+        <h2 className="text-xl font-bold text-primary dark:text-white mb-4">{t('dashboard.featuredClubs')}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {clubs.slice(0, 3).map(club => (
@@ -193,7 +195,7 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-bold text-primary dark:text-white">{club.name}</h3>
                 <div className="flex items-center mt-1">
                   <Star size={14} className="text-yellow-400 mr-1" />
-                  <span className="text-xs text-primary/70 dark:text-white/70">{club.fanCount || 0} fãs</span>
+                  <span className="text-xs text-primary/70 dark:text-white/70">{club.fanCount || 0} {t('dashboard.fans')}</span>
                 </div>
                 <Button
                   variant="secondary"
@@ -204,35 +206,35 @@ export default function DashboardPage() {
                     handleSelectClub(club.id);
                   }}
                 >
-                  Ver Detalhes
+                  {t('actions.viewDetails')}
                 </Button>
               </div>
             </div>
           ))}
         </div> */}
         <Quests questScope={QuestScope.GENERAL} />
-        {/* <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Ações Rápidas</h2>
+        {/* <h2 className="text-xl font-bold text-primary dark:text-white mb-4">{t('dashboard.quickActions')}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ActionCard 
             icon={<ShoppingBag size={36} className="text-secondary" />}
-            title="Fazer Pedido"
-            description="Peça comidas e bebidas sem pegar fila"
-            buttonText="Pedir Agora"
+            title={t('dashboard.placeOrder')}
+            description={t('dashboard.orderDescription')}
+            buttonText={t('dashboard.orderNow')}
             onClick={() => navigate('/pedidos')}
           />
           <ActionCard 
             icon={<Trophy size={36} className="text-secondary" />}
-            title="Completar Quests"
-            description="Ganhe pontos completando missões"
-            buttonText="Ver Quests"
+            title={t('dashboard.completeQuests')}
+            description={t('dashboard.questsDescription')}
+            buttonText={t('dashboard.viewQuests')}
             onClick={() => navigate('/quests')}
           />
           <ActionCard 
             icon={<User size={36} className="text-secondary" />}
-            title="Meu Perfil"
-            description="Veja e edite suas informações"
-            buttonText="Ver Perfil"
+            title={t('dashboard.myProfile')}
+            description={t('dashboard.profileDescription')}
+            buttonText={t('dashboard.viewProfile')}
             onClick={() => navigate('/perfil')}
           />
         </div> */}
