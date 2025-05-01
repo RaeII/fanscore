@@ -558,14 +558,14 @@ export default function ProfilePage() {
         <div className="rounded-xl overflow-hidden mb-6 bg-gradient-to-r from-primary to-secondary/80 p-8">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             <div className="h-24 w-24 rounded-full bg-white/20 flex items-center justify-center text-white">
-              <User size={48} className="text-foreground" />
+              <User size={48} className="text-black" />
             </div>
             
             <div className="flex-grow text-center md:text-left">
               {editMode ? (
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="name" className="block text-xs text-white/80 mb-1">Name</label>
+                    <label htmlFor="name" className="block text-xs text-black/80 mb-1">Name</label>
                     <input
                       type="text"
                       id="name"
@@ -598,16 +598,16 @@ export default function ProfilePage() {
                 </form>
               ) : (
                 <>
-                  <h1 className="text-2xl font-bold mb-1">{userData.name}</h1>
-                  <p className="text-sm text-foreground/80 mb-4">{userData.wallet_address}</p>
+                  <h1 className="text-2xl font-bold mb-1 text-black">{userData.name}</h1>
+                  <p className="text-sm text-black/80 mb-4">{userData.wallet_address}</p>
                   
                   <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center text-foreground/80 text-sm">
+                    <div className="flex items-center text-black/80 text-sm">
                       <Calendar size={16} className="mr-2" />
                       Joined: {registrationDate}
                     </div>
                     {userData.update_date && (
-                      <div className="flex items-center text-foreground/80 text-sm">
+                      <div className="flex items-center text-black/80 text-sm">
                         <Clock size={16} className="mr-2" />
                         Last updated: {new Date(userData.update_date).toLocaleDateString()}
                       </div>
@@ -616,10 +616,10 @@ export default function ProfilePage() {
                   
                   <Button 
                     variant="outline" 
-                    className="mt-4 border-foreground text-foreground hover:bg-tertiary/10 dark:border-white dark:text-white dark:hover:bg-white/10"
+                    className="mt-4 border-foreground text-black hover:bg-tertiary/10 dark:border-black dark:text-black dark:hover:bg-black/10"
                     onClick={() => setEditMode(true)}
                   >
-                    <Edit size={16} className="mr-2" />
+                    <Edit size={16} className="mr-2 text-black" />
                     Edit Profile
                   </Button>
                 </>
