@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Ticket } from 'lucide-react'
 import { ThemeToggle } from './ui/theme-toggle'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { cn } from '../lib/utils'
 
 export function Header({ className }) {
@@ -29,6 +30,7 @@ export function Header({ className }) {
         
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <ThemeToggle />
           </div>
         </div>

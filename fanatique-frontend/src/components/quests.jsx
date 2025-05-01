@@ -1,36 +1,39 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { Star, CheckCircle, Clock, Lock, Loader2 } from 'lucide-react';
 import questApi from '../api/quest';
 import QuestScope from '../enum/QuestScope';
 
 const QuestStatusChip = ({ status }) => {
+  const { t } = useTranslation('quests');
+  
   switch (status) {
     case 'AVAILABLE':
       return (
         <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/80 text-white">
-          Available
+          {t('quests.status.available')}
         </div>
       );
     case 'IN_PROGRESS':
       return (
         <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/80 text-white">
           <Clock size={12} className="mr-1" />
-          In Progress
+          {t('quests.status.inProgress')}
         </div>
       );
     case 'COMPLETED':
       return (
         <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500/80 text-white">
           <CheckCircle size={12} className="mr-1" />
-          Completed
+          {t('quests.status.completed')}
         </div>
       );
     case 'LOCKED':
       return (
         <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/80 text-white">
           <Lock size={12} className="mr-1" />
-          Locked
+          {t('quests.status.locked')}
         </div>
       );
     default:
@@ -39,6 +42,7 @@ const QuestStatusChip = ({ status }) => {
 };
 
 export default function Quests({ questScope, gameId = null }) {
+  const { t } = useTranslation('quests');
   const [quests, setQuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'available', 'inProgress', 'completed'
@@ -99,10 +103,12 @@ export default function Quests({ questScope, gameId = null }) {
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-text-adaptive">{questScope === QuestScope.GENERAL ? 'General' : 'Club'} Quests</h1>
+            <h1 className="text-2xl font-bold text-text-adaptive">
+              {questScope === QuestScope.GENERAL ? t('quests.generalQuests') : t('quests.clubQuests')}
+            </h1>
           </div>
           <p className="text-text-adaptive/70 mt-1">
-            Complete quests to earn points and unlock rewards for your club.
+            {t('quests.description')}
           </p>
         </div>
 
@@ -119,7 +125,7 @@ export default function Quests({ questScope, gameId = null }) {
                 : 'bg-foreground/20 text-text-adaptive hover:bg-secondary hover:text-white border-background'}
             `}
           >
-            All
+            {t('quests.filters.all')}
           </Button>
           <Button 
             variant={activeFilter === 'available' ? 'default' : 'outline'}
@@ -132,7 +138,7 @@ export default function Quests({ questScope, gameId = null }) {
                 : 'bg-foreground/20 text-text-adaptive hover:bg-blue-500 hover:text-white border-background'}
             `}
           >
-            Available
+            {t('quests.filters.available')}
           </Button>
           <Button 
             variant={activeFilter === 'inProgress' ? 'default' : 'outline'}
@@ -145,7 +151,7 @@ export default function Quests({ questScope, gameId = null }) {
                 : 'bg-foreground/20 text-text-adaptive hover:bg-orange-500 hover:text-white border-background'}
             `}
           >
-            In Progress
+            {t('quests.filters.inProgress')}
           </Button>
           <Button 
             variant={activeFilter === 'completed' ? 'default' : 'outline'}
@@ -158,7 +164,7 @@ export default function Quests({ questScope, gameId = null }) {
                 : 'bg-foreground/20 text-text-adaptive hover:bg-green-500 hover:text-white border-background'}
             `}
           >
-            Completed
+            {t('quests.filters.completed')}
           </Button>
         </div>
 
@@ -168,7 +174,7 @@ export default function Quests({ questScope, gameId = null }) {
           </div>
         ) : filteredQuests.length === 0 ? (
           <div className="text-center my-12">
-            <p className="text-lg text-primary/70 dark:text-white/70">No quests available in this category</p>
+            <p className="text-lg text-primary/70 dark:text-white/70">{t('quests.noQuests')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -193,7 +199,7 @@ export default function Quests({ questScope, gameId = null }) {
                   <QuestStatusChip status={quest.status} />
                   <div className="flex items-center px-2 py-1 rounded-full bg-black/50 text-white text-xs font-semibold">
                     <Star size={14} className="text-yellow-400 mr-1.5" fill="#FFCC00" />
-                    {quest.point_value} pts
+                    {quest.point_value} {t('quests.points')}
                   </div>
                 </div>
                 
@@ -207,32 +213,10 @@ export default function Quests({ questScope, gameId = null }) {
                     <p className="text-sm text-white/80 line-clamp-2 mb-6">
                       {quest.description}
                     </p>
-                    
-                    {/* Progress indicators
-                    <div className="flex h-1.5 gap-1.5">
-                      {quest.progress ? (
-                        <div className="w-full bg-gray-200 dark:bg-[#2A2A3C] rounded-full h-1.5">
-                          <div 
-                            className="bg-secondary h-1.5 rounded-full" 
-                            style={{ width: `${(quest.progress.current / quest.progress.total) * 100}%` }}
-                          ></div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="h-full min-w-0 grow rounded-full bg-white/10 dark:bg-white/10"></div>
-                          <div className="h-full min-w-0 grow rounded-full bg-white/10 dark:bg-white/10"></div>
-                          <div className="h-full min-w-0 grow rounded-full bg-white/10 dark:bg-white/10"></div>
-                        </>
-                      )}
-                    </div> */}
                   </div>
                   
                   {/* Bottom section */}
                   <div className="flex flex-col gap-2 mt-auto">
-                    {/* <div className="text-xs text-white/70">
-                      <span className="font-semibold text-white/90">Requirements:</span> {quest.requirements}
-                    </div> */}
-                    
                     <div className="flex items-center justify-between">
                       {/* Participant count */}
                       <div className="flex items-center gap-2">
@@ -240,16 +224,16 @@ export default function Quests({ questScope, gameId = null }) {
                           {quest.status === 1 ? (
                             <div className="flex items-center text-green-400">
                               <CheckCircle size={14} className="mr-1" />
-                              <span>Completed</span>
+                              <span>{t('quests.status.completed')}</span>
                             </div>
                           ) : quest.progress ? (
                             <div className="flex flex-col">
                               <span className="leading-none">{quest.progress.current}/{quest.progress.total}</span>
-                              <span className="text-xs font-medium text-white/70">Progress</span>
+                              <span className="text-xs font-medium text-white/70">{t('quests.progress')}</span>
                             </div>
                           ) : (
                             <div className="flex flex-col">
-                              <span className="leading-none">Available</span>
+                              <span className="leading-none">{t('quests.status.available')}</span>
                               <span className="text-xs font-medium text-white/70">Status</span>
                             </div>
                           )}
@@ -268,10 +252,10 @@ export default function Quests({ questScope, gameId = null }) {
                           {loadingQuests[quest.id] ? (
                             <>
                               <Loader2 size={14} className="mr-1 animate-spin" />
-                              Loading
+                              {t('quests.loading')}
                             </>
                           ) : (
-                            quest.status === 3 ? 'Update' : 'Complete'
+                            quest.status === 3 ? t('quests.update') : t('quests.complete')
                           )}
                         </Button>
                       ) : quest.status === 1 ? (

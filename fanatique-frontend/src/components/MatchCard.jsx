@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Calendar, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui-v2/Button';
 
 export default function MatchCard({ 
@@ -10,6 +11,7 @@ export default function MatchCard({
   onClick 
 }) {
   const navigate = useNavigate();
+  const { t } = useTranslation('matches');
   const matchDate = new Date(match.date);
 
   return (
@@ -35,12 +37,12 @@ export default function MatchCard({
             {isLive ? (
               <div className="flex items-center">
                 <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse mr-2"></div>
-                <span className="text-xs font-medium uppercase">Live Now</span>
+                <span className="text-xs font-medium uppercase">{t('matchCard.liveNow', 'Live Now')}</span>
               </div>
             ) : isPast ? (
               <div className="flex items-center">
                 <CheckCircle size={12} className="mr-1" />
-                <span className="text-xs font-medium uppercase">Completed</span>
+                <span className="text-xs font-medium uppercase">{t('matchCard.completed', 'Completed')}</span>
               </div>
             ) : (
               <div className="flex items-center">
@@ -53,9 +55,9 @@ export default function MatchCard({
           </div>
           <h3 className="font-medium mt-1">{match.home_club.name} vs {match.away_club.name}</h3>
           <p className="text-sm mt-1">
-            Score: {match.score ? `${match.score.home} - ${match.score.away}` : "0 - 0"}
+            {t('matchCard.score', 'Score')}: {match.score ? `${match.score.home} - ${match.score.away}` : "0 - 0"}
           </p>
-          <p className="text-xs mt-1">Stadium: {match.stadium.name}</p>
+          <p className="text-xs mt-1">{t('matchCard.stadium', 'Stadium')}: {match.stadium.name}</p>
         </div>
         <div className="flex flex-col gap-2">
           <Button
@@ -65,7 +67,7 @@ export default function MatchCard({
               e.stopPropagation();
               navigate(`/game/${club.id}/${match.id}`, { state: { club } });
             }}
-            text="View Game"
+            text={t('matchCard.buttons.viewGame', 'View Game')}
           />
           {!isPast && (
             <Button
@@ -76,7 +78,7 @@ export default function MatchCard({
                 e.stopPropagation();
                 navigate(`/stadium-orders/${club.id}/${match.id}`, { state: { club } });
               }}
-              text="Order Food & Drinks"
+              text={t('matchCard.buttons.orderFood', 'Order Food & Drinks')}
             />
           )}
         </div>
