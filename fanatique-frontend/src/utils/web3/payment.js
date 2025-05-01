@@ -9,18 +9,11 @@ export function usePayment() {
     const { getContracts } = useContracts();
 
     // 1. Usuário solicita pagamento
-    async function paymentSignature(orderId, clubId, amount) {
-
+    async function paymentSignature(orderId, amount, erc20Id) {
         try {   
-
             console.log('paymentSignature');
 
-            const { fanTokenContract, fanatiqueContract, fanatiqueContractAddress, fanTokenContractAddress } = await getContracts();
-
-            console.log({fanTokenContractAddress});
-            // Verificar se a carteira está conectada
-
-            console.log({isConnected});
+            const { fanTokenContract, fanatiqueContractAddress, fanTokenContractAddress } = await getContracts();
 
             if (!isConnected) {
                 throw new Error("conecte sua carteira.");
@@ -40,13 +33,11 @@ export function usePayment() {
             } catch {
                 throw new Error("Por favor, desbloqueie sua carteira.");
             }
-
-            console.log('amount',amount.toString());
             
             // Converte amount para BigInt se for string
             const amountBigInt = ethers.parseEther(amount.toString());
 
-            console.log('amountBigInt',amountBigInt.toString());
+            console.log('amountBigInt', amountBigInt.toString());
 
             // Obter chainId
             const network = await provider.getNetwork();
@@ -54,81 +45,76 @@ export function usePayment() {
             
             // Prazo de 1 hora para a transação
             const deadline = Math.floor(Date.now() / 1000) + 3600;
-
-            console.log({fanTokenContractAddress});
             
-            // Obter nonce atual (necessário para a meta-transação)
-            const nonce = await fanTokenContract.getNonce(userAddress);
-
+            // Obter nonce atual (necessário para a permissão EIP-2612)
+            const nonce = await fanTokenContract.nonces(userAddress);
+            
             console.log({
               orderId, 
               userAddress, 
-              clubId, 
               amountBigInt, 
               fanatiqueContractAddress, 
-              chainId
+              chainId,
+              erc20Id
             });
             
-            // Computa o hash da mensagem igual ao usado no contrato Solidity
-            // Incluindo chainId como no backend
+            // Computa o hash da mensagem para a assinatura da ordem
+            // Ajustado para corresponder ao formato usado no contrato
             const messageHash = ethers.solidityPackedKeccak256(
-                ['uint256', 'address', 'uint256', 'uint256', 'address', 'uint256'],
-                [orderId, userAddress, clubId, amountBigInt, fanatiqueContractAddress, chainId]
+                ['uint256', 'address', 'uint256', 'address', 'uint256'],
+                [orderId, userAddress, amountBigInt, fanatiqueContractAddress, chainId]
             );
             
-            // Converte o hash para arrayify (equivalente a getBytes na v6)
+            // Converte o hash para bytes
             const messageBytes = ethers.getBytes(messageHash);
             
             // Assina a mensagem (prefixo EIP-191/Ethereum) para obter a orderSignature
             const orderSignature = await signer.signMessage(messageBytes);
             
-            // Agora vamos preparar a meta-transação (transferência sem gas)
-            // Obtemos o endereço da treasury
-            const treasury = await fanatiqueContract.treasury();
-            
-            // Dados para assinatura EIP-712 no padrão MetaTransfer
+            // Dados para assinatura EIP-2612 Permit
             const domain = {
-              name: "Fanatique Token",
-              version: "1",
+              name: await fanTokenContract.name(),
+              version: '1',
               chainId: chainId,
               verifyingContract: fanTokenContractAddress
             };
             
             const types = {
-              Transfer: [
-                { name: "clubId", type: "uint256" },
-                { name: "from", type: "address" },
-                { name: "to", type: "address" },
-                { name: "amount", type: "uint256" },
+              Permit: [
+                { name: "owner", type: "address" },
+                { name: "spender", type: "address" },
+                { name: "value", type: "uint256" },
                 { name: "nonce", type: "uint256" },
                 { name: "deadline", type: "uint256" }
               ]
             };
             
-            const value = {
-              clubId: clubId,
-              from: userAddress,
-              to: treasury,
-              amount: amountBigInt,
+            const permitDeadline = Math.floor(Date.now() / 1000) + 3600; // 1 hora
+            
+            const permitValue = {
+              owner: userAddress,
+              spender: fanatiqueContractAddress,
+              value: amountBigInt,
               nonce: nonce.toString(),
-              deadline: deadline
+              deadline: permitDeadline
             };
             
-            // Assinar usando MetaMask para metaTransfer
-            const metaSignature = await signer.signTypedData(domain, types, value);
-            const sig = ethers.Signature.from(metaSignature);
+            // Assinar usando o formato EIP-2612 Permit
+            const permitSignature = await signer.signTypedData(domain, types, permitValue);
+            const sig = ethers.Signature.from(permitSignature);
             
             // Retorna os dados necessários alinhados com o backend
             return {
                 orderId,
-                userAddress: userAddress,  // Renomeado para userId conforme esperado pelo backend
-                clubId,
-                amount: amountBigInt.toString(),
+                userAddress: userAddress,
+                amount: amount.toString(),
                 deadline: deadline,
-                signature: orderSignature,  // Signature da ordem
-                v: sig.v,               // Componente v da assinatura EIP-712
-                r: sig.r,               // Componente r da assinatura EIP-712
-                s: sig.s                // Componente s da assinatura EIP-712
+                signature: orderSignature,
+                erc20Id: erc20Id,
+                permitV: sig.v,
+                permitR: sig.r,
+                permitS: sig.s,
+                permitDeadline: permitDeadline
             };
         } catch (err) {
             console.error('Erro ao assinar pagamento:', err);

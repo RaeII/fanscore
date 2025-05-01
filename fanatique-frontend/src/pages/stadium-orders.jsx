@@ -437,22 +437,29 @@ export default function StadiumOrdersPage() {
       
       setProcessingPayment(true);
       
-      // Obter assinatura do usuário usando a função de pagamento
-      const signatureData = await paymentSignature(order.id, Number(clubId), order.total_fantoken);
+      // ERC20 token ID (1 = token padrão, pode variar dependendo da configuração)
+      const erc20Id = 1;
+      
+      // Obter assinatura do usuário usando a função de pagamento atualizada
+      const signatureData = await paymentSignature(order.id, order.total_fantoken, erc20Id);
       
       // Adicionar os dados de pagamento à ordem no formato que o backend espera
       const paymentData = {
-        order_id: order.id,
-        club_id: clubId, 
-        user_address: signatureData.userAddress,
-        amount: order.total_fantoken,
+        orderId: order.id,
+        userId: order.user_id,
+        userAddress: signatureData.userAddress,
+        amount: signatureData.amount,
         deadline: signatureData.deadline,
         signature: signatureData.signature,
-        v: signatureData.v,
-        r: signatureData.r,
-        s: signatureData.s
+        erc20Id: signatureData.erc20Id,
+        permitV: signatureData.permitV,
+        permitR: signatureData.permitR,
+        permitS: signatureData.permitS,
+        permitDeadline: signatureData.permitDeadline
       };
-                  
+      
+      console.log('Enviando dados de pagamento:', paymentData);          
+      
       // Enviar para o backend processar o pagamento
       const paymentResult = await orderApi.paymentOrder(paymentData);
       

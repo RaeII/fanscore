@@ -114,13 +114,14 @@ class OrderService {
 		if (!data.orderId) throw Error(getErrorMessage('missingField', 'ID do pedido'));
 		if (!data.userId) throw Error(getErrorMessage('missingField', 'ID do usuário'));
 		if (!data.userAddress) throw Error(getErrorMessage('missingField', 'Endereço do usuário'));
-		if (!data.clubId) throw Error(getErrorMessage('missingField', 'ID do clube'));
 		if (!data.amount) throw Error(getErrorMessage('missingField', 'Valor do pagamento'));
 		if (!data.signature) throw Error(getErrorMessage('missingField', 'Assinatura do pagamento'));
 		if (!data.deadline) throw Error(getErrorMessage('missingField', 'Prazo limite para a meta-transação'));
-		if (!data.v) throw Error(getErrorMessage('missingField', 'Componente v da assinatura do usuário para a meta-transação'));
-		if (!data.r) throw Error(getErrorMessage('missingField', 'Componente r da assinatura do usuário para a meta-transação'));
-		if (!data.s) throw Error(getErrorMessage('missingField', 'Componente s da assinatura do usuário para a meta-transação'));
+		if (!data.permitV) throw Error(getErrorMessage('missingField', 'Componente v da assinatura permit'));
+		if (!data.permitR) throw Error(getErrorMessage('missingField', 'Componente r da assinatura permit'));
+		if (!data.permitS) throw Error(getErrorMessage('missingField', 'Componente s da assinatura permit'));
+		if (!data.permitDeadline) throw Error(getErrorMessage('missingField', 'Prazo limite do permit'));
+		if (!data.erc20Id) throw Error(getErrorMessage('missingField', 'ID do token ERC20'));
 
 		// Verificar se o pedido existe
 		const order = await this.fetch(data.orderId);
@@ -148,34 +149,38 @@ class OrderService {
 		}
 
 		try {
-			// Aqui enviamos para o smart contract (simulado nesse exemplo)
-			// Em produção, chamaríamos o método gaslessOrderPayment do contrato
 			console.log('Processando pagamento blockchain com assinatura:', data.signature);
-
-			// Processar o pagamento utilizando a assinatura EIP-712
-			// Este é o ponto onde você integraria com seu contrato inteligente
 
 			const contractService = new ContractService();
 			const contractFanatique = contractService.getFanatiqueContract();
 			
-			console.log({
-				orderId:data.orderId, 
-				userAddress:data.userAddress, 
-				clubId:data.clubId, 
-				amount:order.total_fantoken.toString(), 
+			// Estruturar os dados para o pagamento conforme as structs do contrato
+			const paymentData = {
+				orderId: data.orderId,
+				buyer: data.userAddress,
+				amount: ethers.parseEther(order.total_fantoken.toString()),
+				deadline: data.deadline,
+				erc20Id: data.erc20Id
+			};
+			
+			const permitData = {
+				v: data.permitV,
+				r: data.permitR,
+				s: data.permitS,
+				deadline: data.permitDeadline
+			};
+			
+			console.log('Dados de pagamento:', {
+				payment: paymentData,
+				signature: data.signature,
+				permit: permitData
 			});
 
-			// Chamar a função gaslessOrderPayment do contrato
-			const tx = await contractFanatique.gaslessOrderPayment(
-				data.orderId,
-				data.userAddress,
-				Number(data.clubId),
-				ethers.parseEther(order.total_fantoken.toString()),
-				data.deadline,
+			// Chamar a função orderPaymentWithPermit do contrato
+			const tx = await contractFanatique.orderPaymentWithPermit(
+				paymentData,
 				data.signature,
-				data.v,
-				data.r,
-				data.s
+				permitData
 			);
 
 			// Aguardar a transação ser confirmada
@@ -199,7 +204,7 @@ class OrderService {
 			};
 		} catch (error) {
 			console.error('Erro ao processar pagamento blockchain:', error);
-			throw Error('Falha ao processar o pagamento na blockchain');
+			throw Error('Falha ao processar o pagamento na blockchain: ' + (error as Error).message);
 		}
 	}
 
@@ -298,3 +303,4 @@ class OrderService {
 }
 
 export default OrderService; 
+

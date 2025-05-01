@@ -4,212 +4,100 @@ pragma solidity ^0.8.21;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/IFanToken.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 
 /**
- * @title PaymentProcessor
- * @dev Processa pagamentos utilizando FanToken autorizado via assinaturas off-chain
- *      Projetado para chains compatíveis com EVM (ex: Chiliz)
- *      Suporta pagamentos com qualquer token de clube disponível no contrato FanToken
+ * @title Payment
+ * @notice Contrato para processamento de pagamentos ERC20 com meta-transações
+ * @dev Suporta dois métodos de pagamento:
+ * 1. Método tradicional com approve prévio (requer duas transações)
+ * 2. Método EIP-2612 Permit que permite aprovar e transferir em uma única transação
  */
 contract Payment is Ownable {
     using ECDSA for bytes32;
 
-    // Interface do token de fã usado para pagamentos
-    IFanToken public fanToken;
-    // Endereço autorizado a assinar ordens de pagamento (carteira backend)
-    address public signer;
     // Endereço recebedor dos fundos
     address public treasury;
-    // Rastreia nonces usados para prevenir replay
-    mapping(uint256 => bool) public usedNonces;
-    // Mapping para armazenar quais clubIds são aceitos como pagamento
+    // Evento emitido quando um pagamento é processado
+    event PaymentProcessed(uint256 indexed orderId, address indexed buyer, uint256 amount);
+    // Evento emitido quando um token é aceito ou removido como método de pagamento
+    event TokenStatusUpdated(address indexed tokenAddress, uint256 indexed tokenId, bool accepted);
+    
     mapping(uint256 => bool) public acceptedTokens;
-    // Array de todos os clubIds aceitos para pagamento
-    uint256[] public allAcceptedClubIds;
+    // Mapeamento de ID para endereço do token
+    mapping(uint256 => address) public tokenAddresses;
+    // Indica se o token suporta EIP-2612 Permit
+    mapping(uint256 => bool) public tokenSupportsPermit;
 
-    // Emitido quando um pagamento é processado
-    event PaymentProcessed(uint256 indexed orderId, address indexed buyer, uint256 amount, uint256 clubId);
-    // Emitido quando um token é aceito ou removido como método de pagamento
-    event TokenAcceptanceChanged(uint256 indexed clubId, bool accepted);
-    // Emitido quando um pagamento gasless é processado
-    event GaslessPaymentProcessed(uint256 indexed orderId, address indexed buyer, uint256 amount, uint256 clubId, address relayer);
+    // Estrutura para dados do pagamento para evitar erro "Stack too deep"
+    struct PaymentData {
+        uint256 orderId;
+        address buyer;
+        uint256 amount;
+        uint256 deadline;
+        uint256 erc20Id;
+    }
+
+    // Estrutura para dados do permit para evitar erro "Stack too deep"
+    struct PermitData {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+        uint256 deadline;
+    }
 
     /**
-     * @dev Inicializa com endereços do token, do assinante e da tesouraria
-     * @param _fanToken Endereço do contrato FanToken
+     * @dev Construtor do contrato Payment
      */
     constructor(
-        address _fanToken
-      
     ) Ownable(msg.sender) {
-        require(_fanToken != address(0), "FanToken address zero");
-
-        fanToken = IFanToken(_fanToken);
-        signer = msg.sender;
         treasury = msg.sender;
     }
 
-    /** Funções admin para atualizar configurações **/
-
-    function setSigner(address _signer) external onlyOwner {
-        require(_signer != address(0), "Signer address zero");
-        signer = _signer;
-    }
-
-    function setFanToken(address _fanToken) external onlyOwner {
-        require(_fanToken != address(0), "Token address zero");
-        fanToken = IFanToken(_fanToken);
-    }
-
+    /**
+     * @dev Define o endereço do tesouro que receberá os fundos
+     * @param _treasury Novo endereço do tesouro
+     */
     function setTreasury(address _treasury) external onlyOwner {
-        require(_treasury != address(0), "Treasury address zero");
+        require(_treasury != address(0), "Endereco invalido");
         treasury = _treasury;
     }
-    
+
     /**
-     * @dev Adiciona ou remove um token de clube como método de pagamento aceito
-     * @param clubId ID do clube cujo token será aceito ou não
-     * @param accepted Se true, o token é aceito como pagamento; se false, não é aceito
+     * @dev Adiciona ou remove um token como método de pagamento aceito
+     * @param tokenId ID do token
+     * @param tokenAddress Endereço do contrato do token ERC20
+     * @param supportsPermit Se o token suporta a interface EIP-2612 Permit
+     * @param accepted Status de aceitação do token
      */
-    function setTokenAcceptance(uint256 clubId, bool accepted) external onlyOwner {
-        // Verifica se o token existe no contrato FanToken
-        (string memory name, , ) = fanToken.getTokenDetails(clubId);
-        require(bytes(name).length > 0, "Token nao existe");
+    function setAcceptedToken(uint256 tokenId, address tokenAddress, bool supportsPermit, bool accepted) external onlyOwner {
+        require(tokenId > 0, "TokenId invalido");
+        require(tokenAddress != address(0), "Endereco de token invalido");
         
-        // Se já está no estado desejado, não faz nada
-        if (acceptedTokens[clubId] == accepted) return;
+        acceptedTokens[tokenId] = accepted;
+        tokenAddresses[tokenId] = tokenAddress;
+        tokenSupportsPermit[tokenId] = supportsPermit;
         
-        acceptedTokens[clubId] = accepted;
-        
-        // Se está adicionando, adiciona ao array de tokens aceitos
-        if (accepted) {
-            allAcceptedClubIds.push(clubId);
-        } else {
-            // Se está removendo, remove do array
-            for (uint256 i = 0; i < allAcceptedClubIds.length; i++) {
-                if (allAcceptedClubIds[i] == clubId) {
-                    // Move o último elemento para a posição atual e reduz o tamanho do array
-                    allAcceptedClubIds[i] = allAcceptedClubIds[allAcceptedClubIds.length - 1];
-                    allAcceptedClubIds.pop();
-                    break;
-                }
-            }
-        }
-        
-        emit TokenAcceptanceChanged(clubId, accepted);
-    }
-    
-    /**
-     * @dev Retorna todos os IDs de clube aceitos como método de pagamento
-     * @return Array com todos os clubIds aceitos
-     */
-    function getAllAcceptedTokens() external view returns (uint256[] memory) {
-        return allAcceptedClubIds;
+        emit TokenStatusUpdated(tokenAddress, tokenId, accepted);
     }
 
     /**
-     * @dev Processa um pagamento autorizado por uma assinatura off-chain
-     * @param orderId ID único da ordem de compra
-     * @param clubId ID do clube cujo token será usado para pagamento
-     * @param amount Quantidade de tokens a serem transferidos
-     * @param signature Assinatura do `signer` sobre os dados
+     * @dev Verifica a assinatura da ordem
+     * @param paymentData Dados do pagamento
+     * @param orderSignature Assinatura do comprador
+     * @return true se a assinatura for válida
      */
-    function orderPayment(
-        uint256 orderId,
-        uint256 clubId,
-        uint256 amount,
-        bytes calldata signature
-    ) external {
-        require(!usedNonces[orderId], "Purchase already processed");
-        require(acceptedTokens[clubId], "Token nao aceito para pagamento");
-
-        console.log("\nCONTRACT PAYMENT\n");
-        console.log("OrderId:", orderId);
-        console.log("Buyer:", msg.sender);
-        console.log("ClubId:", clubId);
-        console.log("Amount:", amount);
-        console.log("Contract Address:", address(this));
-        console.log("ChainId:", block.chainid);
-        console.log("Signer Address:", signer);
-        console.log("\n========================================\n");
-
-        // Compõe a mensagem assinada: orderId, comprador, clubId, amount, contrato e chain
-        bytes32 message = keccak256(
-            abi.encodePacked(
-                orderId,
-                msg.sender,
-                clubId,
-                amount,
-                address(this),
-                block.chainid
-            )
-        );
-        
-        // Converte para Ethereum signed message
-        bytes32 ethSigned = MessageHashUtils.toEthSignedMessageHash(message);
-
-        // Recupera e verifica
-        address recovered = ECDSA.recover(ethSigned, signature);
-        require(recovered == signer, "Invalid signature");
-
-        // Marca nonce como usado
-        usedNonces[orderId] = true;
-
-        // Transfere tokens do comprador para a tesouraria
-        // O usuário precisa aprovar primeiro chamando a função transferFrom do IFanToken
-        fanToken.transferFrom(clubId, msg.sender, treasury, amount);
-
-        emit PaymentProcessed(orderId, msg.sender, amount, clubId);
-    }
-
-    /**
-     * @dev Processa um pagamento usando meta-transação (sem gas para o usuário)
-     * @param orderId ID único da ordem de compra
-     * @param buyer Endereço do comprador
-     * @param clubId ID do clube cujo token será usado
-     * @param amount Quantidade de tokens
-     * @param deadline Prazo limite para a meta-transação
-     * @param orderSignature Assinatura do signer sobre a ordem
-     * @param v Componente v da assinatura do usuário para a meta-transação
-     * @param r Componente r da assinatura do usuário para a meta-transação
-     * @param s Componente s da assinatura do usuário para a meta-transação
-     */
-    function gaslessOrderPayment(
-        uint256 orderId,
-        address buyer,
-        uint256 clubId,
-        uint256 amount,
-        uint256 deadline,
-        bytes calldata orderSignature,
-        uint8 v, 
-        bytes32 r, 
-        bytes32 s
-    ) external {
-        require(!usedNonces[orderId], "Purchase already processed");
-        require(acceptedTokens[clubId], "Token nao aceito para pagamento");
-        require(block.timestamp <= deadline, "Meta-transacao expirada");
-
-        console.log("\nCONTRACT GASLESS PAYMENT\n");
-        console.log("OrderId:", orderId);
-        console.log("Buyer:", buyer);
-        console.log("ClubId:", clubId);
-        console.log("Amount:", amount);
-        console.log("Relayer:", msg.sender);
-        console.log("this address:", address(this));
-        console.log("BlockchainId:", block.chainid);
-        console.log("Deadline:", deadline);
-        
-        console.log("\n========================================\n");
-
-        // 1. Verificar assinatura da ordem (pelo backend)
+    function _verifyOrderSignature(
+        PaymentData memory paymentData, 
+        bytes calldata orderSignature
+    ) internal view returns (bool) {
         bytes32 orderMessage = keccak256(
             abi.encodePacked(
-                orderId,
-                buyer,
-                clubId,
-                amount,
+                paymentData.orderId,
+                paymentData.buyer,
+                paymentData.amount,
                 address(this),
                 block.chainid
             )
@@ -217,60 +105,81 @@ contract Payment is Ownable {
         
         bytes32 orderEthSigned = MessageHashUtils.toEthSignedMessageHash(orderMessage);
         address recoveredSigner = ECDSA.recover(orderEthSigned, orderSignature);
-        console.log("Recovered Signer:", recoveredSigner);
-        console.log("recoveredSigner == buyer:", recoveredSigner == buyer);
-        console.log("dale");
-        require(recoveredSigner == buyer, "Invalid order signature");
+        return recoveredSigner == paymentData.buyer;
+    }
 
-        // 2. Executar a meta-transação (o usuário não paga gas)
-        // O usuário precisa ter assinado uma mensagem permitindo esta transferência
-        fanToken.metaTransfer(
-            clubId,
-            buyer,
-            treasury,
-            amount,
-            deadline,
-            v,
-            r,
-            s
+    /**
+     * @dev Transfere tokens usando permit e emite evento
+     * @param paymentData Dados do pagamento
+     * @param permitData Dados da permissão (assinatura EIP-2612)
+     */
+    function _transferWithPermit(
+        PaymentData memory paymentData,
+        PermitData memory permitData
+    ) internal {
+        // Obter endereço do token
+        address tokenAddress = tokenAddresses[paymentData.erc20Id];
+        require(tokenAddress != address(0), "Token nao configurado");
+        
+        // Executar permit
+        IERC20Permit permitToken = IERC20Permit(tokenAddress);
+        permitToken.permit(
+            paymentData.buyer, 
+            address(this), 
+            paymentData.amount, 
+            permitData.deadline, 
+            permitData.v, 
+            permitData.r, 
+            permitData.s
         );
-
-        // Marca nonce como usado
-        usedNonces[orderId] = true;
-
-        emit GaslessPaymentProcessed(orderId, buyer, amount, clubId, msg.sender);
-    }
-
-    /**
-     * @dev Permite ao usuário fazer um pagamento direto sem assinatura
-     * @param clubId ID do clube cujo token será usado para pagamento
-     * @param amount Quantidade de tokens a serem transferidos
-     */
-    function directPurchase(uint256 clubId, uint256 amount) external {
-        require(acceptedTokens[clubId], "Token nao aceito para pagamento");
         
-        // O usuário deve ter aprovado a transferência anteriormente
-        fanToken.transferFrom(clubId, msg.sender, treasury, amount);
+        // Transferir tokens
+        IERC20 token = IERC20(tokenAddress);
+        bool success = token.transferFrom(paymentData.buyer, treasury, paymentData.amount);
+        require(success, "Falha na transferencia de token");
         
-        emit PaymentProcessed(0, msg.sender, amount, clubId);
+        // Emitir evento
+        emit PaymentProcessed(
+            paymentData.orderId, 
+            paymentData.buyer, 
+            paymentData.amount
+        );
     }
-    
+
     /**
-     * @dev Retorna o saldo de tokens de um endereço para um clube específico
-     * @param clubId ID do clube
-     * @param holder Endereço do holder
-     * @return Saldo de tokens
+     * @dev Processa um pagamento utilizando o método permit (EIP-2612)
+     * @param payment Estrutura contendo dados do pagamento
+     * @param orderSignature Assinatura do comprador
+     * @param permit Estrutura contendo dados do permit
+     * @notice Este método permite aprovar e transferir em uma única transação para tokens
+     * que implementam a interface EIP-2612 Permit.
      */
-    function balanceOf(uint256 clubId, address holder) external view returns (uint256) {
-        return fanToken.balanceOf(clubId, holder);
+    function orderPaymentWithPermit(
+        PaymentData calldata payment,
+        bytes calldata orderSignature,
+        PermitData calldata permit
+    ) external {
+        require(block.timestamp <= payment.deadline, "transacao expirada");
+        require(block.timestamp <= permit.deadline, "permit expirado");
+        require(payment.erc20Id > 0, "TokenId invalido");
+        require(acceptedTokens[payment.erc20Id], "Token nao aceito para pagamento");
+        require(tokenSupportsPermit[payment.erc20Id], "Token nao suporta permit");
+
+        // Verificar assinatura da ordem
+        require(_verifyOrderSignature(payment, orderSignature), "Assinatura de ordem invalida");
+        
+        // Executar transferência com permit
+        _transferWithPermit(payment, permit);
     }
-    
+
     /**
-     * @dev Verifica se um token de clube é aceito como método de pagamento
-     * @param clubId ID do clube
-     * @return true se o token é aceito, false caso contrário
+     * @dev Permite que o proprietário do contrato retire tokens ERC20 enviados acidentalmente
+     * @param tokenAddress Endereço do contrato do token
+     * @param amount Quantidade a ser retirada
      */
-    function isTokenAccepted(uint256 clubId) external view returns (bool) {
-        return acceptedTokens[clubId];
+    function rescueTokens(address tokenAddress, uint256 amount) external onlyOwner {
+        IERC20 token = IERC20(tokenAddress);
+        bool success = token.transfer(treasury, amount);
+        require(success, "Falha no resgate de tokens");
     }
 }
