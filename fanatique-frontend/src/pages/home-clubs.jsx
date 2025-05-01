@@ -296,7 +296,7 @@ export default function HomeClubsPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
       {/* Club Header */}
-      <div className="relative bg-primary/80 overflow-hidden">
+      <div className="relative bg-secondary/90 dark:bg-primary/80 overflow-hidden">
         {/* Blurred logo background */}
         {selectedClub && selectedClub.image && (
           <div
