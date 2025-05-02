@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import "hardhat/console.sol";
 
 /**
  * @title Payment
@@ -120,7 +121,14 @@ contract Payment is Ownable {
         // Obter endereço do token
         address tokenAddress = tokenAddresses[paymentData.erc20Id];
         require(tokenAddress != address(0), "Token nao configurado");
-        
+
+        console.log("tokenAddress", tokenAddress);
+        console.log("buyer", paymentData.buyer);
+        console.log("this", address(this));
+        console.log("amount", paymentData.amount);
+        console.log("deadline", paymentData.deadline);
+        console.log("erc20Id", paymentData.erc20Id);
+
         // Executar permit
         IERC20Permit permitToken = IERC20Permit(tokenAddress);
         permitToken.permit(
@@ -160,7 +168,6 @@ contract Payment is Ownable {
         PermitData calldata permit
     ) external {
         require(block.timestamp <= payment.deadline, "transacao expirada");
-        require(block.timestamp <= permit.deadline, "permit expirado");
         require(payment.erc20Id > 0, "TokenId invalido");
         require(acceptedTokens[payment.erc20Id], "Token nao aceito para pagamento");
         require(tokenSupportsPermit[payment.erc20Id], "Token nao suporta permit");

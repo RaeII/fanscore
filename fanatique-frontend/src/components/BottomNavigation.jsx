@@ -52,13 +52,13 @@ export default function Navigation() {
     {
       id: 'club',
       label: 'Meu Clube',
-      icon: <Heart size={20} className={activeItem === 'club' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Heart size={20} className={activeItem === 'club' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}`) : navigate('/dashboard'),
     },
     {
       id: 'matches',
       label: 'Partidas',
-      icon: <Trophy size={20} className={activeItem === 'matches' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Trophy size={20} className={activeItem === 'matches' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/matches'),
     }
   ];
@@ -68,20 +68,20 @@ export default function Navigation() {
     {
       id: 'home',
       label: 'Home',
-      icon: <Home size={20} className={activeItem === 'home' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Home size={20} className={activeItem === 'home' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/dashboard'),
     },
     {
       id: 'forum',
       label: 'Forum',
-      icon: <MessageCircle size={20} className={activeItem === 'forum' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <MessageCircle size={20} className={activeItem === 'forum' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}/forum`) : navigate('/dashboard'),
       disabled: !heartClub,
     },
     {
       id: 'heartClub',
       label: 'Meu Clube',
-      icon: <Heart size={20} className={(activeItem === 'club' || activeItem === 'matches') ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Heart size={20} className={(activeItem === 'club' || activeItem === 'matches') ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => {
         setShowClubOptions(!showClubOptions);
       },
@@ -90,13 +90,13 @@ export default function Navigation() {
     {
       id: 'wallet',
       label: 'Carteira',
-      icon: <Wallet size={20} className={activeItem === 'wallet' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Wallet size={20} className={activeItem === 'wallet' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/buy-fantokens'),
     },
     {
       id: 'profile',
       label: 'Perfil',
-      icon: <User size={20} className={activeItem === 'profile' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <User size={20} className={activeItem === 'profile' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/profile'),
     },
   ];
@@ -106,39 +106,39 @@ export default function Navigation() {
     {
       id: 'home',
       label: 'Home',
-      icon: <Home size={20} className={activeItem === 'home' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Home size={20} className={activeItem === 'home' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/dashboard'),
     },
     {
       id: 'club',
       label: 'Meu Clube',
-      icon: <Heart size={20} className={activeItem === 'club' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Heart size={20} className={activeItem === 'club' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}`) : navigate('/dashboard'),
       disabled: !heartClub,
     },
     {
       id: 'matches',
       label: 'Partidas',
-      icon: <Trophy size={20} className={activeItem === 'matches' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Trophy size={20} className={activeItem === 'matches' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/matches'),
     },
     {
       id: 'forum',
       label: 'Forum',
-      icon: <MessageCircle size={20} className={activeItem === 'forum' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <MessageCircle size={20} className={activeItem === 'forum' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => heartClub ? navigate(`/clubs/${heartClub.id}/forum`) : navigate('/dashboard'),
       disabled: !heartClub,
     },
     {
       id: 'wallet',
       label: 'Carteira',
-      icon: <Wallet size={20} className={activeItem === 'wallet' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <Wallet size={20} className={activeItem === 'wallet' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/buy-fantokens'),
     },
     {
       id: 'profile',
       label: 'Perfil',
-      icon: <User size={20} className={activeItem === 'profile' ? 'text-white' : 'text-black dark:text-white/80'} />,
+      icon: <User size={20} className={activeItem === 'profile' ? 'icon' : 'text-black dark:text-white/80'} />,
       onClick: () => navigate('/profile'),
     },
   ];
@@ -262,7 +262,7 @@ export default function Navigation() {
       {/* Desktop side navigation */}
       <div 
         className={cn(
-          "fixed top-0 left-0 bottom-0 bg-background/90 shadow-lg backdrop-blur-sm border-r border-gray-200 dark:border-gray-800 z-50 transition-all duration-300 hidden md:block",
+          "fixed top-0 left-0 bottom-0 bg-background/90 shadow-lg backdrop-blur-sm   z-50 transition-all duration-300 hidden md:block",
           isExpanded ? "w-64" : "w-20"
         )}
       >
@@ -271,11 +271,7 @@ export default function Navigation() {
             "flex items-center px-3 py-5 mb-4",
             !isExpanded && "justify-center"
           )}>
-            {isExpanded ? (
-              <h2 className="text-xl font-bold text-primary dark:text-white">Fanatique</h2>
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-white font-bold">F</div>
-            )}
+
           </div>
 
           <nav className="flex-1 overflow-y-auto">
@@ -286,7 +282,7 @@ export default function Navigation() {
                   'w-full flex items-center py-3 mb-2 rounded-lg transition-all',
                   isExpanded ? 'px-4' : 'px-0 justify-center',
                   activeItem === item.id
-                    ? 'bg-secondary text-white'
+                    ? 'icon'
                     : 'text-primary/80 dark:text-white/80 hover:bg-gray-100 dark:hover:bg-white/10',
                   item.disabled && 'opacity-40 cursor-not-allowed'
                 )}

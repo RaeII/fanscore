@@ -39,8 +39,8 @@ const Cta11 = ({
 }) => {
   return (
     <section className={`py-12 md:py-20 lg:py-32 ${className}`}>
-      <div className="container flex items-center justify-center bg-tertiary">
-        <div className="flex flex-col items-center rounded-lg bg-secondary p-8 text-center md:rounded-xl lg:p-16 shadow-md w-full max-w-4xl">
+      <div className="container flex items-center justify-center">
+        <div className="flex flex-col items-center rounded-lg  p-8 text-center md:rounded-xl lg:p-16 shadow-md w-full max-w-4xl">
           <h3 className="mb-3 max-w-3xl text-2xl font-semibold md:mb-4 md:text-4xl lg:mb-6 dark:text-white">
             {heading}
           </h3>

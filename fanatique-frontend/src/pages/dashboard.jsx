@@ -7,6 +7,8 @@ import { Button } from '../components/ui/button';
 import QuestScope from '../enum/QuestScope';
 import Quests from '../components/quests';
 import { useUserContext } from '../hooks/useUserContext';
+import matchApi from '../api/match';
+import MatchCard from '../components/MatchCard';
 
 export default function DashboardPage() {
   const { t } = useTranslation('common');
@@ -19,8 +21,9 @@ export default function DashboardPage() {
     isConnected, 
     connectWallet
   } = useWalletContext();
-  const { userClubsData } = useUserContext();
+  const { userClubsData, } = useUserContext();
   const [followedClubs, setFollowedClubs] = useState([]);
+  const [heartClubMatch, setHeartClubMatch] = useState(null);
   // const [liveGameClubs, setLiveGameClubs] = useState([]);
 
   // Efeito para garantir que a carteira esteja conectada
@@ -36,7 +39,15 @@ export default function DashboardPage() {
   }, [account, isAuthenticated, isConnected, connectWallet]);
 
   useEffect(() => {
+    //Se o usuário não tem um clube favoritado, seta o primeiro clube da lista como favoritado
+    console.log({heartClub: userClubsData?.heart_club})
+
     setFollowedClubs(userClubsData?.clubs.map(club => club.club));
+
+    // Verificar se o clube do coração tem uma partida
+    if (userClubsData?.heart_club?.club?.id) {
+      checkHeartClubMatch(userClubsData.heart_club.club.id);
+    }
   }, [userClubsData]);
 
   useEffect(() => {
@@ -48,6 +59,28 @@ export default function DashboardPage() {
 
     console.log('Dashboard: Usuário autenticado via contexto, buscando dados');
   }, [isAuthenticated, navigate, clearAuthCredentials]);
+
+  const checkHeartClubMatch = async (clubId) => {
+    try {
+      const clubGames = await matchApi.getMatchesByClub(clubId);
+      if (clubGames.length > 0) {
+        // Se uma partida for encontrada onde o clube está participando, defina-a
+        const clubGame = clubGames[0];
+        const isCurrentClubHomeTeam = clubGame.home_club_id === clubId;
+
+        setHeartClubMatch({
+          ...clubGame,
+          isHomeTeam: isCurrentClubHomeTeam
+        });
+      } else {
+        // Nenhuma partida ao vivo encontrada para este clube
+        setHeartClubMatch(null);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar partida do clube do coração:', error);
+      setHeartClubMatch(null);
+    }
+  };
 
   const handleSelectClub = (clubId) => {
     navigate(`/clubs/${clubId}`);
@@ -212,6 +245,20 @@ export default function DashboardPage() {
             </div>
           ))}
         </div> */}
+
+        {/* Partida do clube do coração (se existir) */}
+        {heartClubMatch && userClubsData?.heart_club?.club && (
+          <div className="mb-8">
+            <MatchCard 
+              match={heartClubMatch}
+              club={userClubsData.heart_club.club}
+              isPast={false}
+              isLive={true}
+              onClick={() => navigate(`/game/${userClubsData.heart_club.club.id}/${heartClubMatch.id}`, { state: { club: userClubsData.heart_club.club } })}
+            />
+          </div>
+        )}
+        
         <Quests questScope={QuestScope.GENERAL} />
         {/* <h2 className="text-xl font-bold text-primary dark:text-white mb-4">{t('dashboard.quickActions')}</h2>
         

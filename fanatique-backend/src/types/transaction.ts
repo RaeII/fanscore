@@ -19,7 +19,8 @@ export interface TransactionInsert {
   hash: string;
   value: number;
   user_id: number;
-  club_id: number;
+  club_id?: number;
+  stable_id?: number;
 }
 
 export interface TransactionForFront extends TransactionBasicInfo {
@@ -29,6 +30,12 @@ export interface TransactionForFront extends TransactionBasicInfo {
 
 export interface TransferTokenPayload {
   club_id: number;
+  to: string;
+  amount: string;
+}
+
+export interface TransferStablecoinPayload {
+  stablecoin_id: number;
   to: string;
   amount: string;
 } 

@@ -19,15 +19,16 @@ class TransactionService {
     if (!data.hash) throw Error(getErrorMessage('missingField', 'Hash da transação'));
     if (!data.value) throw Error(getErrorMessage('missingField', 'Valor da transação'));
     if (!data.user_id) throw Error(getErrorMessage('missingField', 'ID do usuário'));
-    if (!data.club_id) throw Error(getErrorMessage('missingField', 'ID do clube'));
 
     // Verificar se o usuário existe
     const user = await this.userService.fetch(data.user_id);
     if (!user) throw Error(getErrorMessage('registryNotFound', 'Usuário'));
 
     // Verificar se o clube existe
-    const club = await this.clubService.fetch(data.club_id);
-    if (!club) throw Error(getErrorMessage('registryNotFound', 'Clube'));
+    if (data.club_id) {
+      const club = await this.clubService.fetch(data.club_id);
+      if (!club) throw Error(getErrorMessage('registryNotFound', 'Clube'));
+    }
 
     const result: any = await this.database.create(data);
     return result[0].insertId;

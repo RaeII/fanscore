@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Volleyball as Football, ArrowLeft, Search, BanknoteArrowUp, X, ChevronRight, History, HandCoins, Loader2,Receipt,ExternalLink } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Volleyball as Football, ArrowLeft, Search, BanknoteArrowUp, X, ChevronRight, History, HandCoins, Loader2, Receipt, ExternalLink, Coins } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import clubApi from '../api/club';
 import contractApi from '../api/contract';
@@ -17,6 +17,7 @@ const cardInnerShadow = {
 
 export default function BuyFantokensPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { account, isConnected, connectWallet } = useContext(WalletContext);
   const [loading, setLoading] = useState(false);
   const [clubs, setClubs] = useState([]);
@@ -27,10 +28,19 @@ export default function BuyFantokensPage() {
   const [showQRCode, setShowQRCode] = useState(false);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [walletTokens, setWalletTokens] = useState([]);
+  const [stablecoins, setStablecoins] = useState([]);
+  const [loadingStablecoins, setLoadingStablecoins] = useState(false);
   const [activeTab, setActiveTab] = useState('comprar'); // 'comprar', 'historico', ou 'stake'
   const [transactions, setTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   
+  // Obter o tab do parâmetro da URL
+  const queryParams = new URLSearchParams(location.search);
+  const tokenTypeParam = queryParams.get('type');
+  
+  // Estados para a navegação por tipo de token
+  const [activeTokenType, setActiveTokenType] = useState(tokenTypeParam || 'fantoken');
+
   // Verificar se o usuário está autenticado
   useEffect(() => {
     const checkWalletConnection = async () => {
@@ -66,6 +76,26 @@ export default function BuyFantokensPage() {
 
     fetchWalletTokens();
   }, [account]);
+  
+  // Buscar stablecoins quando mudar o tipo de token ativo
+  useEffect(() => {
+    const fetchStablecoins = async () => {
+      if (account && activeTokenType === 'stablecoin') {
+        try {
+          setLoadingStablecoins(true);
+          const stablecoinsData = await contractApi.getStablecoinBalances(account);
+          setStablecoins(stablecoinsData);
+        } catch (error) {
+          console.error('Erro ao buscar stablecoins:', error);
+          toast.error('Não foi possível carregar as stablecoins');
+        } finally {
+          setLoadingStablecoins(false);
+        }
+      }
+    };
+
+    fetchStablecoins();
+  }, [account, activeTokenType]);
 
   // Get clubs
   useEffect(() => {
@@ -116,6 +146,18 @@ export default function BuyFantokensPage() {
     setShowModal(true);
   };
 
+  // Função para selecionar stablecoin
+  const handleSelectStablecoin = (coin) => {
+    setSelectedClub({
+      id: coin.id,
+      name: coin.name,
+      symbol: coin.symbol,
+      image: coin.image,
+      isStablecoin: true
+    });
+    setShowModal(true);
+  };
+
   const handleBuyTokens = async () => {
     if (!isConnected || !account) {
       toast.error('Conecte sua carteira para continuar com a compra');
@@ -145,19 +187,39 @@ export default function BuyFantokensPage() {
         return;
       }
       
-      // Preparar dados para a transferência
-      const transferData = {
-        club_id: selectedClub.id,
-        to: account,
-        amount: quantity
-      };
-      
-      // Chamar a API para transferir tokens
-      await contractApi.transferTokens(transferData);
-      
-      // Atualizar tokens da carteira após a compra
-      const tokens = await contractApi.getWalletTokens(account);
-      setWalletTokens(tokens);
+      if (selectedClub.isStablecoin) {
+        // Compra de stablecoin
+        const transferData = {
+          stablecoin_id: selectedClub.id,
+          to: account,
+          amount: quantity.toString()
+        };
+        
+        // Chamar a API para transferir stablecoins
+        await contractApi.transferStablecoins(transferData);
+        
+        // Atualizar stablecoins da carteira após a compra
+        const stablecoinsData = await contractApi.getStablecoinBalances(account);
+        setStablecoins(stablecoinsData);
+        
+        toast.success(`Compra de ${quantity} ${selectedClub.symbol} realizada com sucesso!`);
+      } else {
+        // Compra de fantoken
+        const transferData = {
+          club_id: selectedClub.id,
+          to: account,
+          amount: quantity
+        };
+        
+        // Chamar a API para transferir tokens
+        await contractApi.transferTokens(transferData);
+        
+        // Atualizar tokens da carteira após a compra
+        const tokens = await contractApi.getWalletTokens(account);
+        setWalletTokens(tokens);
+        
+        toast.success(`Compra de ${quantity} FanTokens do ${selectedClub.name} realizada com sucesso!`);
+      }
       
       // Atualizar transações
       if (activeTab === 'historico') {
@@ -168,7 +230,6 @@ export default function BuyFantokensPage() {
       setShowQRCode(false);
       setShowModal(false);
       setQuantity(1);
-      toast.success(`Compra de ${quantity} FanTokens do ${selectedClub.name} realizada com sucesso!`);
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
       toast.error('Falha ao processar o pagamento. Tente novamente.');
@@ -193,6 +254,33 @@ export default function BuyFantokensPage() {
     return hash.length > 16 ? `${hash.substring(0, 8)}...${hash.substring(hash.length - 8)}` : hash;
   };
 
+  // Função para alterar o tipo de token e atualizar a URL
+  const handleTokenTypeChange = (type) => {
+    setActiveTokenType(type);
+    navigate(`/tokens?type=${type}`);
+    
+    // Se mudar para stablecoin, buscar dados das stablecoins
+    if (type === 'stablecoin' && account) {
+      fetchStablecoins();
+    }
+  };
+
+  // Função auxiliar para buscar stablecoins
+  const fetchStablecoins = async () => {
+    if (!account) return;
+    
+    try {
+      setLoadingStablecoins(true);
+      const stablecoinsData = await contractApi.getStablecoinBalances(account);
+      setStablecoins(stablecoinsData);
+    } catch (error) {
+      console.error('Erro ao buscar stablecoins:', error);
+      toast.error('Não foi possível carregar as stablecoins');
+    } finally {
+      setLoadingStablecoins(false);
+    }
+  };
+
   if (loading && activeTab === 'comprar') {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
@@ -213,7 +301,7 @@ export default function BuyFantokensPage() {
           >
             <ArrowLeft size={18} />
           </Button>
-          <h1 className="text-2xl font-bold text-primary  dark:text-white">FanTokens</h1>
+          <h1 className="text-2xl font-bold text-primary dark:text-white">Tokens</h1>
         </div>
 
         {/* Nova Navegação com Ícones Conforme Imagem */}
@@ -249,10 +337,38 @@ export default function BuyFantokensPage() {
           </div>
         </div>
 
+        {/* Tab de navegação FanTokens / Stablecoin - Reposicionada para abaixo dos ícones */}
+        <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className={`flex-1 rounded-none border-b-2 py-2 ${
+              activeTokenType === 'fantoken'
+                ? 'border-tertiary text-foreground font-semibold'
+                : 'border-transparent text-foreground/70 dark:text-white/70'
+            }`}
+            onClick={() => handleTokenTypeChange('fantoken')}
+          >
+            FanTokens
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className={`flex-1 rounded-none border-b-2 py-2 ${
+              activeTokenType === 'stablecoin'
+                ? 'border-tertiary text-foreground font-semibold'
+                : 'border-transparent text-foreground/70 dark:text-white/70'
+            }`}
+            onClick={() => handleTokenTypeChange('stablecoin')}
+          >
+            Stablecoin
+          </Button>
+        </div>
+
         {activeTab === 'comprar' ? (
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-primary dark:text-white mb-4">
-              PRINCIPAIS TOKENS
+              {activeTokenType === 'fantoken' ? 'PRINCIPAIS TOKENS' : 'STABLECOINS'}
             </h2>
             
             {/* Search input */}
@@ -262,55 +378,100 @@ export default function BuyFantokensPage() {
               </div>
               <input
                 type="text"
-                placeholder="Buscar clube..."
+                placeholder={activeTokenType === 'fantoken' ? "Buscar clube..." : "Buscar stablecoin..."}
                 className="w-full pl-10 pr-4 py-2 border border-primary/20 dark:border-white/20 rounded-lg bg-white dark:bg-[#150924] text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            {/* Tokens List (novo formato) */}
-            <div className="flex flex-col space-y-2">
-              {filteredClubs.map(club => (
-                <div 
-                  key={club.id}
-                  onClick={() => handleSelectClub(club)}
-                  className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-background-dark/60 dark:hover:bg-background-dark/60 transition-colors backdrop-blur-md border border-white/10"
-                  style={cardInnerShadow}
-                >
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 rounded-full bg-white overflow-hidden mr-4 flex-shrink-0">
-                      {club.image ? (
-                        <img 
-                          src={club.image} 
-                          alt={club.name} 
-                          className="w-full h-full object-cover" 
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/50">
-                          <Football size={24} />
-                        </div>
-                      )}
+            {/* Conteúdo condicional baseado no tipo de token ativo */}
+            {activeTokenType === 'fantoken' ? (
+              // Tokens List (formato existente para FanTokens)
+              <div className="flex flex-col space-y-2">
+                {filteredClubs.map(club => (
+                  <div 
+                    key={club.id}
+                    onClick={() => handleSelectClub(club)}
+                    className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-background-dark/60 dark:hover:bg-background-dark/60 transition-colors backdrop-blur-md border border-white/10"
+                    style={cardInnerShadow}
+                  >
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 rounded-full bg-white overflow-hidden mr-4 flex-shrink-0">
+                        {club.image ? (
+                          <img 
+                            src={club.image} 
+                            alt={club.name} 
+                            className="w-full h-full object-cover" 
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/50">
+                            <Football size={24} />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">
+                          {club.symbol}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-white">
-                        {club.symbol}
-                      </p>
+                    <div className="flex items-center">
+                      <div className="text-right mr-4">
+                        <p className="font-bold text-white">
+                          {getClubTokenBalance(club.id)} {club.symbol}
+                        </p>
+                      </div>
+                      <ChevronRight size={20} className="text-gray-400" />
                     </div>
                   </div>
-                  <div className="flex items-center">
-                    <div className="text-right mr-4">
-                      <p className="font-bold text-white">
-                        {getClubTokenBalance(club.id)} {club.symbol}
-                      </p>
-                    </div>
-                    <ChevronRight size={20} className="text-gray-400" />
-                  </div>
+                ))}
+              </div>
+            ) : (
+              // Lista de Stablecoins
+              loadingStablecoins ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 size={28} className="animate-spin text-primary dark:text-white" />
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="flex flex-col space-y-2">
+                  {stablecoins.length === 0 ? (
+                    <div className="text-center py-10">
+                      <Coins size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
+                      <p className="text-primary/70 dark:text-white/70">
+                        Você não possui stablecoins na sua carteira.
+                      </p>
+                    </div>
+                  ) : (
+                    stablecoins.map(coin => (
+                      <div 
+                        key={coin.symbol}
+                        onClick={() => handleSelectStablecoin(coin)}
+                        className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:bg-background-dark/60 dark:hover:bg-background-dark/60 transition-colors backdrop-blur-md border border-white/10"
+                        style={cardInnerShadow}
+                      >
+                        {console.log(coin)}
+                        <div className="flex items-center">
+                          <img src={coin.image} alt={coin.symbol} className="w-12 h-12 rounded-full overflow-hidden mr-4 flex-shrink-0" />
+                          <div>
+                            <p className="font-medium text-white">{coin.symbol}</p>
+                            <p className="text-xs text-gray-400">{coin.name}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="text-right mr-4">
+                            <p className="font-bold text-white">{coin.balance} {coin.symbol}</p>
+                          </div>
+                          <ChevronRight size={20} className="text-gray-400" />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )
+            )}
 
-            {filteredClubs.length === 0 && (
+            {activeTokenType === 'fantoken' && filteredClubs.length === 0 && (
               <div className="text-center py-10">
                 <Football size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
                 <p className="text-primary/70 dark:text-white/70">
@@ -531,7 +692,7 @@ export default function BuyFantokensPage() {
             <div className="p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-primary dark:text-white">
-                  {showQRCode ? "Realize o Pagamento" : `${selectedClub.name}`}
+                  {showQRCode ? "Realize o Pagamento" : selectedClub.isStablecoin ? `${selectedClub.name}` : `${selectedClub.name}`}
                 </h3>
                 <Button variant="ghost" size="icon" onClick={handleCloseModal}>
                   <X size={18} />
@@ -565,7 +726,7 @@ export default function BuyFantokensPage() {
 
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-primary/80 dark:text-white/80 mb-2 text-center">
-                      Quantidade de FanTokens
+                      Quantidade de {selectedClub?.isStablecoin ? selectedClub.symbol : 'FanTokens'}
                     </label>
                     <div className="flex items-center justify-center">
                       <Button 
@@ -614,7 +775,7 @@ export default function BuyFantokensPage() {
                     className="w-full"
                     onClick={handleBuyTokens}
                   >
-                    Comprar FanTokens
+                    Comprar {selectedClub?.isStablecoin ? selectedClub.symbol : 'FanTokens'}
                   </Button>
                 </>
               ) : (

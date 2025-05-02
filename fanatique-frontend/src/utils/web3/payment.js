@@ -11,9 +11,7 @@ export function usePayment() {
     // 1. Usuário solicita pagamento
     async function paymentSignature(orderId, amount, erc20Id) {
         try {   
-            console.log('paymentSignature');
-
-            const { fanTokenContract, fanatiqueContractAddress, fanTokenContractAddress } = await getContracts();
+            const { fanatiqueContractAddress, brzContract } = await getContracts();
 
             if (!isConnected) {
                 throw new Error("conecte sua carteira.");
@@ -35,19 +33,14 @@ export function usePayment() {
             }
             
             // Converte amount para BigInt se for string
-            const amountBigInt = ethers.parseEther(amount.toString());
-
-            console.log('amountBigInt', amountBigInt.toString());
+            const amountBigInt = ethers.parseUnits(amount.toString(), 6);
 
             // Obter chainId
             const network = await provider.getNetwork();
             const chainId = Number(network.chainId);
-            
-            // Prazo de 1 hora para a transação
-            const deadline = Math.floor(Date.now() / 1000) + 3600;
-            
+                        
             // Obter nonce atual (necessário para a permissão EIP-2612)
-            const nonce = await fanTokenContract.nonces(userAddress);
+            const nonce = await brzContract.nonces(userAddress);
             
             console.log({
               orderId, 
@@ -71,13 +64,23 @@ export function usePayment() {
             // Assina a mensagem (prefixo EIP-191/Ethereum) para obter a orderSignature
             const orderSignature = await signer.signMessage(messageBytes);
             
+            // Verificar se o contrato BRZ suporta EIP-2612 chamando o método DOMAIN_SEPARATOR
+            try {
+                await brzContract.DOMAIN_SEPARATOR();
+            } catch (error) {
+                console.error('Contrato não suporta EIP-2612 (sem DOMAIN_SEPARATOR):', error);
+                throw new Error('Este token não suporta o padrão EIP-2612 Permit');
+            }
+            
             // Dados para assinatura EIP-2612 Permit
             const domain = {
-              name: await fanTokenContract.name(),
+              name: await brzContract.name(),
               version: '1',
               chainId: chainId,
-              verifyingContract: fanTokenContractAddress
+              verifyingContract: brzContract.target
             };
+            
+            console.log('Domain para assinatura:', domain);
             
             const types = {
               Permit: [
@@ -89,32 +92,41 @@ export function usePayment() {
               ]
             };
             
-            const permitDeadline = Math.floor(Date.now() / 1000) + 3600; // 1 hora
+            const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hora
             
             const permitValue = {
               owner: userAddress,
               spender: fanatiqueContractAddress,
               value: amountBigInt,
-              nonce: nonce.toString(),
-              deadline: permitDeadline
+              nonce: nonce,
+              deadline: deadline
             };
             
+            console.log('Permit value:', permitValue);
+            
             // Assinar usando o formato EIP-2612 Permit
+            console.log('Enviando para assinatura com tipos:', types);
             const permitSignature = await signer.signTypedData(domain, types, permitValue);
+            console.log('Assinatura permit gerada:', permitSignature);
+            
             const sig = ethers.Signature.from(permitSignature);
+            console.log('Componentes da assinatura:', {
+                v: sig.v,
+                r: sig.r,
+                s: sig.s
+            });
             
             // Retorna os dados necessários alinhados com o backend
             return {
                 orderId,
                 userAddress: userAddress,
                 amount: amount.toString(),
-                deadline: deadline,
                 signature: orderSignature,
                 erc20Id: erc20Id,
                 permitV: sig.v,
                 permitR: sig.r,
                 permitS: sig.s,
-                permitDeadline: permitDeadline
+                deadline: deadline
             };
         } catch (err) {
             console.error('Erro ao assinar pagamento:', err);

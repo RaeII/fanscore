@@ -3,10 +3,11 @@ import FanTokenContract from '../../abi/FanToken.json'
 import FanatiqueContract from '../../abi/Fanatique.json'
 import { useContext } from 'react';
 import { WalletContext } from '../../contexts/WalletContextDef';
+import BrzContract from '../../abi/BRL.json'
 
 const FANTOKEN_CONTRACT_ADDRESS = import.meta.env.VITE_FANTOKEN_CONTRACT_ADDRESS;
 const FANATIQUE_CONTRACT_ADDRESS = import.meta.env.VITE_FANATIQUE_CONTRACT_ADDRESS;
-
+const BRZ_CONTRACT_ADDRESS = import.meta.env.VITE_BRZ_CONTRACT_ADDRESS;
 // Hook para usar os contratos com o provider do WalletContext
 export const useContracts = () => {
   const { getSigner } = useContext(WalletContext);
@@ -16,8 +17,6 @@ export const useContracts = () => {
     // Obter o signer através da função getSigner
     const signer = await getSigner();
     
-    console.log('Signer obtido:', signer);
-
     if (!signer) {
       throw new Error('Conecte sua carteira!');
     }
@@ -33,13 +32,20 @@ export const useContracts = () => {
       FanatiqueContract.abi,
       signer
     );
+
+    const brzContract = new ethers.Contract(
+      BRZ_CONTRACT_ADDRESS,
+      BrzContract.abi,
+      signer
+    );
     
     return {
       fanTokenContract,
       fanatiqueContract,
+      brzContract,
       fanTokenContractAddress: FANTOKEN_CONTRACT_ADDRESS,
-      fanatiqueContractAddress: FANATIQUE_CONTRACT_ADDRESS
-    
+      fanatiqueContractAddress: FANATIQUE_CONTRACT_ADDRESS,
+      brzContractAddress: BRZ_CONTRACT_ADDRESS
     };
   };
   

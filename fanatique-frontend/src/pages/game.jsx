@@ -115,6 +115,7 @@ export default function GamePage() {
     };
 
     checkAuthAndLoadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, navigate, getUserData, clubId, gameId]);
 
   const fetchClubById = async (id) => {
@@ -182,17 +183,17 @@ export default function GamePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] bg-background">
       {/* Game Header */}
-      <div className="relative bg-primary overflow-hidden">
+      <div className="relative gradientBackground overflow-hidden">
         {/* Blurred stadium background */}
         {gameInfo && gameInfo?.stadium?.image && (
           <div
-            className="absolute inset-0 opacity-80 bg-no-repeat bg-center"
+            className="absolute inset-0 opacity-80 bg-no-repeat bg-center gradientBackground"
             style={{
               backgroundImage: `url(${gameInfo.stadium.image})`,
               backgroundSize: '150%',
-              filter: 'blur(30px)'
+              filter: 'blur(7px)'
             }}
           />
         )}
@@ -281,7 +282,7 @@ export default function GamePage() {
         <div className="mb-8">
           <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Match Statistics</h2>
           
-          <div className="bg-white dark:bg-[#150924] rounded-lg p-6 shadow-sm">
+          <div className="bg-background-overlay rounded-lg p-6 shadow-sm">
             {/* Possession */}
             <div className="mb-6">
               <div className="flex justify-between text-sm text-primary/70 dark:text-white/70 mb-1">
@@ -354,7 +355,7 @@ export default function GamePage() {
         <div className="mb-8">
           <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Match Timeline</h2>
           
-          <div className="bg-white dark:bg-[#150924] rounded-lg p-6 shadow-sm">
+          <div className="bg-background-overlay rounded-lg p-6 shadow-sm">
             <div className="space-y-4">
               {timelineEvents.map((event, index) => (
                 <div 

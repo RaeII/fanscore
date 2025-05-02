@@ -8,16 +8,16 @@ task("deploy", "Deploy contracts")
  
     const contractDeploy = new Map<string, (...args: any[]) => Promise<any>>();
 
-    const { deployFanatique,deployFanToken } = await import("./deploy/deploy");
+    const { deployFanatique,deployFanToken,deployERC20 } = await import("./deploy/deploy");
     contractDeploy.set("fanatique", deployFanatique);
     contractDeploy.set("fantoken", deployFanToken);
+    contractDeploy.set("erc20", deployERC20);
 
     const runDeploy = contractDeploy.get(taskArgs.contract);
 
     if (!runDeploy) {
-      throw new Error("Contract deploy not found");
+      throw new Error(`Contract deploy not found: ${taskArgs.contract}`);
     }
 
-    // Executa a função de deploy.
     await runDeploy();
   });

@@ -15,6 +15,7 @@ import questUser from './quest-user.routes'
 import contract from './contract.routes'
 import userClubToken from './userClubToken.routes'
 import transaction from './transaction.routes'
+import stablecoin from './stablecoin.routes'
 
 const apiRouter = Router();
 
@@ -33,4 +34,5 @@ apiRouter.use("/quest-user", questUser);
 apiRouter.use("/contract", contract);
 apiRouter.use("/user-club-token", userClubToken);
 apiRouter.use("/transaction", transaction);
+apiRouter.use("/stablecoin", stablecoin);
 export default apiRouter;
