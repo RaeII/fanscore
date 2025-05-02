@@ -245,7 +245,7 @@ export default function Quests({ questScope, gameId = null }) {
                         <Button 
                           variant="default"
                           size="sm"
-                          className="whitespace-nowrap bg-primary hover:bg-primary/90 text-white px-4"
+                          className="whitespace-nowrap bg-primary hover:bg-primary/90 text-black px-4"
                           onClick={(e) => handleCompleteQuest(quest.id, e)}
                           disabled={loadingQuests[quest.id]}
                         >

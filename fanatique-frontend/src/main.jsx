@@ -192,6 +192,14 @@ const router = createBrowserRouter([
             <BuyFantokensPage />
           </ProtectedRoute>
         )
+      },
+      {
+        path: 'tokens',
+        element: (
+          <ProtectedRoute>
+            <BuyFantokensPage />
+          </ProtectedRoute>
+        )
       }
     ]
   }

@@ -1,6 +1,7 @@
 export * from './userAccount';
 export * from './club';
 export * from './quest';
+export * from './stablecoin';
 
 // UserClub Types
 export interface UserClub {

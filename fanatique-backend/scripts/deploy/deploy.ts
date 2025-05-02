@@ -5,32 +5,16 @@ export async function deployFanatique(addressFanToken: string = "", treasury: st
   console.log(`Deploying Fanatique with params: fanToken=${addressFanToken}, treasury=${treasury}`);
 
   if(!addressFanToken && !treasury){
-    addressFanToken = env.FANTOKEN_CONTRACT_ADDRESS;
     treasury = env.TREASURY_ADDRESS;
   }
-
-  console.log(`addressFanToken: ${addressFanToken}`);
-  console.log(`treasury: ${treasury}`);
   
   const contractFactory = await ethers.getContractFactory('contracts/Fanatique.sol:Fanatique');
-  
-  // Se os parâmetros não forem fornecidos, obtenha o endereço do FanToken primeiro
-  let finalAddressFanToken = addressFanToken;
-  if (!finalAddressFanToken) {
-    const fanToken = await deployFanToken();
-    finalAddressFanToken = await fanToken.getAddress();
-    console.log(`Using newly deployed FanToken at: ${finalAddressFanToken}`);
-  }
+
   
   // Se o treasury não for fornecido, use o endereço do deployer
   let finalTreasury = treasury;
-  if (!finalTreasury) {
-    const [deployer] = await ethers.getSigners();
-    finalTreasury = await deployer.getAddress();
-    console.log(`Using deployer as treasury: ${finalTreasury}`);
-  }
   
-  const args = [finalAddressFanToken, finalTreasury] as const;
+  const args = [finalTreasury] as const;
   
   console.log(`Deploying Fanatique...`);
   const contract = await contractFactory.deploy(...args);
@@ -56,6 +40,26 @@ export async function deployFanToken() {
   console.log(`FanToken deployed to: ${address}`);
 
   return contract;
+}
+
+export async function deployERC20() {
+
+  console.log(`Deploying ERC20...`);
+
+  const contracts = ["BRL.sol:BRL","EURC.sol:EURC","USDC.sol:USDC"]
+  const args = [1000000000000000] as const;
+
+  for (const contract of contracts) { 
+
+    const contractFactory = await ethers.getContractFactory(`contracts/ERC20/${contract}`);
+      
+    const deploy = await contractFactory.deploy(...args);
+    await deploy.waitForDeployment();
+    
+    const address = await deploy.getAddress();
+    console.log(`${contract} deployed to: ${address}`);
+
+  }
 }
 
 

@@ -175,7 +175,7 @@ function FeaturedItemCard({ item, type }) {
   return (
     <div className="bg-background-overlay p-4 rounded-lg shadow-sm border border-primary">      
       <div className="flex items-start gap-4">
-        <div className="h-12 w-12 rounded-lg flex-shrink-0 flex items-center justify-center bg-tertiary/10 dark:bg-tertiary">
+        <div className="h-12 w-12 rounded-lg flex-shrink-0 flex items-center justify-center bg-tertiary/10 icon">
           {type === t('profile.achievement') ? item.icon : <Star size={24} className="text-white" />}
         </div>
         <div>

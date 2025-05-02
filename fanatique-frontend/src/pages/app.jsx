@@ -174,9 +174,10 @@ export default function AppPage() {
   // Se não tiver conta conectada, mostra a interface inicial para conectar carteira
   if (!isConnected || !account) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] "
+      >
         <Cta11 
-          heading={loginCancelled ? "Login Canceladoooo" : "Bem-vindo ao Fanatique"}
+          heading={loginCancelled ? "Login Cancelado" : "Bem-vindo ao Fanatique"}
           description="Conecte sua carteira Chiliz para entrar na plataforma e aproveitar uma experiência única nos estádios."
           buttons={{
             primary: {

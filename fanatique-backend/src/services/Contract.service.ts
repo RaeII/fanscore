@@ -6,13 +6,16 @@ import ClubService from '@/services/Club.service';
 import UserService from '@/services/User.service';
 import TransactionService from '@/services/Transaction.service';
 import UserClubTokenService from '@/services/UserClubToken.service';
+import StablecoinService from '@/services/Stablecoin.service';
 import fantoken from 'artifacts/contracts/FanToken.sol/FanToken.json';
 import fanatique from 'artifacts/contracts/Fanatique.sol/Fanatique.json';
+import erc20 from 'artifacts/contracts/ERC20/USDC.sol/USDC.json';
 import { ClubBasicInfo } from '@/types';
 import { TransactionInsert } from '@/types/transaction';
-import { TransferTokenPayload } from '@/types/transaction';
+import { TransferTokenPayload, TransferStablecoinPayload } from '@/types/transaction';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { erc20 as erc20Type } from 'typechain-types/contracts';
 
 const execPromise = promisify(exec);
 
@@ -21,12 +24,14 @@ class ContractService {
 	private userService: UserService;
 	private transactionService: TransactionService;
 	private userClubTokenService: UserClubTokenService;
+	private stablecoinService: StablecoinService;
 
 	constructor() {
 		this.clubService = new ClubService();
 		this.userService = new UserService();
 		this.transactionService = new TransactionService();
 		this.userClubTokenService = new UserClubTokenService();
+		this.stablecoinService = new StablecoinService();
 	}
 
 	/**
@@ -49,6 +54,14 @@ class ContractService {
 		return new ethers.Contract(
 			env.FANATIQUE_CONTRACT_ADDRESS,
 			fanatique.abi,
+			wallet
+		);
+	}
+
+	erc20Contract(address: string): ethers.Contract {
+		return new ethers.Contract(
+			address,
+			erc20.abi,
 			wallet
 		);
 	}
@@ -113,6 +126,18 @@ class ContractService {
 				throw new Error(`Falha ao fazer deploy do contrato Fanatique: ${error.message}`);
 			}
 
+			console.log('Iniciando deploy dos contratos ERC20...');
+			try {
+				const { stdout: erc20Output, stderr: erc20Error } = await execPromise('export NODE_ENV=development && npx hardhat deploy --network localhost --contract erc20');
+				console.log('ERC20 deploy output:', erc20Output);
+				if (erc20Error) console.error('ERC20 deploy error:', erc20Error);
+			} catch (error: any) {
+				console.error('Erro ao executar deploy dos contratos ERC20:', error.message);
+				throw new Error(`Falha ao fazer deploy dos contratos ERC20: ${error.message}`);
+			}
+
+			await this.configureAllStablecoins();
+
 			// Buscar todos os clubes cadastrados
 			const clubs: Array<ClubBasicInfo> = await this.clubService.fetchAll();
 
@@ -174,28 +199,9 @@ class ContractService {
 						initialSupply
 					);
 					
-					console.log(`Token criado para o clube ${clubId}, hash: ${createTokenReceipt?.hash}`);
-					
-					// 2. Verificar se o token foi criado corretamente
-					const [name, symbol, totalSupply] = await contractFanToken.getTokenDetails(clubId);
-					
-					// 3. Configurar o token como método de pagamento aceito
-					const acceptanceReceipt = await this.executeWithRetry(
-						contractFanatique.setTokenAcceptance.bind(contractFanatique),
-						clubId,
-						true
-					);
-					
-					console.log(`Token configurado como pagamento para o clube ${clubId}, hash: ${acceptanceReceipt?.hash}`);
-					
 					results.push({
 						clubId,
 						name: club.name,
-						tokenDetails: {
-							name,
-							symbol,
-							totalSupply: totalSupply.toString()
-						},
 						tokenAccepted: true,
 						status: 'created',
 						txHash: createTokenReceipt?.hash
@@ -216,6 +222,31 @@ class ContractService {
 			console.error(`Erro ao configurar tokens para os clubes:`, error);
 			throw error;
 		}
+	}
+
+	async configureAllStablecoins() {
+		const stablecoins = await this.stablecoinService.fetchAll();
+
+		if (stablecoins.length === 0) {
+			throw Error(getErrorMessage('registryNotFound', 'Stablecoins'));
+		}
+
+		for (const stablecoin of stablecoins) {
+			const contract = this.getFanatiqueContract();
+
+			console.log("stablecoin", stablecoin.id, stablecoin.address);
+
+			const acceptanceReceipt = await this.executeWithRetry(
+				contract.setAcceptedToken.bind(contract),
+				stablecoin.id,
+				stablecoin.address,
+				true,
+				true
+			);
+			
+		}
+
+		return true;
 	}
 
 	/**
@@ -429,6 +460,217 @@ class ContractService {
 			}
 		} catch (error: any) {
 			console.error(`Erro ao buscar token do clube ${clubId}:`, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Obtém o saldo de todas as stablecoins registradas para um endereço específico
+	 * @param walletAddress Endereço da carteira a ser consultada
+	 * @returns Array com informações de saldo de cada stablecoin
+	 */
+	async getStablecoinBalances(walletAddress: string): Promise<Array<any>> {
+		
+			if (!walletAddress) throw Error(getErrorMessage('missingField', 'Endereço da carteira'));
+
+			// Buscar todas as stablecoins registradas no sistema
+			const stablecoins = await this.stablecoinService.fetchAll();
+			
+			if (stablecoins.length === 0) {
+				return [];
+			}
+
+			const balances = [];
+
+			// Para cada stablecoin, buscar o saldo do endereço
+			for (const coin of stablecoins) {
+				try {
+					// Obter uma instância do contrato da stablecoin
+					const coinContract = this.erc20Contract(coin.address);
+					
+					// Obter o saldo da stablecoin
+					const balance = await coinContract.balanceOf(walletAddress);
+					
+					// Obter a quantidade de decimais da stablecoin
+					const decimals = await coinContract.decimals();
+
+					// Adicionar ao resultado
+					balances.push({
+						id: coin.id,
+						name: coin.name,
+						symbol: coin.symbol,
+						address: coin.address,
+						balance: ethers.formatUnits(balance.toString(), decimals),
+						raw_balance: balance.toString(),
+						image: coin.image
+					});
+
+
+				} catch (error: any) {
+					console.error(`Erro ao buscar saldo da stablecoin ${coin.name}:`, error);
+					// Adicionar com erro, mas continuar para as próximas
+					balances.push({
+						id: coin.id,
+						name: coin.name,
+						symbol: coin.symbol,
+						address: coin.address,
+						error: error.message
+					});
+				}
+			}			
+			return balances;
+
+	}
+
+	/**
+	 * Realiza um pagamento usando uma stablecoin específica
+	 * @param fromAddress Endereço que fará o pagamento
+	 * @param toAddress Endereço que receberá o pagamento
+	 * @param stablecoinId ID da stablecoin a ser utilizada
+	 * @param amount Valor a ser transferido (em formato string com decimais)
+	 * @returns Objeto com informações da transação
+	 */
+	async payWithStablecoin(fromAddress: string, toAddress: string, stablecoinId: number, amount: string): Promise<any> {
+		try {
+			if (!fromAddress) throw Error(getErrorMessage('missingField', 'Endereço de origem'));
+			if (!toAddress) throw Error(getErrorMessage('missingField', 'Endereço de destino'));
+			if (!stablecoinId) throw Error(getErrorMessage('missingField', 'ID da stablecoin'));
+			if (!amount) throw Error(getErrorMessage('missingField', 'Valor a transferir'));
+
+			// Buscar a stablecoin no banco de dados
+			const stablecoin = await this.stablecoinService.fetch(stablecoinId);
+			if (!stablecoin) {
+				throw Error(getErrorMessage('registryNotFound', 'Stablecoin'));
+			}
+
+			// Obter uma instância do contrato da stablecoin
+			const coinContract = this.erc20Contract(stablecoin.address);
+			
+			// Obter a quantidade de decimais da stablecoin
+			const decimals = await coinContract.decimals();
+
+			// Converter o valor para a unidade adequada considerando os decimais
+			const valueToSend = ethers.parseUnits(amount, decimals);
+
+			// Verificar se o usuário tem saldo suficiente
+			const balance = await coinContract.balanceOf(fromAddress);
+			if (balance.lt(valueToSend)) {
+				throw Error('Saldo insuficiente para realizar a transferência');
+			}
+
+			// Executar a transferência chamando o método transferFrom no contrato
+			// Nota: Isso requer que o contrato tenha aprovação (allowance) para transferir tokens do fromAddress
+			const receipt = await this.executeWithRetry(
+				coinContract.transferFrom.bind(coinContract),
+				fromAddress,
+				toAddress,
+				valueToSend
+			);
+
+			// Registrar a transação no banco de dados
+			const transactionData: TransactionInsert = {
+				hash: receipt?.hash || '',
+				value: parseFloat(amount), // Valor usado para o banco
+				user_id: 0, // Precisaria buscar o ID do usuário com base no endereço
+				stable_id: stablecoinId
+				// Outros dados poderiam ser adicionados conforme necessário
+			};
+			
+			const transactionId = await this.transactionService.create(transactionData);
+			
+			return {
+				transactionId,
+				from: fromAddress,
+				to: toAddress,
+				amount: amount,
+				stablecoin: {
+					id: stablecoin.id,
+					name: stablecoin.name,
+					symbol: stablecoin.symbol
+				},
+				transactionHash: receipt?.hash,
+				blockNumber: receipt?.blockNumber,
+				status: 'success'
+			};
+		} catch (error: any) {
+			console.error(`Erro ao realizar pagamento com stablecoin:`, error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Transfere stablecoins para um usuário
+	 * @param data Dados para transferência (stablecoin_id, to, amount)
+	 * @param userId ID do usuário que receberá as stablecoins
+	 * @returns Objeto com informações da transação
+	 */
+	async transferStablecoinsToUser(data: TransferStablecoinPayload, userId: number): Promise<any> {
+		try {
+			if (!data.stablecoin_id) throw Error(getErrorMessage('missingField', 'ID da stablecoin'));
+			if (!data.to) throw Error(getErrorMessage('missingField', 'Endereço do destinatário'));
+			if (!data.amount) throw Error(getErrorMessage('missingField', 'Quantidade de tokens'));
+
+			// Verificar se o usuário existe
+			const user = await this.userService.fetch(userId);
+			if (!user) throw Error(getErrorMessage('registryNotFound', 'Usuário'));
+
+			// Verificar se a stablecoin existe
+			const stablecoin = await this.stablecoinService.fetch(data.stablecoin_id);
+			if (!stablecoin) throw Error(getErrorMessage('registryNotFound', 'Stablecoin'));
+
+			// Obter instância do contrato da stablecoin
+			const stableContract = this.erc20Contract(stablecoin.address);
+
+			// Verificar se a stablecoin existe no contrato
+			try {
+				// Obter a quantidade de decimais da stablecoin
+				const decimals = await stableContract.decimals();
+				
+				// Converter amount para BigNumber
+				const amount = ethers.parseUnits(data.amount, decimals);
+
+				// Verificar se o contrato possui saldo suficiente 
+				const contractBalance = await stableContract.balanceOf(wallet.address);
+				
+				console.log('contractBalance', contractBalance);
+
+				// Executar a transferência
+				console.log(`Transferindo ${data.amount} ${stablecoin.symbol} para ${data.to}`);
+				const receipt = await this.executeWithRetry(
+					stableContract.transfer.bind(stableContract),
+					data.to,
+					amount
+				);
+				
+				// Registrar a transação no banco de dados
+				const transactionData: TransactionInsert = {
+					hash: receipt?.hash || '',
+					value: parseFloat(data.amount), // Convertendo para float para o banco
+					user_id: userId,
+					stable_id: data.stablecoin_id
+				};
+				
+				const transactionId = await this.transactionService.create(transactionData);
+				
+				return {
+					transactionId,
+					stablecoin_id: data.stablecoin_id,
+					stablecoin: {
+						name: stablecoin.name,
+						symbol: stablecoin.symbol
+					},
+					to: data.to,
+					amount: data.amount,
+					transactionHash: receipt?.hash,
+					blockNumber: receipt?.blockNumber,
+					status: 'success'
+				};
+			} catch (error: any) {
+				console.error(`Erro ao transferir stablecoins:`, error);
+				throw error;
+			}
+		} catch (error: any) {
+			console.error(`Erro ao transferir stablecoins:`, error);
 			throw error;
 		}
 	}

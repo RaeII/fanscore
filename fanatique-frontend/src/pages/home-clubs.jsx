@@ -77,6 +77,7 @@ export default function HomeClubsPage() {
     };
 
     checkAuthAndLoadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, navigate, getUserData, clubId]);
 
   const checkIfFollowing = async (clubId) => {
@@ -239,12 +240,6 @@ export default function HomeClubsPage() {
     try {
       setHeartClubLoading(true);
       
-      // In a real app, this would be an API call to set/unset the heart club
-      // For demo purposes, we'll use local storage
-      const hasHeartClub = hasUserHeartClub();
-
-      console.log('hasHeartClub', hasHeartClub);
-      
       if (isHeartClub) {
         // Remove this club as heart club
         await userClubApi.removeClubAssociation(clubId);
@@ -294,19 +289,19 @@ export default function HomeClubsPage() {
       </div>
     );
   }
-  console.log('liveGame', liveGame);
+ 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
       {/* Club Header */}
-      <div className="relative bg-secondary/90 dark:bg-primary/80 overflow-hidden">
+      <div className="relative gradientBackground overflow-hidden">
         {/* Blurred logo background */}
         {selectedClub && selectedClub.image && (
           <div
-            className="absolute inset-0 opacity-30 bg-no-repeat bg-center"
+            className="absolute inset-0 opacity-20 bg-no-repeat bg-center"
             style={{
               backgroundImage: `url(${selectedClub.image})`,
               backgroundSize: '150%',
-              filter: 'blur(30px)'
+              filter: 'blur(10px)'
             }}
           />
         )}
@@ -334,7 +329,11 @@ export default function HomeClubsPage() {
                   <div className="w-28 h-28 rounded-full bg-white/20 mb-4" />
                 )}
                 {liveGame && (
-                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center animate-pulse shadow-md">
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center animate-pulse shadow-md"
+                    style={{
+                      width: '72px',
+                    }}
+                  >
                     <div className="h-2 w-2 rounded-full bg-white mr-1"></div>
                     {t('club:clubPage.gameStatus.live')}
                   </div>
@@ -356,13 +355,13 @@ export default function HomeClubsPage() {
 
                   (hasHeartClub && isHeartClub || !hasHeartClub) && (
                     <Button 
-                      variant={isHeartClub ? "secondary" : "default"}
+                      variant={isHeartClub ? "ghost" : "default"}
                       size="sm" 
-                      className={`${isHeartClub ? '' : 'bg-white/30 hover:bg-white/40 text-white border-none'}`}
+                      className={`${isHeartClub ? 'bg-black text-white' : 'bg-white/30 hover:bg-white/40 text-white'}`}
                       onClick={toggleHeartClub}
                       disabled={heartClubLoading}
                     >
-                      <Heart size={16} className={`mr-2 ${isHeartClub ? 'fill-white' : ''}`} />
+                      <Heart size={16} className={`mr-2 border-black ${isHeartClub ? 'fill-red-500' : ''}`} />
                       {heartClubLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
@@ -406,25 +405,25 @@ export default function HomeClubsPage() {
       <div className="container mx-auto px-4 -mt-6 relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard
-            icon={<Trophy size={24} className="text-foreground" />}
+            icon={<Trophy size={24} className="icon" />}
             title={t('club:clubPage.stats.points')}
             value={userClubStats?.points || "0"}
             label={t('club:clubPage.stats.accumulated')}
           />
           <StatCard
-            icon={<Star size={24} className="text-foreground" />}
+            icon={<Star size={24} className="icon" />}
             title={t('club:clubPage.stats.quests')}
             value={userClubStats?.quests || "0"}
             label={t('club:clubPage.stats.completed')}
           />
           <StatCard
-            icon={<ShoppingBag size={24} className="text-foreground" />}
+            icon={<ShoppingBag size={24} className="icon" />}
             title={t('club:clubPage.stats.orders')}
             value={userClubStats?.orders || "0"}
             label={t('club:clubPage.stats.made')}
           />
           <StatCard
-            icon={<Ticket size={24} className="text-foreground" />}
+            icon={<Ticket size={24} className="icon" />}
             title={t('club:clubPage.stats.tickets')}
             value={userClubStats?.tickets || "0"}
             label={t('club:clubPage.stats.purchased')}
@@ -442,7 +441,7 @@ export default function HomeClubsPage() {
                   key={sport.id}
                   className={`px-6 py-4 flex flex-1 justify-center items-center transition-all border-b-2 ${
                     activeSport === sport.id 
-                      ? 'border-tertiary text-secondary font-medium' 
+                      ? 'border-secondary text-secondary font-medium' 
                       : 'border-transparent text-text-adaptive/60 dark:text-white/60 hover:text-text-adaptive dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5'
                   }`}
                   onClick={() => {
@@ -473,7 +472,7 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'overview'
-                ? 'border-tertiary text-foreground font-semibold'
+                ? 'border-secondary text-foreground font-semibold'
                 : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
@@ -488,7 +487,7 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'events'
-                ? 'border-tertiary text-foreground font-semibold'
+                ? 'border-secondary text-foreground font-semibold'
                 : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
@@ -503,7 +502,7 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'news'
-                ? 'border-tertiary text-foreground font-semibold'
+                ? 'border-secondary text-foreground font-semibold'
                 : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
@@ -617,8 +616,8 @@ export default function HomeClubsPage() {
                     navigate(`/clubs/${clubId}?tab=quests`);
                   }}
                 >
-                  <div className="w-12 h-12 rounded-full bg-tertiary/10 dark:bg-tertiary flex items-center justify-center mb-2">
-                    <Star size={24} className="text-foreground" />
+                  <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center mb-2">
+                    <Star size={24} className="text-foreground text-primary" />
                   </div>
                   <h3 className="font-medium text-text-adaptive dark:text-white">{t('club:clubPage.stats.quests')}</h3>
                   <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">{t('club:clubPage.messages.completeQuestsDescription')}</p>
@@ -628,8 +627,8 @@ export default function HomeClubsPage() {
                   className="bg-background-overlay rounded-lg p-4 shadow-sm flex flex-col items-center text-center cursor-pointer"
                   onClick={() => navigate(`/pedidos?clubId=${selectedClub.id}`)}
                 >
-                  <div className="w-12 h-12 rounded-full bg-tertiary/10 dark:bg-tertiary flex items-center justify-center mb-2">
-                    <ShoppingBag size={24} className="text-foreground" />
+                  <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center mb-2">
+                    <ShoppingBag size={24} className="text-foreground text-primary" />
                   </div>
                   <h3 className="font-medium text-text-adaptive dark:text-white">{t('club:clubPage.stats.orders')}</h3>
                   <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">{t('club:clubPage.messages.stadiumOrdersDescription')}</p>
@@ -695,7 +694,7 @@ export default function HomeClubsPage() {
             </section>
 
             {/* New Forum Banner */}
-            {isHeartClub && <div className="bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-lg p-4 mb-6 shadow-md border border-indigo-500/30">
+            {isHeartClub && <div className="mt-10 bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-lg p-4 mb-6 shadow-md border border-indigo-500/30">
               <div className="flex items-center gap-4">
                 <div className="bg-indigo-500/30 p-3 rounded-full">
                   <MessageCircle size={24} className="text-indigo-300" />
@@ -892,7 +891,7 @@ function StatCard({ icon, title, value, label }) {
   return (
     <div className="bg-background-overlay p-4 rounded-lg shadow-sm">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-full bg-tertiary/10 dark:bg-tertiary">
+        <div className="p-2 rounded-full bg-tertiary/10 icon">
           {icon}
         </div>
         <div>

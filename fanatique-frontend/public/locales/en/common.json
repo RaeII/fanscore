@@ -45,7 +45,8 @@
     "viewQuests": "View Quests",
     "myProfile": "My Profile",
     "profileDescription": "View and edit your information",
-    "viewProfile": "View Profile"
+    "viewProfile": "View Profile",
+    "heartClubMatch": "Your Heart Club Match"
   },
   "profile": {
     "title": "Profile",

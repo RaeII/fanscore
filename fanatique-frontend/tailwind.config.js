@@ -10,7 +10,6 @@ export default {
         primary: '#C5F232',
         secondary: '#9BB641',
         tertiary: '#683f8a',
-        'background-dark': '#0d0117',
         'background-light': '#fafafa',
         'background-overlay': 'var(--background-overlay)',
         'text-adaptive': "var(--text-adaptive)",
@@ -24,6 +23,8 @@ export default {
         "card-foreground": "hsl(var(--card-foreground))",
         accent: "hsl(var(--accent))",
         "accent-foreground": "hsl(var(--accent-foreground))",
+
+        'backg': '#0e0e0e',
       }
     },
   },

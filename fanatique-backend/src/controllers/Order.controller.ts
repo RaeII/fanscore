@@ -52,15 +52,17 @@ class OrderController extends Controller {
 			const body: any = {
 				userId,
 				orderId: req.body.order_id,
-				clubId: req.body.club_id,
 				amount: req.body.amount,
 				signature: req.body.signature,
 				userAddress: req.body.user_address,
 				deadline: req.body.deadline,
 				v: req.body.v,
 				r: req.body.r,
-				s: req.body.s
+				s: req.body.s,
+				stablecoin_id: req.body.stablecoin_id
 			};
+
+			console.log({body});
 
 			await Database.startTransaction();
 			const result = await this.service.paymentOrder(body);

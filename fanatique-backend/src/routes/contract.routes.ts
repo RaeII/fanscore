@@ -23,6 +23,15 @@ router.post('/transfer-tokens', [
 	}
 ]);
 
+router.post('/transfer-stablecoins', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+
+		controller.transferStablecoinsToUser(req, res);
+	}
+]);
+
 router.get('/wallet-tokens/:wallet_address', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
@@ -38,6 +47,24 @@ router.get('/wallet-tokens/:wallet_address/club/:club_id', [
 		const controller = new Controller();
 
 		controller.getWalletTokenByClub(req, res);
+	}
+]);
+
+router.get('/stablecoin-balances/:wallet_address', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+
+		controller.getStablecoinBalances(req, res);
+	}
+]);
+
+router.post('/pay-with-stablecoin', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+
+		controller.payWithStablecoin(req, res);
 	}
 ]);
 

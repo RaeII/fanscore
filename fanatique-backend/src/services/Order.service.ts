@@ -37,7 +37,6 @@ class OrderService {
 		if (!data.match_id) throw Error(getErrorMessage('missingField', 'Jogo'));
 		if (!data.products || data.products.length === 0) throw Error(getErrorMessage('missingField', 'Produtos do pedido'));
 		if (!data.total_real) throw Error(getErrorMessage('missingField', 'Total em reais'));
-		if (!data.total_fantoken) throw Error(getErrorMessage('missingField', 'Total em fantoken'));
 
 		// Verificar se o estabelecimento existe
 		const establishment = await this.establishmentService.fetch(data.establishment_id);
@@ -76,17 +75,11 @@ class OrderService {
 			
 			// Calcular subtotais
 			calculatedTotalReal += parseFloat(productData.value_real) * productOrder.quantity;
-            calculatedTotalFantoken += parseFloat(productData.value_tokefan) * productOrder.quantity;
 		}
 		
 		// Validar o total calculado com o total informado (permitindo uma pequena margem de erro)
 		if (Math.abs(calculatedTotalReal - data.total_real) > 0.01) {
 			throw Error(`Total do pedido em reais incorreto. Calculado: ${calculatedTotalReal.toFixed(2)}, Informado: ${data.total_real.toFixed(2)}`);
-		}
-
-		// Validar o total calculado com o total informado (permitindo uma pequena margem de erro)
-		if (Math.abs(calculatedTotalFantoken - data.total_fantoken) > 0.01) {
-			throw Error(`Total do pedido em fantoken incorreto. Calculado: ${calculatedTotalFantoken.toFixed(2)}, Informado: ${data.total_fantoken.toFixed(2)}`);
 		}
 		
 		// Criar o pedido
@@ -96,7 +89,6 @@ class OrderService {
 			match_id: data.match_id,
 			status_id: data.status_id || 1, // Status padrão: Aguardando pagamento
 			total_real: calculatedTotalReal, // Usar o valor calculado para garantir precisão
-			total_fantoken: calculatedTotalFantoken // Usar o valor calculado para garantir precisão
 		};
 		
 		const result: any = await this.database.create(orderData);
@@ -116,19 +108,15 @@ class OrderService {
 		if (!data.userAddress) throw Error(getErrorMessage('missingField', 'Endereço do usuário'));
 		if (!data.amount) throw Error(getErrorMessage('missingField', 'Valor do pagamento'));
 		if (!data.signature) throw Error(getErrorMessage('missingField', 'Assinatura do pagamento'));
-		if (!data.deadline) throw Error(getErrorMessage('missingField', 'Prazo limite para a meta-transação'));
-		if (!data.permitV) throw Error(getErrorMessage('missingField', 'Componente v da assinatura permit'));
-		if (!data.permitR) throw Error(getErrorMessage('missingField', 'Componente r da assinatura permit'));
-		if (!data.permitS) throw Error(getErrorMessage('missingField', 'Componente s da assinatura permit'));
-		if (!data.permitDeadline) throw Error(getErrorMessage('missingField', 'Prazo limite do permit'));
-		if (!data.erc20Id) throw Error(getErrorMessage('missingField', 'ID do token ERC20'));
+		if (!data.v) throw Error(getErrorMessage('missingField', 'Componente v da assinatura permit'));
+		if (!data.r) throw Error(getErrorMessage('missingField', 'Componente r da assinatura permit'));
+		if (!data.s) throw Error(getErrorMessage('missingField', 'Componente s da assinatura permit'));
+		if (!data.deadline) throw Error(getErrorMessage('missingField', 'Prazo limite do permit'));
+		if (!data.stablecoin_id) throw Error(getErrorMessage('missingField', 'ID do token ERC20'));
 
 		// Verificar se o pedido existe
 		const order = await this.fetch(data.orderId);
 		if (!order) throw Error(getErrorMessage('registryNotFound', 'Pedido'));
-
-		console.log('Order:', order);
-		console.log('User:', data.userId);
 
 		// Verificar se o pedido pertence ao usuário
 		if (order.user_id !== data.userId) {
@@ -139,15 +127,7 @@ class OrderService {
 		if (order.status_id !== 1) {
 			throw Error('Este pedido não está em estado pendente de pagamento');
 		}
-
-		// Verificar se o valor do pagamento corresponde ao valor do pedido
-		const orderAmountFantoken = parseFloat(order.total_fantoken.toString());
-		const paymentAmount = parseFloat(data.amount.toString());
 		
-		if (Math.abs(orderAmountFantoken - paymentAmount) > 0.001) {
-			throw Error('Valor do pagamento não corresponde ao valor do pedido');
-		}
-
 		try {
 			console.log('Processando pagamento blockchain com assinatura:', data.signature);
 
@@ -158,16 +138,16 @@ class OrderService {
 			const paymentData = {
 				orderId: data.orderId,
 				buyer: data.userAddress,
-				amount: ethers.parseEther(order.total_fantoken.toString()),
+				amount: ethers.parseUnits(order.total_real.toString(), 6),
 				deadline: data.deadline,
-				erc20Id: data.erc20Id
+				erc20Id: data.stablecoin_id
 			};
 			
 			const permitData = {
-				v: data.permitV,
-				r: data.permitR,
-				s: data.permitS,
-				deadline: data.permitDeadline
+				v: data.v,
+				r: data.r,
+				s: data.s,
+				deadline: data.deadline
 			};
 			
 			console.log('Dados de pagamento:', {

@@ -2,10 +2,7 @@ import { Trophy, Star, Award, Users, Ticket, Coffee, Timer, CreditCard, Shopping
 import { WalletConnect } from '../components/wallet-connect'
 import { Button } from '../components/ui-v2/Button'
 import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
-import { useWalletContext } from '../hooks/useWalletContext'
 import { useTranslation } from 'react-i18next'
-import { LanguageSwitcher } from '../components/LanguageSwitcher'
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -15,53 +12,16 @@ export default function HomePage() {
     navigate('/app');
   };
 
-  const { 
-    isAuthenticated, 
-    isInitialized, 
-    account, 
-    checkWalletExists, 
-    requestSignature,
-    connecting,
-    signing
-  } = useWalletContext();
-
-  // Verificar se o usuário já está autenticado e redirecionar para dashboard
-  useEffect(() => {
-    if (isInitialized && isAuthenticated) {
-      console.log('Home: Usuário já autenticado, redirecionando para dashboard');
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, isInitialized, navigate]);
-
-  // Efeito para verificar se o usuário já tem carteira conectada, está cadastrado, 
-  // mas não está autenticado (não tem token)
-  useEffect(() => {
-    const checkAndRequestSignature = async () => {
-      // Se temos conta conectada mas não estamos autenticados
-      if (isInitialized && account && !isAuthenticated && !connecting && !signing) {
-        // Verificar se a carteira já está cadastrada
-        const walletCheck = await checkWalletExists();
-        
-        if (walletCheck?.success && walletCheck?.exists) {
-          console.log('Home: Carteira conectada e cadastrada, solicitando assinatura');
-          // Solicitar assinatura automaticamente
-          await requestSignature();
-        }
-      }
-    };
-    
-    checkAndRequestSignature();
-  }, [isInitialized, account, isAuthenticated, connecting, signing, checkWalletExists, requestSignature]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 text-white py-16 md:py-24">
+      <section className="bg-backg text-white py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-8 md:mb-0">
               <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-                {t('home:hero.title')} <span className="text-tertiary">{t('common:app.name')}</span>
+                {t('home:hero.title')} <span className="text-primary">{t('common:app.name')}</span>
               </h1>
               <p className="text-lg md:text-xl mb-8">
                 {t('home:hero.subtitle')}
@@ -73,10 +33,10 @@ export default function HomePage() {
                   text={t('home:hero.getStartedButton')}
                   icon={<ChevronRight size={16} />}
                 />
-                <WalletConnect className="w-full sm:w-auto" />
+              
               </div>
             </div>
-            <div className="md:w-1/2 flex justify-center">
+{/*             <div className="md:w-1/2 flex justify-center">
               <div className="relative w-full max-w-md">
                 <div className="bg-secondary/40 p-6 rounded-2xl backdrop-blur-sm border border-white/10">
                   <div className="flex items-center gap-3 mb-4">
@@ -115,13 +75,13 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
 
       {/* Transition between hero and features */}
-      <div className="relative h-32 md:h-40 bg-gradient-to-b from-primary/80 via-primary/50 to-background dark:from-primary/80 dark:via-primary/40 dark:to-background">
+      <div className="relative h-32 md:h-40 bg-backg">
         {/* Wave overlay */}
         <svg className="absolute bottom-0 left-0 w-full" 
           viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -139,9 +99,11 @@ export default function HomePage() {
         <div className="absolute left-1/2 bottom-8 transform -translate-x-1/2 z-10">
           <div className="relative">
             <div className="absolute inset-0 bg-secondary/20 rounded-full blur-xl transform scale-150 animate-pulse-slow"></div>
-            <div className="relative bg-secondary rounded-full p-4 shadow-lg">
-              <Trophy size={32} className="text-white" />
-            </div>
+           
+              <img src="/logo_green.png" alt="Fanatique" style={{
+                width: "5rem",
+              }} />
+            
           </div>
         </div>
       </div>
