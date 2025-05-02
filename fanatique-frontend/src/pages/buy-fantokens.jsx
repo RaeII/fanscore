@@ -290,7 +290,7 @@ export default function BuyFantokensPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center mb-6">
           <Button 
@@ -344,7 +344,7 @@ export default function BuyFantokensPage() {
             size="sm"
             className={`flex-1 rounded-none border-b-2 py-2 ${
               activeTokenType === 'fantoken'
-                ? 'border-tertiary text-foreground font-semibold'
+                ? 'border-primary text-foreground font-semibold'
                 : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => handleTokenTypeChange('fantoken')}
@@ -356,7 +356,7 @@ export default function BuyFantokensPage() {
             size="sm"
             className={`flex-1 rounded-none border-b-2 py-2 ${
               activeTokenType === 'stablecoin'
-                ? 'border-tertiary text-foreground font-semibold'
+                ? 'border-primary text-foreground font-semibold'
                 : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => handleTokenTypeChange('stablecoin')}
@@ -379,7 +379,7 @@ export default function BuyFantokensPage() {
               <input
                 type="text"
                 placeholder={activeTokenType === 'fantoken' ? "Buscar clube..." : "Buscar stablecoin..."}
-                className="w-full pl-10 pr-4 py-2 border border-primary/20 dark:border-white/20 rounded-lg bg-white dark:bg-[#150924] text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary"
+                className="w-full pl-10 pr-4 py-2 dark:border-white/20 rounded-lg bg-background-overlay  dark:text-white focus:outline-none focus:ring-"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -566,7 +566,7 @@ export default function BuyFantokensPage() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-6 gap-4">
                 <div className="flex space-x-2 bg-background-dark/60 rounded-full p-1 w-fit">
                   <button 
-                    className="px-6 py-2 rounded-full text-white bg-indigo-600/90 text-sm font-medium"
+                    className="px-6 py-2 rounded-full text-black bg-primary text-sm font-medium"
                   >
                     Active
                   </button>
@@ -579,19 +579,19 @@ export default function BuyFantokensPage() {
                   <div className="flex items-center">
                     <label className="inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" />
-                      <div className="relative w-11 h-6 bg-background-dark/60 peer-focus:outline-none rounded-full peer dark:bg-background-dark/60 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600/80"></div>
+                      <div className="relative w-11 h-6 bg-black peer-focus:outline-none rounded-full peer dark:bg-background-dark/60 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600/80"></div>
                       <span className="ms-3 text-sm font-medium text-white">Staked Only</span>
                     </label>
                   </div>
                   
-                  <div className="relative">
+                  <div className="relative BG" >
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Search size={16} className="text-white/50" />
                     </div>
                     <input
                       type="text"
                       placeholder="Search"
-                      className="pl-10 pr-4 py-2 text-sm border-none rounded-full bg-background-dark/60 text-white focus:outline-none focus:ring-1 focus:ring-indigo-600/50 w-48"
+                      className="pl-10 pr-4 py-2 text-sm border-none rounded-full bg-background-dark/60 text-white focus:outline-none focus:ring-1 bg-black w-48"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -672,7 +672,7 @@ export default function BuyFantokensPage() {
                           </div>
                         </div>
                         
-                        <button className="w-full py-2 bg-indigo-500 bg-opacity-80 text-white rounded-xl font-medium text-sm hover:bg-opacity-100 transition-colors">
+                        <button className="w-full py-2 bg-backg bg-opacity-80 text-white rounded-xl font-medium text-sm hover:bg-opacity-100 transition-colors">
                           View More
                         </button>
                       </div>
@@ -688,7 +688,7 @@ export default function BuyFantokensPage() {
       {/* Modal para compra de tokens */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1c0c2e] rounded-lg w-full max-w-md overflow-hidden shadow-xl">
+          <div className="bg-white dark:bg-black rounded-lg w-full max-w-md overflow-hidden shadow-xl">
             <div className="p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-primary dark:text-white">
@@ -732,7 +732,7 @@ export default function BuyFantokensPage() {
                       <Button 
                         variant="outline" 
                         onClick={() => quantity > 1 && setQuantity(quantity - 1)}
-                        className="px-3 mr-2 py-1 hover:bg-secondary hover:text-white transition-colors font-bold"
+                        className="px-3 mr-2 py-1 hover:bg-secondary text-white hover:text-white transition-colors font-bold"
                       >
                         -
                       </Button>
@@ -742,12 +742,12 @@ export default function BuyFantokensPage() {
                         max="100"
                         value={quantity}
                         onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-16 mx-2 py-2 text-center border border-primary/20 dark:border-white/20 rounded-md bg-white dark:bg-[#150924] text-primary dark:text-white focus:outline-none"
+                        className="w-16 mx-2 py-2 text-center border border-primary/20 dark:border-white/20 rounded-md bg-white dark:bg-[#000000] text-primary dark:text-white focus:outline-none"
                       />
                       <Button 
                         variant="outline" 
                         onClick={() => setQuantity(quantity + 1)}
-                        className="px-3 py-1 hover:bg-secondary hover:text-white transition-colors ml-2 font-bold"
+                        className="px-3 py-1 hover:bg-secondary text-white hover:text-white transition-colors ml-2 font-bold"
                       >
                         +
                       </Button>

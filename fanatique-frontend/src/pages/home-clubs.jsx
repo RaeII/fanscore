@@ -355,13 +355,13 @@ export default function HomeClubsPage() {
 
                   (hasHeartClub && isHeartClub || !hasHeartClub) && (
                     <Button 
-                      variant={isHeartClub ? "secondary" : "default"}
+                      variant={isHeartClub ? "ghost" : "default"}
                       size="sm" 
-                      className={`${isHeartClub ? '' : 'bg-white/30 hover:bg-white/40 text-white border-none'}`}
+                      className={`${isHeartClub ? 'bg-black text-white' : 'bg-white/30 hover:bg-white/40 text-white'}`}
                       onClick={toggleHeartClub}
                       disabled={heartClubLoading}
                     >
-                      <Heart size={16} className={`mr-2 ${isHeartClub ? 'fill-white' : ''}`} />
+                      <Heart size={16} className={`mr-2 border-black ${isHeartClub ? 'fill-red-500' : ''}`} />
                       {heartClubLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
@@ -441,7 +441,7 @@ export default function HomeClubsPage() {
                   key={sport.id}
                   className={`px-6 py-4 flex flex-1 justify-center items-center transition-all border-b-2 ${
                     activeSport === sport.id 
-                      ? 'border-tertiary text-secondary font-medium' 
+                      ? 'border-secondary text-secondary font-medium' 
                       : 'border-transparent text-text-adaptive/60 dark:text-white/60 hover:text-text-adaptive dark:hover:text-white hover:bg-primary/5 dark:hover:bg-white/5'
                   }`}
                   onClick={() => {
@@ -472,7 +472,7 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'overview'
-                ? 'border-tertiary text-foreground font-semibold'
+                ? 'border-secondary text-foreground font-semibold'
                 : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
@@ -487,7 +487,7 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'events'
-                ? 'border-tertiary text-foreground font-semibold'
+                ? 'border-secondary text-foreground font-semibold'
                 : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
@@ -502,7 +502,7 @@ export default function HomeClubsPage() {
             size="sm"
             className={`rounded-none border-b-2 px-4 ${
               activeTab === 'news'
-                ? 'border-tertiary text-foreground font-semibold'
+                ? 'border-secondary text-foreground font-semibold'
                 : 'border-transparent text-foreground/70 dark:text-white/70'
             }`}
             onClick={() => {
@@ -616,8 +616,8 @@ export default function HomeClubsPage() {
                     navigate(`/clubs/${clubId}?tab=quests`);
                   }}
                 >
-                  <div className="w-12 h-12 rounded-full bg-tertiary/10 dark:bg-tertiary flex items-center justify-center mb-2">
-                    <Star size={24} className="text-foreground" />
+                  <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center mb-2">
+                    <Star size={24} className="text-foreground text-primary" />
                   </div>
                   <h3 className="font-medium text-text-adaptive dark:text-white">{t('club:clubPage.stats.quests')}</h3>
                   <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">{t('club:clubPage.messages.completeQuestsDescription')}</p>
@@ -627,8 +627,8 @@ export default function HomeClubsPage() {
                   className="bg-background-overlay rounded-lg p-4 shadow-sm flex flex-col items-center text-center cursor-pointer"
                   onClick={() => navigate(`/pedidos?clubId=${selectedClub.id}`)}
                 >
-                  <div className="w-12 h-12 rounded-full bg-tertiary/10 dark:bg-tertiary flex items-center justify-center mb-2">
-                    <ShoppingBag size={24} className="text-foreground" />
+                  <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center mb-2">
+                    <ShoppingBag size={24} className="text-foreground text-primary" />
                   </div>
                   <h3 className="font-medium text-text-adaptive dark:text-white">{t('club:clubPage.stats.orders')}</h3>
                   <p className="text-sm text-text-adaptive/70 dark:text-white/70 mt-1">{t('club:clubPage.messages.stadiumOrdersDescription')}</p>
