@@ -1,6 +1,5 @@
 import { ethers } from "hardhat";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { FanToken, Fanatique } from "../../typechain-types";
 
 /**
  * Script para testar o fluxo completo de pagamento usando FanToken

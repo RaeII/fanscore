@@ -17,7 +17,7 @@ export default (app: Application) => {
   const options: cors.CorsOptions = {
     credentials: true,
     methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
-    origin: ['http://46.101.105.113:4173', 'http://localhost:5173', 'https://betabox.sternatravel.com.br', 'http://betabox.sternatravel.com.br'],
+    origin: ['*'],
     preflightContinue: false,
     optionsSuccessStatus: 200
   }
