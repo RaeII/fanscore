@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
 import { Button } from '../components/ui-v2/Button';
 import { Input } from '../components/ui/input';
-import { Loader2, Wallet } from 'lucide-react';
+import { Loader2, Wallet, AlertTriangle } from 'lucide-react';
 import { showError, showSuccess } from '../lib/toast';
 import { Cta11 } from '../components/ui/cta11';
+import { MetaMaskDebug } from '../components/MetaMaskDebug';
 
 export default function AppPage() {
   const navigate = useNavigate();
@@ -18,29 +19,63 @@ export default function AppPage() {
     requestSignature,
     checkWalletExists,
     isAuthenticated,
-    isConnected
+    isConnected,
+    isCorrectNetwork,
+    checkNetwork,
+    addChilizNetwork
   } = useWalletContext();
 
   const [loading, setLoading] = useState(true);
   const [showRegister, setShowRegister] = useState(false);
   const [userName, setUserName] = useState('');
+  const [userNameError, setUserNameError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loginCancelled, setLoginCancelled] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
+
+  // Regex para validar caracteres permitidos no nome de usuário
+  const validCharsRegex = /^[a-zA-Z0-9_]+$/;
+  
+  // Contador de tentativas de assinatura
+  const [signAttempts, setSignAttempts] = useState(0);
 
   // Função para verificar se o usuário está cadastrado
   const checkIfUserRegistered = useCallback(async () => {
     try {
       setLoading(true);
-      setLoginCancelled(false);
-      console.log('checkIfUserRegistered', account);
+      
+      // Verifica se o usuário já cancelou muitas vezes
+      if (signAttempts >= 2) {
+        setLoginCancelled(true);
+        setLoading(false);
+        return;
+      }
+      
+      // Reseta o flag de cancelamento apenas se for a primeira tentativa
+      if (signAttempts === 0) {
+        setLoginCancelled(false);
+      }
+      
       if (!account) {
         setLoading(false);
         return;
       }
       
+      // Verifica se está na rede correta
+      if (!isCorrectNetwork) {
+        const networkOk = await checkNetwork();
+        if (!networkOk) {
+          setNetworkError(true);
+          setLoading(false);
+          return;
+        }
+      }
+      
       // Verifica se o usuário já está cadastrado
       const walletCheck = await checkWalletExists();
-      console.log('walletCheck', walletCheck);
+
+      console.log("1- walletCheck", walletCheck);
+      
       if (!walletCheck.success) {
         showError(walletCheck.message || 'Erro ao verificar cadastro');
         setLoading(false);
@@ -54,9 +89,13 @@ export default function AppPage() {
       // Se o usuário já estiver cadastrado, solicita a assinatura automaticamente
       if (walletCheck.exists) {
         
-        const loggedIn = await requestSignature();
+        // Incrementa o contador de tentativas de assinatura
+        setSignAttempts(prev => prev + 1);
         
-        if (loggedIn) {
+        const result = await requestSignature();
+        
+        // Verifica se o login foi bem-sucedido
+        if (result === true) {
           
           // Aguarda um pouco para garantir que os dados estejam persistidos
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -66,6 +105,12 @@ export default function AppPage() {
           return;
         } else {
           console.log('App: Falha no login, exibindo botão para tentar novamente');
+          
+          // Se o usuário cancelou explicitamente, incrementamos a contagem
+          if (result && result.cancelled) {
+            console.log('Usuário cancelou a assinatura, contador atual:', signAttempts);
+          }
+          
           setLoginCancelled(true);
         }
       }
@@ -76,7 +121,7 @@ export default function AppPage() {
       showError('Erro ao verificar se o usuário está cadastrado');
       setLoading(false);
     }
-  }, [account, checkWalletExists, requestSignature, navigate]);
+  }, [account, checkWalletExists, requestSignature, navigate, signAttempts, isCorrectNetwork, checkNetwork]);
 
   // Verificar se o usuário já está autenticado e redirecionar para o dashboard
   useEffect(() => {
@@ -98,11 +143,21 @@ export default function AppPage() {
     })();
   }, [isAuthenticated, isConnected, account, navigate, checkIfUserRegistered]);
 
+  // Atualiza o estado de erro de rede quando isCorrectNetwork muda
+  useEffect(() => {
+    if (isConnected) {
+      setNetworkError(!isCorrectNetwork);
+    }
+  }, [isCorrectNetwork, isConnected]);
+
   // Função para apenas conectar a carteira
   const handleConnectWallet = async () => {
     try {
       setLoading(true);
       setLoginCancelled(false);
+      setNetworkError(false);
+      // Reseta o contador de tentativas ao conectar a carteira
+      setSignAttempts(0);
       
       // Conectar a carteira
       const connected = await connectWallet();
@@ -128,6 +183,25 @@ export default function AppPage() {
     }
   };
 
+  // Função para adicionar a rede Chiliz
+  const handleAddNetwork = async () => {
+    try {
+      setLoading(true);
+      const added = await addChilizNetwork();
+      if (added) {
+        setNetworkError(false);
+        // Se adicionou com sucesso, continua o fluxo
+        await checkIfUserRegistered();
+      } else {
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Erro ao adicionar rede:", error);
+      showError('Erro ao adicionar rede Chiliz');
+      setLoading(false);
+    }
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     
@@ -136,13 +210,19 @@ export default function AppPage() {
       return;
     }
     
+    if (!validCharsRegex.test(userName)) {
+      showError('Nome de usuário deve conter apenas letras, números e underscore (_)');
+      return;
+    }
+    
     setSubmitting(true);
     
     try {
       // Registra o usuário e faz a assinatura em um único passo
-      const success = await registerWithSignature(userName);
+      const result = await registerWithSignature(userName);
       
-      if (success) {
+      // Verifica se o resultado foi sucesso (true) ou objeto de erro
+      if (result === true) {
         showSuccess('Cadastro realizado com sucesso!');
         
         // Aguarda um pouco para garantir persistência
@@ -152,6 +232,10 @@ export default function AppPage() {
         navigate('/dashboard');
       } else {
         // Se não teve sucesso, provavelmente o usuário cancelou a assinatura
+        if (result && result.cancelled) {
+          console.log('Usuário cancelou o registro');
+          setSignAttempts(prev => prev + 1);
+        }
         setLoginCancelled(true);
       }
     } catch (error) {
@@ -159,6 +243,19 @@ export default function AppPage() {
       showError(error.response?.data?.message || 'Erro ao cadastrar usuário');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleUserNameChange = (e) => {
+    const value = e.target.value;
+    setUserName(value);
+    
+    if (!value.trim()) {
+      setUserNameError('');
+    } else if (!validCharsRegex.test(value)) {
+      setUserNameError('Nome de usuário deve conter apenas letras, números e underscore (_)');
+    } else {
+      setUserNameError('');
     }
   };
 
@@ -174,8 +271,27 @@ export default function AppPage() {
     );
   }
 
+  // Mostra a tela de erro de rede se não estiver na rede correta
+  if (isConnected && networkError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">
+        <Cta11 
+          heading="Rede Incorreta"
+          description="Você precisa estar na rede Chiliz para usar o Fanatique. Clique no botão abaixo para adicionar ou trocar para a rede Chiliz."
+          buttons={{
+            primary: {
+              text: "Trocar para Rede Chiliz",
+              onClick: handleAddNetwork,
+              icon: <AlertTriangle size={18} />
+            }
+          }}
+        />
+      </div>
+    );
+  }
+
   // Se não tiver conta conectada, mostra a interface inicial para conectar carteira
-  if (!isConnected || !account) {
+  if (!isConnected || !account || loginCancelled) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] "
       >
@@ -184,56 +300,25 @@ export default function AppPage() {
           description="Conecte sua carteira Chiliz para entrar na plataforma e aproveitar uma experiência única nos estádios."
           buttons={{
             primary: {
-              text: "Conectar Carteira",
+              text: "Login MetaMask",
               onClick: handleConnectWallet,
               icon: <Wallet size={18} />
             }
           }}
         />
-      </div>
-    );
-  }
-
-  // Se o login foi cancelado mas a carteira continua conectada
-  if (loginCancelled) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
-        <div className="w-full max-w-md p-8 bg-tertiary rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Login Canceladoooo</h1>
-          
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Você precisa assinar a mensagem para entrar na plataforma.
-          </p>
-          
-          <div className="space-y-4">
-            <Button 
-              onClick={checkIfUserRegistered} 
-              className="w-full bg-secondary text-white"
-            >
-              Tentar Novamente
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => {
-                disconnectWallet();
-                setLoginCancelled(false);
-              }}
-              className="w-full"
-            >
-              Desconectar Carteira
-            </Button>
-          </div>
+        <div className="container mx-auto max-w-md">
+          <MetaMaskDebug />
         </div>
       </div>
     );
   }
 
+
   // Mostra o formulário de registro se o usuário não estiver cadastrado
   if (showRegister) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
-        <div className="w-full max-w-md p-8 bg-tertiary rounded-lg shadow-md">
+        <div className="w-full max-w-md p-8 bg-black rounded-lg shadow-md">
           <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Cadastre-se no Fanatique</h1>
           
           <p className="text-gray-600 dark:text-gray-300 mb-6">
@@ -248,41 +333,36 @@ export default function AppPage() {
               <Input
                 id="username"
                 value={userName}
-                onChange={(e) => setUserName(e.target.value)}
+                onChange={handleUserNameChange}
                 placeholder="Digite seu nome de usuário"
                 required
-                className="w-full"
+                className="w-ful"
                 autoFocus
               />
+              {userNameError && (
+                <p className="text-sm text-red-500 mt-1">{userNameError}</p>
+              )}
             </div>
             
             <div className="flex gap-4">
               <Button
                 type="button"
-                variant="outline"
+                variant="default"
                 onClick={() => {
                   disconnectWallet();
                   setShowRegister(false);
                 }}
                 disabled={submitting}
-                className="flex-1"
-              >
-                Cancelar
-              </Button>
+                className="flex-1 bg-secondary text-white"
+                text="Cancelar"
+              />
               <Button
                 type="submit"
-                disabled={submitting}
-                className="flex-1 bg-secondary text-white"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando
-                  </>
-                ) : (
-                  'Cadastrar'
-                )}
-              </Button>
+                disabled={submitting || !!userNameError || !userName.trim()}
+                className="flex-1 bg-primary text-white"
+                text={submitting ? "Processando" : "Cadastrar"}
+                icon={submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              />
             </div>
           </form>
         </div>

@@ -18,8 +18,8 @@ Objetivo é ter uma carteira de deploy e outra admin
 
 ---
 #DEPLOY
-export NODE_ENV=development && npx hardhat deploy --network localhost --contract fantoken
-export NODE_ENV=development && npx hardhat deploy --network localhost --contract fanatique
+export NODE_ENV=test && npx hardhat deploy --network chiliz_spicy --contract fantoken
+export NODE_ENV=test && npx hardhat deploy --network chiliz_spicy --contract fanatique
 
 export NODE_ENV=test && npx hardhat deploy --network lineaSepolia --contract usdt
 export NODE_ENV=test && npx hardhat deploy --network lineaSepolia --contract valocracy
@@ -32,8 +32,7 @@ export NODE_ENV=test && npx hardhat estimateGas --network lineaSepolia --contrac
 export NODE_ENV=test && npx hardhat estimateGas --network lineaSepolia --contract valocracy
 
 #VERIFY 
-export NODE_ENV=test && npx hardhat verifyContracts --network lineaSepolia 
+export NODE_ENV=test && npx hardhat verifyContracts --network mainnet 
 
-0x70cb76f1aa8cb85f95536d448973ba89231d5f0a
-0x70CB76f1aa8cB85F95536d448973Ba89231D5F0a
-0x70cb76f1aa8cb85f95536d448973ba89231d5f0a
+export NODE_ENV=test && npx hardhat deploy --network chiliz_spicy --contract erc20
+

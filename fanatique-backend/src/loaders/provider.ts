@@ -6,6 +6,7 @@ console.log({providerURL})
 const provider = new ethers.JsonRpcProvider(providerURL)
 
 const privateKey = env.PRIVATE_KEY ?? ''
+console.log({privateKey})
 const wallet = new ethers.Wallet(privateKey, provider);
 
 export {
