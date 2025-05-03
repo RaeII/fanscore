@@ -32,7 +32,7 @@ export default function AppPage() {
     try {
       setLoading(true);
       setLoginCancelled(false);
-      
+      console.log('checkIfUserRegistered', account);
       if (!account) {
         setLoading(false);
         return;
@@ -40,7 +40,7 @@ export default function AppPage() {
       
       // Verifica se o usuário já está cadastrado
       const walletCheck = await checkWalletExists();
-      
+      console.log('walletCheck', walletCheck);
       if (!walletCheck.success) {
         showError(walletCheck.message || 'Erro ao verificar cadastro');
         setLoading(false);
@@ -81,6 +81,9 @@ export default function AppPage() {
   // Verificar se o usuário já está autenticado e redirecionar para o dashboard
   useEffect(() => {
     (async () => {
+      console.log('isAuthenticated', isAuthenticated);
+      console.log('isConnected', isConnected);
+      console.log('account', account);
       if (isAuthenticated) {
         navigate('/dashboard');
         return;
