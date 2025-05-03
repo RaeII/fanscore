@@ -32,7 +32,7 @@ export default function ForumPostPage() {
         }
         
         // Check if user is following this club or has it as heart club
-        const hasAccess = isFollowingClub(clubId) || isUserHeartClub(clubId);
+        const hasAccess = await isFollowingClub(clubId) || await isUserHeartClub(clubId);
         if (!hasAccess) {
           showError("You need to follow this club to access the forum");
           navigate(`/clubs/${clubId}`);

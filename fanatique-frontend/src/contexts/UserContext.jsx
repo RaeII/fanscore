@@ -34,33 +34,56 @@ export function UserProvider({ children }) {
     }
   }, [isAuthenticated]);
 
+  const getUserClubData = useCallback(async () => {
+    const data = await userClubApi.getUserClub();
+      console.log('user clubs data', data);
+      const heartClub = data.find(club => club.club_type.id == 1);
+      return { heart_club: heartClub, clubs: data };
+  }, [isAuthenticated]);
+
   const updateUserClubsData = useCallback(async () => {
     if (!isAuthenticated) {
       setError('Not authenticated');
       return;
     }
     try {
-      const data = await userClubApi.getUserClub();
-      console.log('user clubs data', data);
-      const heartClub = data.find(club => club.club_type.id == 1);
-      setUserClubsData({ heart_club: heartClub, clubs: data });
+      const data = await getUserClubData();
+      setUserClubsData(data);
     } catch (err) {
       console.error('Error fetching user clubs data:', err);
       setError(err.message || 'Failed to fetch user clubs data');
     }
   }, [isAuthenticated]);
 
-  const isUserHeartClub = useCallback((clubId) => {
-    return userClubsData?.heart_club?.club?.id == clubId;
-  }, [userClubsData?.heart_club?.club?.id]);
+  const isUserHeartClub = useCallback(async (clubId) => {
+    let _userClubsData = null;
+    if (!userClubsData) {
+      _userClubsData = await getUserClubData();
+    } else {
+      _userClubsData = userClubsData;
+    }
+    return _userClubsData?.heart_club?.club?.id == clubId;
+  }, [userClubsData, getUserClubData]);
 
-  const hasUserHeartClub = useCallback(() => {
-    return userClubsData?.heart_club != null;
-  }, [userClubsData?.heart_club]);
+  const hasUserHeartClub = useCallback(async () => {
+    let _userClubsData = null;
+    if (!userClubsData) {
+      _userClubsData = await getUserClubData();
+    } else {
+      _userClubsData = userClubsData;
+    }
+    return _userClubsData?.heart_club != null;
+  }, [userClubsData, getUserClubData]);
 
-  const isFollowingClub = useCallback((clubId) => {
-    return userClubsData?.clubs?.some(club => club.club.id == clubId && club.club_type.id == 2);
-  }, [userClubsData?.clubs]);
+  const isFollowingClub = useCallback(async (clubId) => {
+    let _userClubsData = null;
+    if (!userClubsData) {
+      _userClubsData = await getUserClubData();
+    } else {
+      _userClubsData = userClubsData;
+    }
+    return _userClubsData?.clubs?.some(club => club.club.id == clubId && club.club_type.id == 2);
+  }, [userClubsData, getUserClubData]);
 
   // Fetch user data when authenticated
   useEffect(() => {

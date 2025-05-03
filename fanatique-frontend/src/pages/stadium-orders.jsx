@@ -36,7 +36,7 @@ import stablecoinApi from '../api/stablecoin';
 export default function StadiumOrdersPage() {
   const navigate = useNavigate();
   const { clubId, gameId } = useParams();
-  const { isAuthenticated, getUserData } = useWalletContext();
+  const { isAuthenticated, isInitialized, getUserData } = useWalletContext();
   const { state } = useLocation();
   const { paymentSignature } = usePayment();
   
@@ -67,7 +67,7 @@ export default function StadiumOrdersPage() {
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
       try {
-        if (!isAuthenticated) {
+        if (isInitialized && !isAuthenticated) {
           navigate('/app');
           return;
         }

@@ -60,7 +60,7 @@ const CategoryBadge = ({ category, active, onClick }) => {
 export default function ClubForumPage() {
   const { clubId } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useWalletContext();
+  const { isAuthenticated, isInitialized } = useWalletContext();
   const { isFollowingClub, isUserHeartClub } = useUserContext();
   
   const [loading, setLoading] = useState(true);
@@ -84,13 +84,13 @@ export default function ClubForumPage() {
   useEffect(() => {
     const checkAccessAndLoadData = async () => {
       try {
-        if (!isAuthenticated) {
+        if (isInitialized && !isAuthenticated) {
           navigate('/app');
           return;
         }
         
         // Check if user is following this club or has it as heart club
-        const hasAccess = isFollowingClub(clubId) || isUserHeartClub(clubId);
+        const hasAccess = await isFollowingClub(clubId) || await isUserHeartClub(clubId);
         if (!hasAccess) {
           showError("You need to follow this club to access the forum");
           navigate(`/clubs/${clubId}`);

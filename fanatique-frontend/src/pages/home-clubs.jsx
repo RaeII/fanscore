@@ -16,7 +16,7 @@ export default function HomeClubsPage() {
   const { clubId } = useParams();
   const location = useLocation();
   const { t } = useTranslation(['common', 'club']);
-  const { isAuthenticated, getUserData } = useWalletContext();
+  const { isAuthenticated, isInitialized, getUserData } = useWalletContext();
   const [loading, setLoading] = useState(true);
   const [userClubStats, setUserClubStats] = useState(null);
   const [selectedClub, setSelectedClub] = useState(null);
@@ -44,7 +44,8 @@ export default function HomeClubsPage() {
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
       try {
-        if (!isAuthenticated) {
+        // Only check authentication after wallet context is fully initialized
+        if (isInitialized && !isAuthenticated) {
           console.log('HomeClubs: User not authenticated, redirecting to /app');
           navigate('/app');
           return;
@@ -78,13 +79,13 @@ export default function HomeClubsPage() {
 
     checkAuthAndLoadData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, navigate, getUserData, clubId]);
+  }, [isAuthenticated, isInitialized, navigate, getUserData, clubId]);
 
   const checkIfFollowing = async (clubId) => {
     try {
       // In a real app, this would be an API call to check if user is following this club
       // For demo purposes, we'll mock this with local storage
-      setIsFollowing(isFollowingClub(clubId));
+      setIsFollowing(await isFollowingClub(clubId));
     } catch (error) {
       console.error('Error checking following status:', error);
       setIsFollowing(false);
@@ -228,8 +229,8 @@ export default function HomeClubsPage() {
     try {
       // In a real app, this would be an API call to check if this is the user's heart club
       // For demo purposes, we'll mock this with local storage
-      setIsHeartClub(isUserHeartClub(clubId));
-      setHasHeartClub(hasUserHeartClub(clubId));
+      setIsHeartClub(await isUserHeartClub(clubId));
+      setHasHeartClub(await hasUserHeartClub(clubId));
     } catch (error) {
       console.error('Error checking heart club status:', error);
       setIsHeartClub(false);

@@ -58,7 +58,7 @@ const QuestStatusChip = ({ status }) => {
 export default function GamePage() {
   const navigate = useNavigate();
   const { clubId, gameId } = useParams();
-  const { isAuthenticated, getUserData } = useWalletContext();
+  const { isAuthenticated, isInitialized, getUserData } = useWalletContext();
   const [loading, setLoading] = useState(true);
   const [gameInfo, setGameInfo] = useState(null);
   const [club, setClub] = useState(null);
@@ -83,7 +83,7 @@ export default function GamePage() {
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
       try {
-        if (!isAuthenticated) {
+        if (isInitialized && !isAuthenticated) {
           console.log('GamePage: User not authenticated, redirecting to /app');
           navigate('/app');
           return;

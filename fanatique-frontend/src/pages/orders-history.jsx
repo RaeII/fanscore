@@ -9,7 +9,7 @@ import orderApi from '../api/order';
 
 export default function OrdersHistoryPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, getUserData } = useWalletContext();
+  const { isAuthenticated, isInitialized, getUserData } = useWalletContext();
   
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
@@ -29,7 +29,7 @@ export default function OrdersHistoryPage() {
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
       try {
-        if (!isAuthenticated) {
+        if (isInitialized && !isAuthenticated) {
           console.log('OrdersHistory: User not authenticated, redirecting to /app');
           navigate('/app');
           return;

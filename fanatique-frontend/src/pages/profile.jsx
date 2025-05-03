@@ -191,7 +191,7 @@ export default function ProfilePage() {
   const { t } = useTranslation(['common', 'achievements', 'quests']);
   const navigate = useNavigate();
   const { userData, loading, error, userClubsData, updateUserData } = useUserContext();
-  const { isAuthenticated } = useWalletContext();
+  const { isAuthenticated, isInitialized } = useWalletContext();
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -364,10 +364,10 @@ export default function ProfilePage() {
 
   // Redirect to home if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isInitialized && !isAuthenticated) {
       navigate('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isInitialized, navigate]);
 
   // Fetch total stats across all clubs
   useEffect(() => {
