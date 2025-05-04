@@ -1,7 +1,7 @@
 # Fanatique 🏟️
 
 <div align="center">
-  <img src="hhttp://64.23.128.77:4173/fanatique_white.png" alt="Fanatique Logo" width="200"/>
+  <img src="./fanatique-frontend/public/logo-header.png" alt="Fanatique Logo" width="200"/>
   <h3>Experiência de estádio sem filas</h3>
 </div>
 
