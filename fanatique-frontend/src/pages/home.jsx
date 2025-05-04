@@ -3,14 +3,34 @@ import { WalletConnect } from '../components/wallet-connect'
 import { Button } from '../components/ui-v2/Button'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useEffect } from 'react';
+import { useWalletContext } from '../hooks/useWalletContext';
+import { showError } from '../lib/toast'
+
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { t } = useTranslation(['home', 'common']);
-
+  const { isAuthenticated } = useWalletContext();
   const handleGetStarted = () => {
     navigate('/app');
   };
+
+  useEffect(() => {
+    const checkAuthAndLoadData = async () => {
+      try {
+        if (!isAuthenticated) {
+          navigate('/dashboard'); 
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        showError('Erro ao verificar autenticação');
+      }
+    };
+
+    checkAuthAndLoadData();
+  }, [isAuthenticated, navigate]);
+  
 
 
   return (

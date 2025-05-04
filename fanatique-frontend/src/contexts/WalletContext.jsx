@@ -287,11 +287,22 @@ export function WalletProvider({ children }) {
     
     if (chainId !== formattedChilizChainId) {
       setIsChilizNetwork(false);
-      showError("Troque para a rede Chiliz para continuar usando o aplicativo");
+      showError("Troque para a rede Chiliz Spicy para continuar usando o aplicativo");
+      
+      // Adiciona um pequeno delay antes de solicitar a troca de rede
+      setTimeout(() => {
+        // Tenta trocar para a rede Chiliz automaticamente
+        switchNetwork().catch(error => {
+          console.error('Erro ao solicitar troca de rede:', error);
+          if (error.code !== 4001) { // Se não for erro de usuário cancelou
+            addNetwork().catch(console.error);
+          }
+        });
+      }, 1500);
     } else {
       setIsChilizNetwork(true);
     }
-  }, []);
+  }, [switchNetwork, addNetwork]);
   
   // Verifica o estado de autenticação e restaura se necessário
   useEffect(() => {
