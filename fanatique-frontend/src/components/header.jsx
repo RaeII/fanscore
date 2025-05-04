@@ -28,7 +28,7 @@ export function Header({ className }) {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2 text-primary dark:text-white">
           <span className="font-bold text-text-adaptive text-xl">
-            <img src="/fanatique_white.png" alt="Fanatique"style={{width:"11.5rem"}} />
+            <img src="/logo-header.png" alt="Fanatique"style={{width:"11.5rem", height:"auto"}} />
           </span>
         </Link>
         

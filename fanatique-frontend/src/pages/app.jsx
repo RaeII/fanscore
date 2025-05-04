@@ -288,9 +288,9 @@ export default function AppPage() {
             }
           }}
         />
-        <div className="container mx-auto max-w-md">
+{/*         <div className="container mx-auto max-w-md">
           <MetaMaskDebug />
-        </div>
+        </div> */}
       </div>
     );
   }
