@@ -1,8 +1,7 @@
-# Fanatique 🏟️
 
 <div align="center">
   <img src="./fanatique-frontend/public/logo-header.png" alt="Fanatique Logo" width="200"/>
-  <p>acesse: 🔗<span style="font-size: 2em;"><a href="http://64.23.128.77:4173/" target="_blank">FANATIQUE APP</a></span></p>
+  <p>acesse: 🔗<span style="font-size: 4em;"><a href="http://64.23.128.77:4173/" target="_blank">FANATIQUE APP</a></span></p>
   <h3>Consuma sem filas, ganhe recompensas e transforme sua experiência no estádio com a Fanatique</h3>
 </div>
 
