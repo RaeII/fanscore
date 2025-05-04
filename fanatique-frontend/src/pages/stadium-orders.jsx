@@ -1140,6 +1140,13 @@ export default function StadiumOrdersPage() {
                   </span>
                 </div>
               </div>
+              <Button 
+                className="w-full mt-2 text-foreground"
+                variant="outline"
+                onClick={() => setShowPaymentModal(false)}
+              >
+                Cancelar
+              </Button>
             </div>
           </div>
         </div>
@@ -1229,6 +1236,14 @@ export default function StadiumOrdersPage() {
                 ) : (
                   'Confirmar Pagamento'
                 )}
+              </Button>
+              
+              <Button 
+                className="w-full mt-2 text-foreground"
+                variant="outline"
+                onClick={() => setShowStablecoinModal(false)}
+              >
+                Cancelar
               </Button>
             </div>
           </div>
