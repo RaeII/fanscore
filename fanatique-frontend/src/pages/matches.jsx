@@ -26,6 +26,7 @@ export default function MatchesPage() {
     upcoming: [],
     past: []
   });
+  const [heartClubMatch, setHeartClubMatch] = useState(null);
   
   // Get the heart club data
   const heartClub = userClubsData?.heart_club?.club;
@@ -39,15 +40,34 @@ export default function MatchesPage() {
 
       try {
         setLoading(true);
-        // Get matches for the user's heart club
-        const clubMatches = await matchApi.getMatchesByClubId(heartClub.id);
         
-        // Sort matches into upcoming and past
+        // Buscar apenas a partida do clube do coração
+        await checkHeartClubMatch(heartClub.id);
+      } catch (error) {
+        console.error('Error fetching matches:', error);
+        showError(t('matches.errors.failedToLoad', 'Failed to load matches'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMatches();
+  }, [heartClub, t]);
+
+  const checkHeartClubMatch = async (clubId) => {
+    try {
+      const clubGames = await matchApi.getMatchesByClub(clubId);
+      if (clubGames.length > 0) {
+        // Se uma partida for encontrada onde o clube está participando, defina-a
+        const clubGame = clubGames[0];
+        const isCurrentClubHomeTeam = clubGame.home_club_id === clubId;
+        
+        // Classificar as partidas em próximas e passadas
         const now = new Date();
         const upcoming = [];
         const past = [];
         
-        clubMatches.forEach(match => {
+        clubGames.forEach(match => {
           const matchDate = new Date(match.date);
           if (matchDate > now) {
             upcoming.push(match);
@@ -66,19 +86,27 @@ export default function MatchesPage() {
           upcoming,
           past
         });
-      } catch (error) {
-        console.error('Error fetching matches:', error);
-        showError(t('matches.errors.failedToLoad', 'Failed to load matches'));
-      } finally {
-        setLoading(false);
+
+        setHeartClubMatch({
+          ...clubGame,
+          isHomeTeam: isCurrentClubHomeTeam
+        });
+      } else {
+        // Nenhuma partida ao vivo encontrada para este clube
+        setHeartClubMatch(null);
+        setMatches({
+          upcoming: [],
+          past: []
+        });
       }
-    };
-
-    fetchMatches();
-  }, [heartClub, t]);
-
-  const handleMatchClick = (match) => {
-    navigate(`/clubs/${heartClub.id}/game/${match.id}`);
+    } catch (error) {
+      console.error('Erro ao verificar partida do clube do coração:', error);
+      setHeartClubMatch(null);
+      setMatches({
+        upcoming: [],
+        past: []
+      });
+    }
   };
 
   if (loading) {
@@ -111,75 +139,67 @@ export default function MatchesPage() {
     <div className="min-h-[calc(100vh-4rem)] bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center mb-6">
-          {/* <Button
-            variant="normal"
-            size="icon"
-            onClick={handleBackButton}
-            className="mr-2"
-          >
-            <ArrowLeft size={20} />
-          </Button> */}
           <h1 className="text-2xl font-bold text-primary dark:text-white">
             {t('matches.title', '{{clubName}} Matches', { clubName: heartClub.name })}
           </h1>
         </div>
 
+
+
         <Tabs defaultValue="upcoming">
           <TabsList className="w-full mb-6 bg-background-overlay">
             <TabsTrigger value="upcoming" className="flex-1">
               <Clock className="mr-2 h-4 w-4" />
-              {t('matches.tabs.upcoming', 'Upcoming')}
+              {t('matches.tabs.upcoming', 'Próximas')}
             </TabsTrigger>
             <TabsTrigger value="past" className="flex-1 bg-background-overlay">
               <Trophy className="mr-2 h-4 w-4" />
-              {t('matches.tabs.past', 'Past')}
+              {t('matches.tabs.past', 'Anteriores')}
             </TabsTrigger>
           </TabsList>
           
           <TabsContent value="upcoming">
-            {matches.upcoming.length === 0 ? (
-              <div className="text-center py-12">
-                <Calendar size={48} className="mx-auto text-primary/30 dark:text-white/30 mb-4" />
-                <p className="text-primary/70 dark:text-white/70">{t('matches.noUpcoming', 'No upcoming matches found')}</p>
-              </div>
-            ) : (
-              <div>
-                {matches.upcoming.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    club={heartClub}
-                    isPast={false}
-                    isLive={false}
-                    onClick={() => handleMatchClick(match)}
-                  />
-                ))}
-              </div>
-            )}
+            <div>
+              {matches.upcoming.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  club={heartClub}
+                  isPast={false}
+                  isLive={false}
+                />
+              ))}
+            </div>
           </TabsContent>
           
           <TabsContent value="past">
-            {matches.past.length === 0 ? (
-              <div className="text-center py-12">
-                <Calendar size={48} className="mx-auto text-primary/30 dark:text-white/30 mb-4" />
-                <p className="text-primary/70 dark:text-white/70">{t('matches.noPast', 'No past matches found')}</p>
-              </div>
-            ) : (
-              <div>
-                {matches.past.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    club={heartClub}
-                    isPast={true}
-                    isLive={false}
-                    onClick={() => handleMatchClick(match)}
-                  />
-                ))}
-              </div>
-            )}
+            <div>
+              {matches.past.map((match) => (
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  club={heartClub}
+                  isPast={true}
+                  isLive={false}
+                />
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
+
+                {/* Partida do clube do coração (se existir) */}
+        {heartClubMatch && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">{t('matches.liveMatch', 'Partida Atual')}</h2>
+            <MatchCard 
+              match={heartClubMatch}
+              club={heartClub}
+              isPast={false}
+              isLive={true}
+              onClick={() => navigate(`/game/${heartClub.id}/${heartClubMatch.id}`, { state: { club: heartClub } })}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

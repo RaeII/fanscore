@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUserContext } from '../hooks/useUserContext';
@@ -210,7 +210,7 @@ export default function ProfilePage() {
   const [featuredQuest, setFeaturedQuest] = useState(null);
   
   // Mock achievements data
-  const achievements = [
+  const achievements = useMemo(() => [
     {
       id: 1,
       title: t('achievements:firstSteps.title', "First Steps"),
@@ -312,10 +312,10 @@ export default function ProfilePage() {
       icon: <Gift size={28} className="text-pink-500" />,
       rarity: "rare"
     }
-  ];
+  ], [t]);
 
   // Mock quests data
-  const completedQuests = [
+  const completedQuests = useMemo(() => [
     {
       id: 1,
       title: t('quests:dailyLogin.title', "Daily Login"),
@@ -344,7 +344,7 @@ export default function ProfilePage() {
       completedDate: "Apr 28, 2023",
       points: 75
     }
-  ];
+  ], [t]);
   
   // Calculate achievement progress stats
   const achievementStats = {
@@ -430,7 +430,7 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('Error loading featured items:', error);
     }
-  }, []);
+  }, [achievements, completedQuests]);
   
   // Save featured items to local storage or API
   const saveFeaturedItems = async () => {

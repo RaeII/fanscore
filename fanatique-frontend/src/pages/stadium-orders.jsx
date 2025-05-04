@@ -642,7 +642,7 @@ export default function StadiumOrdersPage() {
                             className="h-8 w-8"
                             onClick={() => handleRemoveFromCart(item)}
                           >
-                            <Minus size={16} />
+                            <Minus size={16} className="dark:text-white" />
                           </Button>
                           <span className="mx-3 font-medium text-primary dark:text-white">{quantity}</span>
                           <Button 
@@ -651,7 +651,7 @@ export default function StadiumOrdersPage() {
                             className="h-8 w-8"
                             onClick={() => handleAddToCart(item)}
                           >
-                            <Plus size={16} />
+                            <Plus size={16} className="dark:text-white" />
                           </Button>
                         </div>
                       ) : (
@@ -1046,8 +1046,8 @@ export default function StadiumOrdersPage() {
                   variant="outline"
                   onClick={() => navigate(`/clubs/${clubId}`)}
                 >
-                  <ArrowLeft size={16} className="mr-2" />
-                  Voltar o jogo
+                  <ArrowLeft size={16} className="mr-2 dark:text-white" />
+                  <span className="dark:text-white">Voltar o jogo</span>
                 </Button>
                 
                 <Button 
