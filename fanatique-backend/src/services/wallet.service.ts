@@ -29,6 +29,8 @@ class walletService {
 
 			// Recuperar o endereço que assinou a mensagem
 			const recoveredAddress = ethers.verifyMessage(message, signature);
+
+			
 			
 			// Verificar se o endereço recuperado coincide com o endereço fornecido
 			const isValid = recoveredAddress.toLowerCase() === address.toLowerCase();

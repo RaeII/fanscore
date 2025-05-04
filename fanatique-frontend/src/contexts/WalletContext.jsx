@@ -4,15 +4,39 @@ import api from '../lib/api';
 import { showError, showSuccess, showInfo } from '../lib/toast';
 import { WalletContext } from './WalletContextDef';
 
-// Configuração da rede Chiliz
-const NETWORK_ID_CHILIZ = import.meta.env.VITE_NETWORK_ID_MOOBEAM;
+// Dados da rede Chiliz
+const NETWORK_ID_CHILIZ = import.meta.env.VITE_NETWORK_ID_CHILIZ;
 const CHAIN_NAME = import.meta.env.VITE_CHAIN_NAME;
 const RPC_URL = import.meta.env.VITE_RPC_URL;
 const SYMBOL = import.meta.env.VITE_SYMBOL;
 const BLOCK_EXPLORER_URL = import.meta.env.VITE_BLOCK_EXPLORER_URL;
 
+// Helper para adicionar delay entre requisições
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Controle de tentativas para evitar spam
+const NETWORK_CHECK_COOLDOWN = 2000; // 2 segundos entre verificações de rede
+let lastNetworkCheck = 0;
+
+// Garantir que o chainId está no formato correto (0x prefixado)
+const formatChainId = (chainId) => {
+  // Se já é uma string hexadecimal com prefixo 0x, retorna como está
+  if (typeof chainId === 'string' && chainId.startsWith('0x')) {
+    return chainId;
+  }
+  
+  // Se é um número ou string sem 0x, converte para inteiro e depois para hexadecimal com prefixo 0x
+  try {
+    const chainIdInt = parseInt(chainId, 10);
+    return `0x${chainIdInt.toString(16)}`;
+  } catch (e) {
+    console.error('Erro ao formatar chainId:', e);
+    return chainId; // Retorna o original em caso de erro
+  }
+};
+
 const networkData = {
-  chainId: NETWORK_ID_CHILIZ,
+  chainId: formatChainId(NETWORK_ID_CHILIZ),
   chainName: CHAIN_NAME,
   rpcUrls: [RPC_URL],
   nativeCurrency: {
@@ -22,11 +46,7 @@ const networkData = {
   }
 };
 
-console.log("networkData", networkData);
-
-if (BLOCK_EXPLORER_URL) {
-  networkData.blockExplorerUrls = [BLOCK_EXPLORER_URL];
-}
+if(BLOCK_EXPLORER_URL) networkData.blockExplorerUrls = [BLOCK_EXPLORER_URL];
 
 // Provider que envolverá a aplicação
 export function WalletProvider({ children }) {
@@ -40,12 +60,160 @@ export function WalletProvider({ children }) {
   const [connecting, setConnecting] = useState(false);
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
-  const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
+  const [isChilizNetwork, setIsChilizNetwork] = useState(false);
 
   // Verifica se o MetaMask está disponível
   const checkIfMetaMaskAvailable = useCallback(() => {
     return window.ethereum && window.ethereum.isMetaMask;
   }, []);
+  
+  // Verifica a rede conectada
+  const checkNetwork = useCallback(async () => {
+    if (!window.ethereum) return false;
+    
+    try {
+      // Verifica se passou tempo suficiente desde a última verificação
+      const now = Date.now();
+      if (now - lastNetworkCheck < NETWORK_CHECK_COOLDOWN) {
+        // Se a última verificação foi recente, espera um pouco
+        await delay(NETWORK_CHECK_COOLDOWN);
+      }
+      
+      // Atualiza o timestamp da última verificação
+      lastNetworkCheck = Date.now();
+      
+      const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const formattedChilizChainId = formatChainId(NETWORK_ID_CHILIZ);
+      
+      console.log("Rede atual:", currentChainId, "Rede Chiliz:", formattedChilizChainId);
+      
+      if (currentChainId !== formattedChilizChainId) {
+        setIsChilizNetwork(false);
+        return false;
+      } else {
+        setIsChilizNetwork(true);
+        return true;
+      }
+    } catch (error) {
+      console.error("Erro ao verificar rede:", error);
+      setIsChilizNetwork(false);
+      return false;
+    }
+  }, []);
+  
+  // Troca para a rede Chiliz
+  const switchNetwork = useCallback(async () => {
+    try {
+      // Adiciona um delay antes de solicitar a troca de rede
+      await delay(1000);
+      
+      const formattedChilizChainId = formatChainId(NETWORK_ID_CHILIZ);
+      
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: formattedChilizChainId }],
+      });
+      
+      // Atualiza o timestamp da última verificação
+      lastNetworkCheck = Date.now();
+      
+      // Aguarda um momento para que a mudança seja processada
+      await delay(1000);
+      
+      setIsChilizNetwork(true);
+      return true;
+    } catch (error) {
+      if (error.code === 4902) {
+        // Rede não adicionada, tenta adicionar
+        return false;
+      }
+      if (error.code === 4001) {
+        showError('Você precisa trocar para a rede Chiliz para continuar');
+        return false;
+      }
+      if (error.code === 4100) {
+        showError('Muitas requisições para a MetaMask. Por favor, aguarde alguns segundos e tente novamente.');
+        return false;
+      }
+      console.error("Erro ao trocar de rede:", error);
+      return false;
+    }
+  }, []);
+  
+  // Adiciona a rede Chiliz
+  const addNetwork = useCallback(async () => {
+    try {
+      // Adiciona um delay antes de solicitar a adição de rede
+      await delay(1500);
+      
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [networkData]
+      });
+      
+      // Aguarda um momento para garantir que a rede foi adicionada
+      await delay(1500);
+      
+      const switched = await switchNetwork();
+      if (switched) {
+        showSuccess("Rede Chiliz conectada com sucesso!");
+        setIsChilizNetwork(true);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      if (error.code === 4001) {
+        showError('Você precisa adicionar a rede Chiliz para continuar');
+      } else if (error.code === 4100) {
+        showError('Muitas requisições para a MetaMask. Por favor, aguarde alguns segundos e tente novamente.');
+      } else {
+        showError('Erro ao adicionar rede Chiliz. Por favor, tente novamente.');
+        console.error("Erro ao adicionar rede:", error);
+      }
+      return false;
+    }
+  }, [switchNetwork]);
+  
+  // Garante que estamos na rede Chiliz
+  const ensureChilizNetwork = useCallback(async () => {
+    try {
+      // Primeiro apenas verifica se já estamos na rede correta
+      const isCorrectNetwork = await checkNetwork();
+      if (isCorrectNetwork) {
+        return true;
+      }
+      
+      // Se não estamos na rede correta, aguarde um momento antes de continuar
+      await delay(1000);
+      
+      // Tenta trocar para a rede Chiliz
+      const switched = await switchNetwork();
+      if (!switched) {
+        // Se não conseguiu trocar, aguarde um momento antes de tentar adicionar
+        await delay(1000);
+        
+        // Se não conseguiu trocar, tenta adicionar a rede
+        return await addNetwork();
+      }
+      return switched;
+    } catch (error) {
+      if (error.code === 4100) {
+        // Se for erro de spam, aguarde mais tempo e tente novamente
+        await delay(3000);
+        showInfo('Aguardando para evitar bloqueio da MetaMask...');
+        try {
+          return await checkNetwork();
+        } catch (e) {
+          console.error('Erro persistente ao verificar rede:', e);
+          return false;
+        }
+      }
+      
+      console.error('Erro ao garantir rede Chiliz:', error);
+      return false;
+    }
+  }, [checkNetwork, switchNetwork, addNetwork]);
   
   // Obtém um signer para transações
   const getSigner = useCallback(async () => {
@@ -86,110 +254,6 @@ export function WalletProvider({ children }) {
     }
   }, []);
   
-  // Verifica a rede atual e troca ou adiciona se necessário
-  const checkNetwork = useCallback(async () => {
-    if (!window.ethereum) return false;
-    
-    try {
-      const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
-      
-      if (currentChainId !== NETWORK_ID_CHILIZ) {
-        showInfo('Você precisa estar na rede Chiliz para continuar');
-        
-        try {
-          // Tenta trocar para a rede Chiliz
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: NETWORK_ID_CHILIZ }]
-          });
-          
-          setIsCorrectNetwork(true);
-          return true;
-        } catch (switchError) {
-          // Se a rede não existe na carteira (erro 4902), tenta adicionar
-          if (switchError.code === 4902) {
-            try {
-              // Adiciona a rede Chiliz
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [networkData]
-              });
-              
-              setIsCorrectNetwork(true);
-              return true;
-            } catch (addError) {
-              if (addError.code === 4001) {
-                showError('Você precisa adicionar a rede Chiliz para continuar');
-              } else {
-                showError('Erro ao adicionar a rede Chiliz');
-              }
-              setIsCorrectNetwork(false);
-              return false;
-            }
-          } else if (switchError.code === 4001) {
-            showError('Você precisa trocar para a rede Chiliz para continuar');
-            setIsCorrectNetwork(false);
-            return false;
-          } else {
-            showError('Erro ao trocar para a rede Chiliz');
-            setIsCorrectNetwork(false);
-            return false;
-          }
-        }
-      } else {
-        setIsCorrectNetwork(true);
-        return true;
-      }
-    } catch (error) {
-      console.error('Erro ao verificar rede:', error);
-      setIsCorrectNetwork(false);
-      return false;
-    }
-  }, []);
-  
-  // Função explícita para adicionar a rede Chiliz
-  const addChilizNetwork = useCallback(async () => {
-    if (!window.ethereum) {
-      showError('MetaMask não está instalada. Por favor, instale-a para continuar.');
-      return false;
-    }
-    
-    try {
-      const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
-      
-      if (currentChainId === NETWORK_ID_CHILIZ) {
-        showInfo('Você já está na rede Chiliz');
-        setIsCorrectNetwork(true);
-        return true;
-      }
-      
-      // Tenta adicionar a rede Chiliz
-      await window.ethereum.request({
-        method: 'wallet_addEthereumChain',
-        params: [networkData]
-      });
-      
-      // Troca para a rede Chiliz
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: NETWORK_ID_CHILIZ }]
-      });
-      
-      showSuccess('Rede Chiliz adicionada com sucesso!');
-      setIsCorrectNetwork(true);
-      return true;
-    } catch (error) {
-      if (error.code === 4001) {
-        showError('Operação cancelada pelo usuário');
-      } else {
-        showError('Erro ao adicionar a rede Chiliz');
-        console.error('Erro ao adicionar rede Chiliz:', error);
-      }
-      setIsCorrectNetwork(false);
-      return false;
-    }
-  }, []);
-  
   // Função para lidar com a mudança de contas no MetaMask
   const handleAccountsChanged = useCallback((accounts) => {
     if (accounts.length === 0) {
@@ -209,16 +273,6 @@ export function WalletProvider({ children }) {
     }
   }, [address, clearAuthCredentials, getSigner]);
   
-  // Função para lidar com a mudança de rede
-  const handleChainChanged = useCallback((chainId) => {
-    if (chainId !== NETWORK_ID_CHILIZ) {
-      setIsCorrectNetwork(false);
-      showError('Troque para a rede Chiliz para continuar usando a aplicação');
-    } else {
-      setIsCorrectNetwork(true);
-    }
-  }, []);
-  
   // Função para lidar com a desconexão do MetaMask
   const handleDisconnect = useCallback(() => {
     clearAuthCredentials();
@@ -226,6 +280,18 @@ export function WalletProvider({ children }) {
     setAddress(null);
     setSigner(null);
   }, [clearAuthCredentials]);
+  
+  // Função para lidar com a mudança de rede
+  const handleChainChanged = useCallback((chainId) => {
+    const formattedChilizChainId = formatChainId(NETWORK_ID_CHILIZ);
+    
+    if (chainId !== formattedChilizChainId) {
+      setIsChilizNetwork(false);
+      showError("Troque para a rede Chiliz para continuar usando o aplicativo");
+    } else {
+      setIsChilizNetwork(true);
+    }
+  }, []);
   
   // Verifica o estado de autenticação e restaura se necessário
   useEffect(() => {
@@ -253,11 +319,11 @@ export function WalletProvider({ children }) {
           setIsAuthenticated(true);
           setIsConnected(true);
           
-          // Verifica a rede atual
-          await checkNetwork();
-          
           // Obter o signer após restaurar o estado da carteira
           await getSigner();
+          
+          // Verifica a rede atual
+          await checkNetwork();
         } else {
           setIsAuthenticated(false);
           console.log('WalletContext: Sem dados de autenticação no localStorage');
@@ -295,11 +361,17 @@ export function WalletProvider({ children }) {
         window.ethereum.removeListener('disconnect', handleDisconnect);
       }
     };
-  }, [handleAccountsChanged, handleChainChanged, handleDisconnect, provider, getSigner, checkNetwork]);
+  }, [handleAccountsChanged, handleDisconnect, provider, getSigner, handleChainChanged, checkNetwork]);
   
   // Função para conectar a carteira
   const connectWallet = useCallback(async () => {
     console.log("Iniciando processo de conexão da carteira...");
+    
+    // Evitar múltiplas tentativas de conexão
+    if (connecting) {
+      console.log("Já existe uma conexão em andamento");
+      return false;
+    }
     
     if (!window.ethereum) {
       console.error("MetaMask não está instalado");
@@ -327,44 +399,75 @@ export function WalletProvider({ children }) {
         console.log("Provider já existente, pulando inicialização");
       }
       
+      // Adiciona um pequeno delay antes de solicitar contas
+      await delay(500);
+      
       // Solicita acesso às contas do MetaMask
       console.log("Solicitando acesso às contas do MetaMask...");
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      });
+      let accounts;
+      try {
+        accounts = await window.ethereum.request({ 
+          method: 'eth_requestAccounts' 
+        });
+      } catch (accountError) {
+        if (accountError.code === 4001) {
+          // Usuário recusou a conexão
+          console.log("Usuário recusou a conexão");
+          showError('Você recusou a conexão com a carteira');
+        } else if (accountError.code === 4100) {
+          // Erro de spam filter
+          console.log("Bloqueio por spam filter");
+          showError('Muitas requisições para a MetaMask. Por favor, aguarde alguns segundos e tente novamente.');
+        } else {
+          showError('Erro ao conectar com a carteira: ' + (accountError.message || 'Erro desconhecido'));
+        }
+        setConnecting(false);
+        return false;
+      }
       
       console.log("Contas retornadas pelo MetaMask:", accounts);
       
-      if (accounts && accounts.length > 0) {
-        setAddress(accounts[0]);
-        setIsConnected(true);
-        console.log("Carteira conectada com sucesso:", accounts[0]);
-        
-        // Verifica a rede atual e troca se necessário
-        const networkCorrect = await checkNetwork();
-        if (!networkCorrect) {
-          console.log("Rede incorreta, tentando trocar...");
-          showInfo('É necessário estar na rede Chiliz para usar o aplicativo');
-        }
-        
-        // Obter o signer após conectar a carteira
-        console.log("Obtendo signer...");
-        await getSigner();
-        console.log("Signer obtido com sucesso");
-        
-        return true;
-      } else {
+      if (!accounts || accounts.length === 0) {
         console.error("Nenhuma conta encontrada no MetaMask");
         showError('Nenhuma conta encontrada. Por favor, verifique o MetaMask.');
+        setConnecting(false);
         return false;
       }
+      
+      // Define o endereço da conta e atualiza o estado de conexão
+      setAddress(accounts[0]);
+      setIsConnected(true);
+      console.log("Carteira conectada com sucesso:", accounts[0]);
+      
+      // Adiciona um pequeno delay antes de obter o signer
+      await delay(500);
+      
+      // Obter o signer após conectar a carteira
+      console.log("Obtendo signer...");
+      await getSigner();
+      console.log("Signer obtido com sucesso");
+      
+      // Agora aguarda mais um momento antes de verificar a rede
+      await delay(1000);
+      
+      // Apenas verifica se a rede está correta, sem tentar trocar
+      // Isso evita o erro de spam filter
+      const isCorrectNetwork = await checkNetwork();
+      if (!isCorrectNetwork) {
+        // Não tenta trocar a rede automaticamente aqui
+        // Apenas informa ao usuário 
+        showError("Você não está na rede Chiliz. Por favor, troque de rede manualmente.");
+        setIsChilizNetwork(false);
+      } else {
+        setIsChilizNetwork(true);
+      }
+      
+      return true;
     } catch (err) {
       console.error("Erro detalhado ao conectar carteira:", err);
       
-      if (err.code === 4001) {
-        // Usuário recusou a conexão
-        console.log("Usuário recusou a conexão");
-        showError('Você recusou a conexão com a carteira');
+      if (err.code === 4100) {
+        showError('Muitas requisições para a MetaMask. Por favor, aguarde alguns segundos e tente novamente.');
       } else {
         showError('Erro ao conectar com a carteira: ' + (err.message || 'Erro desconhecido'));
       }
@@ -374,6 +477,7 @@ export function WalletProvider({ children }) {
       console.log("Finalizando processo de conexão, definindo connecting=false");
       setConnecting(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider, getSigner, checkNetwork]);
   
   // Função para desconectar a carteira
@@ -423,29 +527,38 @@ export function WalletProvider({ children }) {
     }
     
     if (!checkIfMetaMaskAvailable()) {
-      showError('MetaMask não está instalada');
+      showError('MetaMask não está instalado');
       return false;
     }
     
-    // Verifica se já está assinando
+    // Verifica se já está assinando e evita solicitações duplicadas
     if (signing) {
       console.log('Uma solicitação de assinatura já está em andamento');
-      return false;
-    }
-    
-    // Verifica se está na rede correta
-    if (!isCorrectNetwork) {
-      const networkOk = await checkNetwork();
-      if (!networkOk) {
-        showError('Você precisa estar na rede Chiliz para assinar a mensagem');
-        return false;
-      }
+      return { inProgress: true };
     }
     
     try {
+      // Define o estado de assinatura como true no início
       setSigning(true);
       
-      // Mensagem para assinatura
+      // Verifica se a rede está correta ANTES de solicitar a assinatura
+      // Isso evita ter que trocar a rede e depois solicitar assinatura novamente
+      if (!isChilizNetwork) {
+        // Verifica a rede atual sem tentar trocar automaticamente
+        const isCorrect = await checkNetwork();
+        
+        if (!isCorrect) {
+          // Informa ao usuário que precisa trocar de rede manualmente
+          showError("Para continuar, você precisa trocar para a rede Chiliz manualmente.");
+          setSigning(false);
+          return false;
+        }
+      }
+      
+      // Adiciona um pequeno delay antes de solicitar assinatura
+      await delay(1000);
+      
+      // Mensagem para assinatura - usando um formato padrão para evitar assinaturas múltiplas
       const mensagem = `Validação de carteira no Fanatique: ${address}`;
       
       // Solicita assinatura ao usuário
@@ -466,6 +579,9 @@ export function WalletProvider({ children }) {
           console.log('Usuário cancelou a assinatura');
           showError('Assinatura cancelada pelo usuário. É necessário assinar para entrar na plataforma.');
           return { cancelled: true, success: false };
+        } else if (signError.code === 4100) {
+          showError('Muitas requisições para a MetaMask. Por favor, aguarde alguns segundos e tente novamente.');
+          return { spamBlocked: true, success: false };
         } else {
           showError('Falha ao solicitar assinatura. Tente novamente mais tarde.');
         }
@@ -477,6 +593,9 @@ export function WalletProvider({ children }) {
           setSigning(false);
         }
       }
+      
+      // Adiciona um pequeno delay antes de enviar a assinatura para o backend
+      await delay(500);
       
       // Envia a assinatura para o backend para validação
       const response = await api.post('/wallet/signature', {
@@ -504,17 +623,23 @@ export function WalletProvider({ children }) {
       }
     } catch (err) {
       console.error('Erro ao validar carteira:', err);
+      
       if (err.code === 4001) {
         showError('Assinatura cancelada pelo usuário. É necessário assinar para entrar na plataforma.');
         return { cancelled: true, success: false };
+      } else if (err.code === 4100) {
+        showError('Muitas requisições para a MetaMask. Por favor, aguarde alguns segundos e tente novamente.');
+        return { spamBlocked: true, success: false };
       } else {
         showError('Falha no login: ' + (err.message || 'Erro desconhecido'));
       }
+      
       return false;
     } finally {
+      // Sempre define signing como false ao finalizar
       setSigning(false);
     }
-  }, [address, setAuthCredentials, checkIfMetaMaskAvailable, signing, isCorrectNetwork, checkNetwork]);
+  }, [address, setAuthCredentials, checkIfMetaMaskAvailable, signing, isChilizNetwork, checkNetwork]);
   
   // Registrar com assinatura
   const registerWithSignature = useCallback(async (userName) => {
@@ -528,17 +653,11 @@ export function WalletProvider({ children }) {
       return false;
     }
     
-    // Verifica se está na rede correta antes de registrar
-    if (!isCorrectNetwork) {
-      const networkOk = await checkNetwork();
-      if (!networkOk) {
-        showError('Você precisa estar na rede Chiliz para registrar');
-        return false;
-      }
-    }
-
+    // A verificação de rede é feita dentro da função requestSignature
+    // Não precisamos fazer essa verificação aqui novamente
+    
     return await requestSignature(userName);
-  }, [address, requestSignature, isCorrectNetwork, checkNetwork]);
+  }, [address, requestSignature]);
   
   // Verifica se a carteira já está cadastrada
   const checkWalletExists = useCallback(async () => {
@@ -600,20 +719,18 @@ export function WalletProvider({ children }) {
         return { success: false, message: 'Falha ao conectar carteira' };
       }
       
-      // Verifica se está na rede correta
-      if (!isCorrectNetwork) {
-        const networkOk = await checkNetwork();
-        if (!networkOk) {
-          return { 
-            success: false, 
-            message: 'É necessário estar na rede Chiliz para usar o aplicativo' 
-          };
-        }
-      }
-      
       // Se já está autenticado, retorna sucesso
       if (isAuthenticated) {
         return { success: true, needsRegistration: false, isAuthenticated: true };
+      }
+      
+      // Verifica se a rede está correta antes de verificar o registro
+      if (!isChilizNetwork) {
+        return { 
+          success: true, 
+          needsNetworkChange: true,
+          message: 'É necessário trocar para a rede Chiliz'
+        };
       }
       
       // Verifica se a carteira já está cadastrada
@@ -645,7 +762,7 @@ export function WalletProvider({ children }) {
         message: error.message || 'Erro ao conectar e verificar registro'
       };
     }
-  }, [connectWallet, address, isAuthenticated, checkWalletExists, connecting, isCorrectNetwork, checkNetwork]);
+  }, [connectWallet, address, isAuthenticated, checkWalletExists, connecting, isChilizNetwork]);
   
   // Define os valores compartilhados
   const contextValue = {
@@ -653,12 +770,13 @@ export function WalletProvider({ children }) {
     isConnected,
     isAuthenticated,
     isInitialized,
-    isCorrectNetwork,
     token,
     signing,
     connecting,
     provider,
     signer,
+    isChilizNetwork,
+    BLOCK_EXPLORER_URL,
     connectWallet,
     disconnectWallet,
     requestSignature,
@@ -670,7 +788,10 @@ export function WalletProvider({ children }) {
     connectAndCheckRegistration,
     getSigner,
     checkNetwork,
-    addChilizNetwork
+    switchNetwork,
+    addNetwork,
+    ensureChilizNetwork,
+  
   };
   
   return (

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
 import { Button } from '../components/ui-v2/Button';
 import { Input } from '../components/ui/input';
-import { Loader2, Wallet, AlertTriangle } from 'lucide-react';
+import { Loader2, Wallet } from 'lucide-react';
 import { showError, showSuccess } from '../lib/toast';
 import { Cta11 } from '../components/ui/cta11';
 import { MetaMaskDebug } from '../components/MetaMaskDebug';
@@ -20,9 +20,8 @@ export default function AppPage() {
     checkWalletExists,
     isAuthenticated,
     isConnected,
-    isCorrectNetwork,
-    checkNetwork,
-    addChilizNetwork
+    isChilizNetwork,
+    ensureChilizNetwork
   } = useWalletContext();
 
   const [loading, setLoading] = useState(true);
@@ -31,7 +30,7 @@ export default function AppPage() {
   const [userNameError, setUserNameError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [loginCancelled, setLoginCancelled] = useState(false);
-  const [networkError, setNetworkError] = useState(false);
+  const [networkLoading, setNetworkLoading] = useState(false);
 
   // Regex para validar caracteres permitidos no nome de usuário
   const validCharsRegex = /^[a-zA-Z0-9_]+$/;
@@ -61,19 +60,9 @@ export default function AppPage() {
         return;
       }
       
-      // Verifica se está na rede correta
-      if (!isCorrectNetwork) {
-        const networkOk = await checkNetwork();
-        if (!networkOk) {
-          setNetworkError(true);
-          setLoading(false);
-          return;
-        }
-      }
-      
-      // Verifica se o usuário já está cadastrado
+      // Verifica se o usuário já está cadastrado antes de verificar a rede
+      // Isso evita verificações de rede desnecessárias
       const walletCheck = await checkWalletExists();
-
       console.log("1- walletCheck", walletCheck);
       
       if (!walletCheck.success) {
@@ -82,37 +71,58 @@ export default function AppPage() {
         return;
       }
       
-      
       // Se o usuário não estiver cadastrado, exibe o formulário de registro
-      setShowRegister(!walletCheck.exists);
+      if (!walletCheck.exists) {
+        setShowRegister(true);
+        setLoading(false);
+        return;
+      }
       
-      // Se o usuário já estiver cadastrado, solicita a assinatura automaticamente
-      if (walletCheck.exists) {
+      // Só verifica a rede se o usuário já estiver cadastrado
+      // Isso evita solicitações duplicadas
+      if (!isChilizNetwork) {
+        setNetworkLoading(true);
+        const networkCorrect = await ensureChilizNetwork();
+        setNetworkLoading(false);
         
-        // Incrementa o contador de tentativas de assinatura
-        setSignAttempts(prev => prev + 1);
-        
-        const result = await requestSignature();
-        
-        // Verifica se o login foi bem-sucedido
-        if (result === true) {
-          
-          // Aguarda um pouco para garantir que os dados estejam persistidos
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Se chegamos aqui com sucesso, o contexto já deve ter atualizado o estado
-          navigate('/dashboard');
+        if (!networkCorrect) {
+          showError("Você precisa estar na rede Chiliz para continuar");
+          setLoginCancelled(true);
+          setLoading(false);
           return;
-        } else {
-          console.log('App: Falha no login, exibindo botão para tentar novamente');
+        }
+      }
+      
+      // Incrementa o contador de tentativas de assinatura
+      setSignAttempts(prev => prev + 1);
+      
+      // Solicita assinatura apenas uma vez
+      const result = await requestSignature();
+      
+      // Verifica se o login foi bem-sucedido
+      if (result === true) {
+        // Aguarda um pouco para garantir que os dados estejam persistidos
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Se chegamos aqui com sucesso, o contexto já deve ter atualizado o estado
+        navigate('/dashboard');
+        return;
+      } else {
+        console.log('App: Falha no login, exibindo botão para tentar novamente');
+        
+        // Se o usuário cancelou explicitamente ou houve erro de spam, incrementamos a contagem
+        if (result && (result.cancelled || result.spamBlocked)) {
+          console.log('Login falhou:', result);
           
-          // Se o usuário cancelou explicitamente, incrementamos a contagem
-          if (result && result.cancelled) {
-            console.log('Usuário cancelou a assinatura, contador atual:', signAttempts);
+          if (result.spamBlocked) {
+            // Para erros de spam, aguarda um pouco mais antes de permitir nova tentativa
+            await new Promise(resolve => setTimeout(resolve, 3000));
           }
           
-          setLoginCancelled(true);
+          setSignAttempts(prev => prev + 1);
         }
+        
+        setLoginCancelled(true);
       }
       
       setLoading(false);
@@ -121,41 +131,39 @@ export default function AppPage() {
       showError('Erro ao verificar se o usuário está cadastrado');
       setLoading(false);
     }
-  }, [account, checkWalletExists, requestSignature, navigate, signAttempts, isCorrectNetwork, checkNetwork]);
+  }, [account, checkWalletExists, requestSignature, navigate, signAttempts, isChilizNetwork, ensureChilizNetwork]);
 
   // Verificar se o usuário já está autenticado e redirecionar para o dashboard
   useEffect(() => {
-    (async () => {
-      console.log('isAuthenticated', isAuthenticated);
-      console.log('isConnected', isConnected);
-      console.log('account', account);
+    const init = async () => {
+      // Se já está autenticado, redireciona diretamente para o dashboard
       if (isAuthenticated) {
         navigate('/dashboard');
         return;
       }
       
       // Se já está conectado mas não autenticado, verifica registro
-      if (isConnected && account) {
+      // Mas só se não estiver no modo de login cancelado
+      if (isConnected && account && !loginCancelled) {
         await checkIfUserRegistered();
       } else {
         setLoading(false);
       }
-    })();
-  }, [isAuthenticated, isConnected, account, navigate, checkIfUserRegistered]);
-
-  // Atualiza o estado de erro de rede quando isCorrectNetwork muda
-  useEffect(() => {
-    if (isConnected) {
-      setNetworkError(!isCorrectNetwork);
-    }
-  }, [isCorrectNetwork, isConnected]);
+    };
+    
+    init();
+  }, [isAuthenticated, isConnected, account, navigate, checkIfUserRegistered, loginCancelled]);
 
   // Função para apenas conectar a carteira
   const handleConnectWallet = async () => {
     try {
+      // Evita múltiplas tentativas enquanto está carregando
+      if (loading || signing || networkLoading) {
+        return;
+      }
+      
       setLoading(true);
       setLoginCancelled(false);
-      setNetworkError(false);
       // Reseta o contador de tentativas ao conectar a carteira
       setSignAttempts(0);
       
@@ -174,30 +182,14 @@ export default function AppPage() {
         return;
       }
       
+      // Aguarda um pouco antes de prosseguir para dar tempo para a MetaMask processar
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       // Após conectar com sucesso, verifica se o usuário está cadastrado
       await checkIfUserRegistered();
     } catch (error) {
       console.error("Erro ao conectar carteira:", error);
       showError('Erro ao conectar carteira');
-      setLoading(false);
-    }
-  };
-
-  // Função para adicionar a rede Chiliz
-  const handleAddNetwork = async () => {
-    try {
-      setLoading(true);
-      const added = await addChilizNetwork();
-      if (added) {
-        setNetworkError(false);
-        // Se adicionou com sucesso, continua o fluxo
-        await checkIfUserRegistered();
-      } else {
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error("Erro ao adicionar rede:", error);
-      showError('Erro ao adicionar rede Chiliz');
       setLoading(false);
     }
   };
@@ -218,6 +210,9 @@ export default function AppPage() {
     setSubmitting(true);
     
     try {
+      // Aguarda um momento antes de prosseguir
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // Registra o usuário e faz a assinatura em um único passo
       const result = await registerWithSignature(userName);
       
@@ -231,11 +226,17 @@ export default function AppPage() {
         // Navega para o dashboard
         navigate('/dashboard');
       } else {
-        // Se não teve sucesso, provavelmente o usuário cancelou a assinatura
+        // Se não teve sucesso, pode ser por diversos motivos
         if (result && result.cancelled) {
           console.log('Usuário cancelou o registro');
           setSignAttempts(prev => prev + 1);
+        } else if (result && result.spamBlocked) {
+          console.log('Registro bloqueado por spam filter');
+          // Aguarda um pouco mais para erros de spam
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          setSignAttempts(prev => prev + 1);
         }
+        
         setLoginCancelled(true);
       }
     } catch (error) {
@@ -260,32 +261,13 @@ export default function AppPage() {
   };
 
   // Mostra a tela de loading
-  if (loading || signing) {
+  if (loading || signing || networkLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-secondary" />
         <p className="mt-4 text-xl text-primary/70 dark:text-white/70">
-          {loading ? 'Carregando...' : signing ? 'Validando assinatura...' : ''}
+          {loading ? 'Carregando...' : signing ? 'Validando assinatura...' : networkLoading ? 'Verificando rede Chiliz...' : ''}
         </p>
-      </div>
-    );
-  }
-
-  // Mostra a tela de erro de rede se não estiver na rede correta
-  if (isConnected && networkError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">
-        <Cta11 
-          heading="Rede Incorreta"
-          description="Você precisa estar na rede Chiliz para usar o Fanatique. Clique no botão abaixo para adicionar ou trocar para a rede Chiliz."
-          buttons={{
-            primary: {
-              text: "Trocar para Rede Chiliz",
-              onClick: handleAddNetwork,
-              icon: <AlertTriangle size={18} />
-            }
-          }}
-        />
       </div>
     );
   }

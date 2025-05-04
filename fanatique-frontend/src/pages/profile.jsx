@@ -13,9 +13,9 @@ import clubApi from '../api/club';
 // StatCard component for displaying user metrics
 function StatCard({ icon, title, value, label }) {
   return (
-    <div className="bg-background-overlay p-4 rounded-lg shadow-sm">
+    <div className="p-4 rounded-lg shadow-sm icon">
       <div className="flex items-center gap-3">
-        <div className="p-2 rounded-full bg-tertiary/10 dark:bg-tertiary">
+        <div className="p-2 rounded-full">
           {icon}
         </div>
         <div>
@@ -632,25 +632,25 @@ export default function ProfilePage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <StatCard
-          icon={<Trophy size={24} className="text-foreground" />}
+          icon={<Trophy size={24} className="" />}
           title={t('profile.points')}
           value={totalStats.points.toLocaleString()}
           label={t('profile.earnedPoints')}
         />
         <StatCard
-          icon={<Star size={24} className="text-foreground" />}
+          icon={<Star size={24} className="" />}
           title={t('profile.completedQuests')}
           value={totalStats.quests.toLocaleString()}
           label={t('profile.quests')}
         />
         <StatCard
-          icon={<ShoppingBag size={24} className="text-foreground" />}
+          icon={<ShoppingBag size={24} className="" />}
           title={t('profile.orders')}
           value={totalStats.orders.toLocaleString()}
           label={t('profile.placedOrders')}
         />
         <StatCard
-          icon={<Ticket size={24} className="text-foreground" />}
+          icon={<Ticket size={24} className="" />}
           title={t('profile.tickets')}
           value={totalStats.tickets.toLocaleString()}
           label={t('profile.purchasedTickets')}
@@ -673,8 +673,8 @@ export default function ProfilePage() {
       <div className="mb-8 bg-background-overlay p-4 rounded-lg shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-tertiary/10 dark:bg-tertiary">
-              <Award size={24} className="text-foreground" />
+            <div className="p-2 rounded-full icon">
+              <Award size={24} className="" />
             </div>
             <div>
               <h3 className="text-xs font-medium text-text-adaptive/60 dark:text-white/60">{t('profile.achievements')}</h3>

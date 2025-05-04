@@ -31,7 +31,7 @@ router.get('', [
 ]);
 
 router.put('/:id', [
-	//jwtMiddleware.validJWTNeeded,
+	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {
 		const controller = new Controller();
 
