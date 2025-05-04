@@ -1,7 +1,7 @@
 # Fanatique 🏟️
 
 <div align="center">
-  <img src="https://via.placeholder.com/200" alt="Fanatique Logo" width="200"/>
+  <img src="hhttp://64.23.128.77:4173/fanatique_white.png" alt="Fanatique Logo" width="200"/>
   <h3>Experiência de estádio sem filas</h3>
 </div>
 
@@ -38,10 +38,13 @@ Fanatique é uma aplicação descentralizada (dApp) construída na rede Chiliz, 
 
 ```bash
 # Clone o repositório
-git clone https://github.com/seu-usuario/fanatique.git
+git clone git@github.com:RaeII/fanatique.git
 
 # Entre na pasta do frontend
 cd fanatique/fanatique-frontend
+
+# Instale as dependências
+cd fanatique/fanatique-backend
 
 # Instale as dependências
 yarn install
