@@ -9,7 +9,11 @@ import "scripts/verify-contract.ts"
 
 import env from './src/config/index.ts'
 
-const accounts = env.PRIVATE_KEY !== undefined ? [ env.PRIVATE_KEY] : [];
+console.log(process.env.CHILIZ_APIKEY)
+
+const accounts = ["04322e0b71e7886588e7cada5efbaa18257e630ff717cd2112d5200edb4dcc1b"];
+
+console.log(accounts)
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -47,6 +51,10 @@ const config: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       timeout:60000
     },
+    chiliz_spicy: {
+      url: 'https://spicy-rpc.chiliz.com',
+      accounts: accounts,
+    },
     testnet: {
       url: 'https://spicy-rpc.chiliz.com/ ',
       chainId: 88882,
@@ -55,9 +63,17 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
+      chiliz_spicy: "chiliz_spicy", // apiKey is not required, just set a placeholder
     },
     customChains: [
-      
+      {
+        network: "chiliz_spicy",
+        chainId: 88882,
+        urls: {
+          apiURL: "https://api.routescan.io/v2/network/testnet/evm/88882/etherscan",
+          browserURL: "https://testnet.chiliscan.com"
+        }
+      }
     ],
   },
 };

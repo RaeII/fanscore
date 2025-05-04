@@ -1,6 +1,6 @@
 {
   "hero": {
-    "title": "Revolutionize your fan experience with",
+    "title": "Consume without queues, earn rewards and transform your stadium experience with",
     "subtitle": "Transform your passion for football into a complete experience with blockchain, Fan Tokens, and exclusive benefits.",
     "getStartedButton": "Get Started"
   },
@@ -24,11 +24,11 @@
     "items": {
       "shopping": {
         "title": "Smart Consumption",
-        "description": "Buy food and drinks without leaving your seat, using Fan Tokens as payment.",
+        "description": "Buy food and drinks without leaving your seat, using on-chain payment.",
         "details": [
-          "Payment with Fan Tokens",
+          "On-chain payment",
           "Seat delivery",
-          "Pre-orders"
+          "Queue-less orders"
         ]
       },
       "checkin": {
@@ -59,12 +59,12 @@
         ]
       },
       "vip": {
-        "title": "VIP Experiences",
-        "description": "Access exclusive experiences available only to platform users.",
+        "title": "Fan Token Staking",
+        "description": "Earn rewards by staking your Fan Tokens",
         "details": [
-          "Exclusive events",
-          "Backstage access",
-          "Meet players"
+          "Special benefits",
+          "Discounts on purchases",
+          "Advantageous staking rates"
         ]
       },
       "community": {

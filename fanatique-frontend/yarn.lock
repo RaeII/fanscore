@@ -3407,6 +3407,11 @@ merge2@^1.3.0:
   resolved "https://registry.yarnpkg.com/merge2/-/merge2-1.4.1.tgz#4368892f885e907455a6fd7dc55c0c9d404990ae"
   integrity sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
 
+metamask-react@^2.7.0:
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/metamask-react/-/metamask-react-2.7.0.tgz#6ecead17819dfdc096bd68ae7b70df309555217e"
+  integrity sha512-E1WuBLdy0bRYPb/W8vCiR28CHnuzBafX1X9tazg3ko8FMXzGlZFYvul8yXg8Y5nacGR9OyIuwc9lfI9gDGvS0A==
+
 micro-ftch@^0.3.1:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/micro-ftch/-/micro-ftch-0.3.1.tgz#6cb83388de4c1f279a034fb0cf96dfc050853c5f"

@@ -48,6 +48,7 @@ class OrderController extends Controller {
 		
 		try {	
 			const userId: number = Number(res.locals.jwt.user_id);
+			const userAddress: string = res.locals.jwt.address;
 
 			const body: any = {
 				userId,
@@ -62,7 +63,9 @@ class OrderController extends Controller {
 				stablecoin_id: req.body.stablecoin_id
 			};
 
-			console.log({body});
+			if (userAddress !== body.userAddress) {
+				throw Error('Endereço de carteira não corresponde a carteira de login');
+			}
 
 			await Database.startTransaction();
 			const result = await this.service.paymentOrder(body);

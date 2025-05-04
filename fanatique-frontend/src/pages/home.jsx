@@ -3,6 +3,9 @@ import { WalletConnect } from '../components/wallet-connect'
 import { Button } from '../components/ui-v2/Button'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useEffect } from 'react';
+import { useWalletContext } from '../hooks/useWalletContext';
+
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -12,9 +15,49 @@ export default function HomePage() {
     navigate('/app');
   };
 
+  const { 
+    isAuthenticated, 
+    isInitialized, 
+    account, 
+    checkWalletExists, 
+    requestSignature,
+    connecting,
+    signing
+  } = useWalletContext();
+
+  // Verificar se o usuário já está autenticado e redirecionar para dashboard
+  useEffect(() => {
+    if (isInitialized && isAuthenticated) {
+      console.log('Home: Usuário já autenticado, redirecionando para dashboard');
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, isInitialized, navigate]);
+
+  // Efeito para verificar se o usuário já tem carteira conectada, está cadastrado, 
+  // mas não está autenticado (não tem token)
+  useEffect(() => {
+    const checkAndRequestSignature = async () => {
+      // Se temos conta conectada mas não estamos autenticados
+      if (isInitialized && account && !isAuthenticated && !connecting && !signing) {
+        // Verificar se a carteira já está cadastrada
+        const walletCheck = await checkWalletExists();
+        
+        if (walletCheck?.success && walletCheck?.exists) {
+          console.log('Home: Carteira conectada e cadastrada, solicitando assinatura');
+          // Solicitar assinatura automaticamente
+          await requestSignature();
+        }
+      }
+    };
+    
+    checkAndRequestSignature();
+  }, [isInitialized, account, isAuthenticated, connecting, signing, checkWalletExists, requestSignature]);
+
+  
+
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-background">
+    <div className="min-h-[calc(100vh-4rem)] bg-background overflow-hidden">
       {/* Hero Section */}
       <section className="bg-backg text-white py-16 md:py-24">
         <div className="container mx-auto px-4">
@@ -23,9 +66,9 @@ export default function HomePage() {
               <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
                 {t('home:hero.title')} <span className="text-primary">{t('common:app.name')}</span>
               </h1>
-              <p className="text-lg md:text-xl mb-8">
+{/*               <p className="text-lg md:text-xl mb-8">
                 {t('home:hero.subtitle')}
-              </p>
+              </p> */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
                   size="lg" 
@@ -138,9 +181,9 @@ export default function HomePage() {
             <div className="absolute left-1/2 top-5/6 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{top: '83.3%'}}></div>
             
             {/* Features in staggered layout */}
-            <div className="space-y-28">
+            <div className="space-y-27">
               <FeatureRow 
-                icon={<ShoppingBag size={28} className="text-foreground" />}
+                icon={<ShoppingBag size={27} className="text-primary" />}
                 title={t('home:features.items.shopping.title')}
                 description={t('home:features.items.shopping.description')}
                 details={[
@@ -153,7 +196,7 @@ export default function HomePage() {
                 number="01"
               />
               <FeatureRow 
-                icon={<Check size={28} className="text-foreground" />}
+                icon={<Check size={27} className="text-primary" />}
                 title={t('home:features.items.checkin.title')}
                 description={t('home:features.items.checkin.description')}
                 details={[
@@ -166,7 +209,7 @@ export default function HomePage() {
                 number="02"
               />
               <FeatureRow 
-                icon={<Trophy size={28} className="text-foreground" />}
+                icon={<Trophy size={27} className="text-primary" />}
                 title={t('home:features.items.quests.title')}
                 description={t('home:features.items.quests.description')}
                 details={[
@@ -179,7 +222,7 @@ export default function HomePage() {
                 number="03"
               />
               <FeatureRow 
-                icon={<Smartphone size={28} className="text-foreground" />}
+                icon={<Smartphone size={27} className="text-primary" />}
                 title={t('home:features.items.tokens.title')}
                 description={t('home:features.items.tokens.description')}
                 details={[
@@ -192,7 +235,7 @@ export default function HomePage() {
                 number="04"
               />
               <FeatureRow 
-                icon={<Award size={28} className="text-foreground" />}
+                icon={<Award size={28} className="text-primary" />}
                 title={t('home:features.items.vip.title')}
                 description={t('home:features.items.vip.description')}
                 details={[
@@ -205,7 +248,7 @@ export default function HomePage() {
                 number="05"
               />
               <FeatureRow 
-                icon={<Users size={28} className="text-foreground" />}
+                icon={<Users size={28} className="text-primary" />}
                 title={t('home:features.items.community.title')}
                 description={t('home:features.items.community.description')}
                 details={[
@@ -241,8 +284,19 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="bg-primary/80 dark:bg-primary/20 py-16">
         <div className="container mx-auto px-4">
-          <div className="bg-white dark:bg-secondary rounded-2xl p-8 md:p-12 shadow-lg">
-            <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="bg-white dark:bg-secondary rounded-2xl p-8 md:p-12 shadow-lg relative overflow-hidden backdrop-blur-sm border border-white/10"
+            style={{
+              border: "1px solid rgb(33 125 6 / 30%))"
+            }}
+          >
+            {/* Gradiente de fundo */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/10 dark:from-primary/10 dark:via-transparent dark:to-purple-700/20"></div>
+            
+            {/* Círculo decorativo */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-secondary/10 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-primary/10 rounded-full blur-3xl"></div>
+            
+            <div className="flex flex-col md:flex-row items-center justify-between relative z-10">
               <div className="mb-6 md:mb-0 md:w-2/3">
                 <h2 className="text-2xl md:text-3xl font-bold text-text-adaptive dark:text-white mb-4">
                   {t('home:cta.title')}
@@ -304,7 +358,7 @@ function FeatureRow({ icon, title, description, details, position, delay, number
       {position === 'left' ? (
         <>
           <div className="col-span-2 animate-fadeInLeft" style={{ animationDelay: `${delay}s` }}>
-            <div className="bg-primary/80 p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
+            <div className="bg-black p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
               {/* Background decoration */}
               <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-secondary/10 group-hover:bg-secondary/10 transition-all duration-500"></div>
               
@@ -313,7 +367,7 @@ function FeatureRow({ icon, title, description, details, position, delay, number
                 {number}
               </div>
               
-              <div className="p-3 rounded-full bg-tertiary/70 w-fit mb-4 relative z-10">
+              <div className="p-3 rounded-full icon text-primary w-fit mb-4 relative z-10">
                 {icon}
               </div>
               <h3 className="text-xl font-bold mb-3 relative z-10">{title}</h3>
@@ -338,16 +392,17 @@ function FeatureRow({ icon, title, description, details, position, delay, number
           <div className="col-span-2"></div>
           <div className="col-span-1"></div>
           <div className="col-span-2 animate-fadeInRight" style={{ animationDelay: `${delay}s` }}>
-            <div className="bg-primary/80 p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
+            <div className="bg-black p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
               {/* Background decoration */}
-              <div className="absolute -top-12 -left-12 w-24 h-24 rounded-full bg-secondary/10 group-hover:bg-secondary/10 transition-all duration-500"></div>
+              <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-secondary/10 group-hover:bg-secondary/10 transition-all duration-500"></div>
               
               {/* Number indicator */}
-              <div className="absolute top-4 left-4 font-bold text-4xl text-secondary/40 group-hover:text-secondary/20 transition-all duration-500">
+              <div className="absolute top-4 right-4 font-bold text-4xl text-secondary/40 group-hover:text-secondary/20 transition-all duration-500">
                 {number}
               </div>
               
-              <div className="p-3 rounded-full bg-tertiary/70 w-fit mb-4 relative z-10">
+              <div className="p-3 rounded-full icon text-primary w-fit mb-4 relative z-10"
+              >
                 {icon}
               </div>
               <h3 className="text-xl font-bold dark:text-white mb-3 relative z-10">{title}</h3>

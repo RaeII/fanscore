@@ -106,7 +106,7 @@ class ContractService {
 	async configureAllClubTokens(initialSupply: string = "1000000000000000000000000"): Promise<Array<object>> {
 		try {
 			// Executar os comandos de deploy dos contratos
-			console.log('Iniciando deploy do contrato FanToken...');
+/* 			console.log('Iniciando deploy do contrato FanToken...');
 			try {
 				const { stdout: fanTokenOutput, stderr: fanTokenError } = await execPromise('export NODE_ENV=development && npx hardhat deploy --network localhost --contract fantoken');
 				console.log('FanToken deploy output:', fanTokenOutput);
@@ -134,7 +134,7 @@ class ContractService {
 			} catch (error: any) {
 				console.error('Erro ao executar deploy dos contratos ERC20:', error.message);
 				throw new Error(`Falha ao fazer deploy dos contratos ERC20: ${error.message}`);
-			}
+			} */
 
 			await this.configureAllStablecoins();
 

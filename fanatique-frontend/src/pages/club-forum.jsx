@@ -476,7 +476,7 @@ export default function ClubForumPage() {
               {/* Club info */}
               {clubData && (
                 <Card className="overflow-hidden rounded-xl">
-                  <div className="h-32 bg-gradient-to-r from-primary to-primary/80"></div>
+                  <div className="h-32 bg-gradient-to-r from-black to-primary/80"></div>
                   <div className="p-4 relative">
                     <Avatar className="absolute -top-10 left-4 w-20 h-20 border-4 border-white dark:border-gray-900">
                       <img 

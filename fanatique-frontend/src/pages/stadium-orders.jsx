@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
 import { 
@@ -32,6 +32,7 @@ import { useLocation } from 'react-router-dom';
 import establishmentProductApi from '../api/establishment_product';
 import { usePayment } from '../utils/web3/payment';
 import stablecoinApi from '../api/stablecoin';
+import { WalletContext } from '../contexts/WalletContextDef';
 
 export default function StadiumOrdersPage() {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export default function StadiumOrdersPage() {
   const { isAuthenticated, isInitialized, getUserData } = useWalletContext();
   const { state } = useLocation();
   const { paymentSignature } = usePayment();
-  
+  const { BLOCK_EXPLORER_URL } = useContext(WalletContext);
   // UI States
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState('establishments'); // 'establishments', 'menu', 'cart', 'confirmation', 'activeOrders'
@@ -569,7 +570,7 @@ export default function StadiumOrdersPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center mr-4">
+                        <div className="w-12 h-12 rounded-full bg-background flex items-center justify-center mr-4">
                           <img 
                             src={establishment.image} 
                             alt={establishment.establishment_name}
@@ -641,7 +642,7 @@ export default function StadiumOrdersPage() {
                             className="h-8 w-8"
                             onClick={() => handleRemoveFromCart(item)}
                           >
-                            <Minus size={16} />
+                            <Minus size={16} className="dark:text-white" />
                           </Button>
                           <span className="mx-3 font-medium text-primary dark:text-white">{quantity}</span>
                           <Button 
@@ -650,7 +651,7 @@ export default function StadiumOrdersPage() {
                             className="h-8 w-8"
                             onClick={() => handleAddToCart(item)}
                           >
-                            <Plus size={16} />
+                            <Plus size={16} className="dark:text-white" />
                           </Button>
                         </div>
                       ) : (
@@ -910,7 +911,7 @@ export default function StadiumOrdersPage() {
                                       : order.transaction_hash}
                                   </span>
                                   <a 
-                                    href={`https://chiliscan.com/tx/${order.transaction_hash}`} 
+                                    href={`${BLOCK_EXPLORER_URL}tx/${order.transaction_hash}`} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="ml-2 inline-flex items-center text-blue-400 hover:text-blue-300"
@@ -1045,8 +1046,8 @@ export default function StadiumOrdersPage() {
                   variant="outline"
                   onClick={() => navigate(`/clubs/${clubId}`)}
                 >
-                  <ArrowLeft size={16} className="mr-2" />
-                  Voltar o jogo
+                  <ArrowLeft size={16} className="mr-2 dark:text-white" />
+                  <span className="dark:text-white">Voltar o jogo</span>
                 </Button>
                 
                 <Button 

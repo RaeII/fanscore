@@ -5,6 +5,7 @@ class JwtMiddleware {
   validJWTNeeded(req: Request, res: Response, next: NextFunction): void {
     if (req.headers['authorization']) {
       try {
+
         const authorization = req.headers['authorization'].split(' ');
         if (authorization[0] !== 'Bearer') {
           res.status(401).send({

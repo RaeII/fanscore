@@ -16,6 +16,8 @@ class walletController extends Controller{
 
 	async signature(req: Request, res: Response) {
 		try {
+
+			console.log('chegou')
 			// Extrair os dados da requisição
 			const { address, message, signature, name } = req.body;
 			
@@ -26,6 +28,8 @@ class walletController extends Controller{
 			
 			// Chamar o serviço para validar a assinatura
 			const result = await service.signature(address, message, signature, name);
+
+			console.log({result})
 			
 			// Retornar o resultado da validação
 			if (result.success) {
@@ -39,7 +43,9 @@ class walletController extends Controller{
 					needsRegistration: result.needsRegistration
 				});
 			}
+
 		} catch (err) {
+			console.log({err})
 			this.sendErrorMessage(res, err, 'walletController');
       	}
 	}
@@ -47,8 +53,6 @@ class walletController extends Controller{
 	async checkWalletExists(req: Request, res: Response) {
 		try {
 			const { walletAddress } = req.params;
-
-			console.log({walletAddress});
 			
 			if (!walletAddress) {
 				return this.sendErrorMessage(res, 'Endereço da carteira é obrigatório', 'walletController');

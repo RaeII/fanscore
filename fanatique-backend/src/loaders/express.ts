@@ -12,7 +12,7 @@ import apiRouter from "@/routes";
 import { connectionMiddleware } from "@/helpers/async_local_storage";
 
 export default (app: Application) => {
-  app.use(json({ limit: '5mb' }));
+  app.use(json({ limit: '10mb' }));
 
   const options: cors.CorsOptions = {
     credentials: true,

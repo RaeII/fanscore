@@ -14,7 +14,7 @@ i18n
   .init({
     fallbackLng: 'en',
     supportedLngs: ['en', 'pt-BR'],
-    debug: import.meta.env.DEV,
+    debug: false,
     
     interpolation: {
       escapeValue: false, // React already escapes by default

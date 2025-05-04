@@ -31,8 +31,8 @@ async function verify(contractPath:string, contractNane:string, args:any, contra
 }
 
 export async function verifyContract(){
-  const args = [1000000] as const;
-  await verify("contracts/.sol:","USCT ",args, "0x63bE56747FECE0487F526008d7070713dBe3FfC5")
+  const args = ["10000000000000000000"] as const;
+  await verify("contracts/ERC20/USDC.sol:USDC","BRZ ",args, "0x63bE56747FECE0487F526008d7070713dBe3FfC5")
 }
 
 

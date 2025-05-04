@@ -3,8 +3,11 @@ import { Ticket } from 'lucide-react'
 import { ThemeToggle } from './ui/theme-toggle'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { cn } from '../lib/utils'
+import { useWalletContext } from '../hooks/useWalletContext';
+
 
 export function Header({ className }) {
+  const { isAuthenticated } = useWalletContext();
   // const navigate = useNavigate();
   // const location = useLocation();
   // const { 
@@ -23,9 +26,9 @@ export function Header({ className }) {
   return (
     <header className={cn("border-b border-secondary/10 dark:border-white/10 bg-background sticky top-0 z-50", className)}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 text-primary dark:text-white">
+        <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2 text-primary dark:text-white">
           <span className="font-bold text-text-adaptive text-xl">
-            <img src="/fanatique_white.png" alt="Fanatique"style={{width:"11.5rem"}} />
+            <img src="/logo-header.png" alt="Fanatique"style={{width:"11.5rem", height:"auto"}} />
           </span>
         </Link>
         

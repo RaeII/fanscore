@@ -18,7 +18,7 @@ const cardInnerShadow = {
 export default function BuyFantokensPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { account, isConnected, connectWallet } = useContext(WalletContext);
+  const { account, isConnected, connectWallet, BLOCK_EXPLORER_URL } = useContext(WalletContext);
   const [loading, setLoading] = useState(false);
   const [clubs, setClubs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +40,22 @@ export default function BuyFantokensPage() {
   
   // Estados para a navegação por tipo de token
   const [activeTokenType, setActiveTokenType] = useState(tokenTypeParam || 'fantoken');
+
+  // Função auxiliar para buscar stablecoins
+  const fetchStablecoins = async () => {
+    if (!account) return;
+    
+    try {
+      setLoadingStablecoins(true);
+      const stablecoinsData = await contractApi.getStablecoinBalances(account);
+      setStablecoins(stablecoinsData);
+    } catch (error) {
+      console.error('Erro ao buscar stablecoins:', error);
+      toast.error('Não foi possível carregar as stablecoins');
+    } finally {
+      setLoadingStablecoins(false);
+    }
+  };
 
   // Verificar se o usuário está autenticado
   useEffect(() => {
@@ -117,7 +133,7 @@ export default function BuyFantokensPage() {
 
   // Buscar transações quando a tab estiver ativa
   useEffect(() => {
-    const fetchTransactions = async () => {
+    const loadTransactions = async () => {
       if (activeTab === 'historico' && account) {
         try {
           setLoadingTransactions(true);
@@ -131,9 +147,9 @@ export default function BuyFantokensPage() {
         }
       }
     };
-
-    fetchTransactions();
-  }, [activeTab, account]);
+    
+    loadTransactions();
+  }, [activeTab, account, activeTokenType]);
 
   // Função para obter o saldo de tokens de um clube específico
   const getClubTokenBalance = (clubId) => {
@@ -259,27 +275,45 @@ export default function BuyFantokensPage() {
     setActiveTokenType(type);
     navigate(`/tokens?type=${type}`);
     
-    // Se mudar para stablecoin, buscar dados das stablecoins
+    // Atualizar dados com base no tipo de token selecionado
     if (type === 'stablecoin' && account) {
       fetchStablecoins();
+    } else if (type === 'fantoken' && account) {
+      const fetchWalletTokens = async () => {
+        try {
+          const tokens = await contractApi.getWalletTokens(account);
+          setWalletTokens(tokens);
+        } catch (error) {
+          console.error('Erro ao buscar tokens da carteira:', error);
+        }
+      };
+      fetchWalletTokens();
+    }
+    
+    // Se estiver na tab de histórico, atualizar as transações
+    if (activeTab === 'historico') {
+      const loadTransactions = async () => {
+        try {
+          setLoadingTransactions(true);
+          const data = await transactionApi.getUserTransactions();
+          setTransactions(data);
+        } catch (error) {
+          console.error('Erro ao buscar transações:', error);
+          toast.error('Não foi possível carregar as transações');
+        } finally {
+          setLoadingTransactions(false);
+        }
+      };
+      loadTransactions();
     }
   };
 
-  // Função auxiliar para buscar stablecoins
-  const fetchStablecoins = async () => {
-    if (!account) return;
-    
-    try {
-      setLoadingStablecoins(true);
-      const stablecoinsData = await contractApi.getStablecoinBalances(account);
-      setStablecoins(stablecoinsData);
-    } catch (error) {
-      console.error('Erro ao buscar stablecoins:', error);
-      toast.error('Não foi possível carregar as stablecoins');
-    } finally {
-      setLoadingStablecoins(false);
+  // Garantir que ao mudar para a aba de stake, o tipo de token seja sempre fantoken
+  useEffect(() => {
+    if (activeTab === 'stake' && activeTokenType !== 'fantoken') {
+      setActiveTokenType('fantoken');
     }
-  };
+  }, [activeTab, activeTokenType]);
 
   if (loading && activeTab === 'comprar') {
     return (
@@ -299,7 +333,7 @@ export default function BuyFantokensPage() {
             onClick={() => navigate('/dashboard')}
             className="mr-2"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft className="text-primary" size={18} />
           </Button>
           <h1 className="text-2xl font-bold text-primary dark:text-white">Tokens</h1>
         </div>
@@ -338,32 +372,34 @@ export default function BuyFantokensPage() {
         </div>
 
         {/* Tab de navegação FanTokens / Stablecoin - Reposicionada para abaixo dos ícones */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`flex-1 rounded-none border-b-2 py-2 ${
-              activeTokenType === 'fantoken'
-                ? 'border-primary text-foreground font-semibold'
-                : 'border-transparent text-foreground/70 dark:text-white/70'
-            }`}
-            onClick={() => handleTokenTypeChange('fantoken')}
-          >
-            FanTokens
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`flex-1 rounded-none border-b-2 py-2 ${
-              activeTokenType === 'stablecoin'
-                ? 'border-primary text-foreground font-semibold'
-                : 'border-transparent text-foreground/70 dark:text-white/70'
-            }`}
-            onClick={() => handleTokenTypeChange('stablecoin')}
-          >
-            Stablecoin
-          </Button>
-        </div>
+        {activeTab !== 'stake' && (
+          <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={`flex-1 rounded-none border-b-2 py-2 ${
+                activeTokenType === 'fantoken'
+                  ? 'border-primary text-foreground font-semibold'
+                  : 'border-transparent text-foreground/70 dark:text-white/70'
+              }`}
+              onClick={() => handleTokenTypeChange('fantoken')}
+            >
+              FanTokens
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className={`flex-1 rounded-none border-b-2 py-2 ${
+                activeTokenType === 'stablecoin'
+                  ? 'border-primary text-foreground font-semibold'
+                  : 'border-transparent text-foreground/70 dark:text-white/70'
+              }`}
+              onClick={() => handleTokenTypeChange('stablecoin')}
+            >
+              Stablecoin
+            </Button>
+          </div>
+        )}
 
         {activeTab === 'comprar' ? (
           <div className="mb-8">
@@ -499,60 +535,91 @@ export default function BuyFantokensPage() {
               </div>
             ) : (
               <div className="flex flex-col space-y-3">
-                {transactions.map(transaction => (
-                  <div 
-                    key={transaction.id}
-                    className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between transition-colors backdrop-blur-md border border-white/10"
-                    style={cardInnerShadow}
-                  >
-                    <div className="flex items-center">
-                      <div className="w-12 h-12 rounded-full bg-white overflow-hidden mr-4 flex-shrink-0">
-                        {transaction.club?.image ? (
-                          <img 
-                            src={transaction.club.image} 
-                            alt={transaction.club.name} 
-                            className="w-full h-full object-cover" 
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/50">
-                            <Football size={24} />
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-white">
-                          {transaction.club?.symbol || 'FanToken'}
+                {(() => {
+                  const filteredTransactions = transactions.filter(transaction => {
+                    // Filtrar transações com base no tipo ativo
+                    if (activeTokenType === 'fantoken') {
+                      return transaction.club !== undefined;
+                    } else if (activeTokenType === 'stablecoin') {
+                      return transaction.stablecoin !== undefined;
+                    }
+                    return true;
+                  });
+                  
+                  if (filteredTransactions.length === 0) {
+                    return (
+                      <div className="text-center py-10 bg-white/5 dark:bg-white/5 rounded-lg">
+                        <Receipt size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
+                        <p className="text-primary/70 dark:text-white/70">
+                          {activeTokenType === 'fantoken' 
+                            ? 'Nenhuma transação de FanToken encontrada.'
+                            : 'Nenhuma transação de Stablecoin encontrada.'}
                         </p>
-                        <div className="flex items-center text-xs text-gray-400">
-                          <span className="inline-flex items-center">
-                            <Receipt size={12} className="mr-1" />
-                            {formatHash(transaction.hash)}
-                          </span>
-                          {transaction.hash && (
-                            <a 
-                              href={`https://explorer.chiliz.com/tx/${transaction.hash}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="ml-2 inline-flex items-center text-blue-400 hover:text-blue-300"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <ExternalLink size={10} className="mr-1" />
-                              Explorar
-                            </a>
+                      </div>
+                    );
+                  }
+                  
+                  return filteredTransactions.map(transaction => (
+                    <div 
+                      key={transaction.id}
+                      className="bg-background-dark/40 dark:bg-background-dark/40 p-4 rounded-xl flex items-center justify-between transition-colors backdrop-blur-md border border-white/10"
+                      style={cardInnerShadow}
+                    >
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-full bg-white overflow-hidden mr-4 flex-shrink-0">
+                          {transaction.club?.image ? (
+                            <img 
+                              src={transaction.club.image} 
+                              alt={transaction.club.name} 
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : transaction.stablecoin?.image ? (
+                            <img 
+                              src={transaction.stablecoin.image} 
+                              alt={transaction.stablecoin.name} 
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/50">
+                              <Football size={24} />
+                            </div>
                           )}
                         </div>
+                        <div>
+                          <p className="font-medium text-white">
+                            {transaction.club?.symbol || transaction.stablecoin?.symbol || 'Token'}
+                          </p>
+                          <div className="flex items-center text-xs text-gray-400">
+                            <span className="inline-flex items-center">
+                              <Receipt size={12} className="mr-1" />
+                              {formatHash(transaction.hash)}
+                            </span>
+                            {transaction.hash && (
+                              <a 
+                                href={`${BLOCK_EXPLORER_URL}tx/${transaction.hash}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="ml-2 inline-flex items-center text-blue-400 hover:text-blue-300"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <ExternalLink size={10} className="mr-1" />
+                                Explorar
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-white">
+                          +{transaction.value}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {transaction.date_register ? new Date(transaction.date_register).toLocaleDateString() : '-'}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-white">
-                        +{transaction.value}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {new Date(transaction.date_register).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             )}
           </div>
@@ -578,8 +645,8 @@ export default function BuyFantokensPage() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center">
                     <label className="inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" />
-                      <div className="relative w-11 h-6 bg-black peer-focus:outline-none rounded-full peer dark:bg-background-dark/60 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600/80"></div>
+                      <input type="checkbox" className="sr-only peer bg-black" />
+                      <div className="relative w-11 h-6 bg-black peer-focus:outline-none rounded-full peer dark:bg-background-dark/60 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary/80"></div>
                       <span className="ms-3 text-sm font-medium text-white">Staked Only</span>
                     </label>
                   </div>
@@ -614,15 +681,14 @@ export default function BuyFantokensPage() {
                   </div>
                 ) : (
                   filteredClubs.map(club => {
-                    // Gerar um APR aleatório entre 2% e 18% para cada clube
-                    const apr = (Math.random() * 16 + 2).toFixed(2);
-                    // Gerar valores fictícios para o stake
-                    const tvl = (Math.random() * 100).toFixed(2);
-                    const totalTokens = (Math.random() * 1000 + 100).toFixed(1);
+                    // Valores fixos para o stake de cada clube
+                    const apr = (club.id % 10) + 5; // APR entre 5% e 14% baseado no ID do clube
+                    const tvl = ((club.id % 5) + 1) * 20; // TVL entre 20k e 100k
+                    const totalTokens = 100 + club.id * 10; // Total de tokens entre 100k e variável dependendo do ID
                     // Usar o saldo real do usuário
                     const userBalance = getClubTokenBalance(club.id);
-                    // Calcular um valor fictício de ganhos baseado no saldo
-                    const earned = userBalance > 0 ? (userBalance * Math.random() * 0.2).toFixed(2) : "0.00";
+                    // Valor fixo de ganhos baseado no saldo
+                    const earned = userBalance > 0 ? (userBalance * 0.1).toFixed(2) : "0.00";
                     
                     return (
                       <div key={club.id} className="bg-background-dark/40 dark:bg-background-dark/40 rounded-xl p-5 backdrop-blur-md border border-white/10 shadow-lg"

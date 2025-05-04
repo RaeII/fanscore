@@ -2,13 +2,26 @@ import axios from 'axios';
 
 // Configuração base do axios
 const api = axios.create({
-  baseURL: import.meta.env.VITE_URL_API,
+  baseURL: '/api',
   timeout: 100000,
   headers: {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
   }
 });
+
+// Interceptor para adicionar o token de autenticação em cada requisição
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Interceptor para tratamento de erros
 api.interceptors.response.use(

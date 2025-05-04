@@ -1,7 +1,6 @@
 {
   "hero": {
-    "title": "Revolucione sua experiência de torcedor com",
-    "subtitle": "Transforme sua paixão pelo futebol em uma experiência completa com blockchain, Fan Tokens e benefícios exclusivos.",
+    "title": "Consuma sem filas, ganhe recompensas e transforme sua experiência no estádio com a",
     "getStartedButton": "Comece Agora"
   },
   "quests": {
@@ -24,11 +23,11 @@
     "items": {
       "shopping": {
         "title": "Consumação Inteligente",
-        "description": "Compre alimentos e bebidas sem sair do seu assento, utilizando Fan Tokens como pagamento.",
+        "description": "Compre alimentos e bebidas sem sair do seu assento, utilizando pagamento on-chain.",
         "details": [
-          "Pagamento com Fan Tokens",
+          "Pagamento on-chain",
           "Entrega no assento",
-          "Pedidos antecipados"
+          "Pedidos sem filas"
         ]
       },
       "checkin": {
@@ -42,7 +41,7 @@
       },
       "quests": {
         "title": "Quests Gamificadas",
-        "description": "Complete missões exclusivas e ganhe recompensas valiosas e reconhecimento.",
+        "description": "Complete missões exclusivas e ganhe recompensas valiosas e reconhecimento",
         "details": [
           "Missões exclusivas",
           "Recompensas especiais",
@@ -51,7 +50,7 @@
       },
       "tokens": {
         "title": "Gestão de Fan Tokens",
-        "description": "Controle completo dos seus Fan Tokens diretamente no aplicativo, com segurança blockchain.",
+        "description": "Controle completo dos seus Fan Tokens diretamente no aplicativo, com segurança blockchain",
         "details": [
           "Carteira integrada",
           "Transações seguras",
@@ -59,17 +58,17 @@
         ]
       },
       "vip": {
-        "title": "Experiências VIP",
-        "description": "Acesse experiências exclusivas disponíveis apenas para usuários da plataforma.",
+        "title": "Staking de Fan Tokens",
+        "description": "Ganhe recompensas por staking de seus Fan Tokens",
         "details": [
-          "Eventos exclusivos",
-          "Acesso a bastidores",
-          "Encontros com jogadores"
+          "Benefícios especiais",
+          "Desconto em compras",
+          "Taxas de staking vantajosas"
         ]
       },
       "community": {
         "title": "Comunidade Engajada",
-        "description": "Conecte-se com outros torcedores e amplie sua experiência social nos jogos.",
+        "description": "Conecte-se com outros torcedores e amplie sua experiência social nos jogos",
         "details": [
           "Grupos exclusivos",
           "Compartilhamento de momentos",
