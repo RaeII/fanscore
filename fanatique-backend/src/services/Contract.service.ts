@@ -523,6 +523,49 @@ class ContractService {
 	}
 
 	/**
+	 * Obtém o saldo de uma stablecoin específica para um endereço
+	 * @param walletAddress Endereço da carteira a ser consultada
+	 * @param stablecoinId ID da stablecoin específica
+	 * @returns Objeto com informações de saldo da stablecoin
+	 */
+	async getStablecoinBalance(walletAddress: string, stablecoinId: number): Promise<any> {
+		try {
+			if (!walletAddress) throw Error(getErrorMessage('missingField', 'Endereço da carteira'));
+			if (!stablecoinId) throw Error(getErrorMessage('missingField', 'ID da stablecoin'));
+
+			// Buscar a stablecoin pelo ID
+			const stablecoin = await this.stablecoinService.fetch(stablecoinId);
+			
+			if (!stablecoin) {
+				throw Error(getErrorMessage('registryNotFound', 'Stablecoin'));
+			}
+
+			// Obter uma instância do contrato da stablecoin
+			const coinContract = this.erc20Contract(stablecoin.address);
+			
+			// Obter o saldo da stablecoin
+			const balance = await coinContract.balanceOf(walletAddress);
+			
+			// Obter a quantidade de decimais da stablecoin
+			const decimals = await coinContract.decimals();
+
+			// Retornar as informações da stablecoin e seu saldo
+			return {
+				id: stablecoin.id,
+				name: stablecoin.name,
+				symbol: stablecoin.symbol,
+				address: stablecoin.address,
+				balance: ethers.formatUnits(balance.toString(), decimals),
+				raw_balance: balance.toString(),
+				image: stablecoin.image
+			};
+		} catch (error: any) {
+			console.error(`Erro ao buscar saldo da stablecoin ${stablecoinId}:`, error);
+			throw error;
+		}
+	}
+
+	/**
 	 * Realiza um pagamento usando uma stablecoin específica
 	 * @param fromAddress Endereço que fará o pagamento
 	 * @param toAddress Endereço que receberá o pagamento

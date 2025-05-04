@@ -79,10 +79,33 @@ export const transferStablecoins = async (data) => {
   }
 };
 
+/**
+ * Busca o saldo de uma stablecoin específica na carteira do usuário
+ * @param {string} walletAddress - Endereço da carteira do usuário
+ * @param {number} stablecoinId - ID da stablecoin
+ * @returns {Promise<Object>} - Informações da stablecoin e saldo
+ */
+export const getStablecoinBalance = async (walletAddress, stablecoinId) => {
+  console.log('walletAddress', walletAddress);
+
+  try {
+    if (!walletAddress || !stablecoinId) {
+      throw new Error('Endereço da carteira e ID da stablecoin são obrigatórios');
+    }
+    
+    const response = await api.get(`/contract/stablecoin-balance/${walletAddress}/stablecoin/${stablecoinId}`);
+    return response.data.content;
+  } catch (error) {
+    console.error('Erro ao buscar saldo da stablecoin:', error);
+    throw error;
+  }
+};
+
 export default {
   transferTokens,
   getWalletTokens,
   getWalletTokensByClub,
   getStablecoinBalances,
+  getStablecoinBalance,
   transferStablecoins
 }; 

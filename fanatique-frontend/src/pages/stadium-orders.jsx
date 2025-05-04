@@ -32,6 +32,7 @@ import { useLocation } from 'react-router-dom';
 import establishmentProductApi from '../api/establishment_product';
 import { usePayment } from '../utils/web3/payment';
 import stablecoinApi from '../api/stablecoin';
+import contractApi from '../api/contract';
 import { WalletContext } from '../contexts/WalletContextDef';
 
 export default function StadiumOrdersPage() {
@@ -40,7 +41,7 @@ export default function StadiumOrdersPage() {
   const { isAuthenticated, isInitialized, getUserData } = useWalletContext();
   const { state } = useLocation();
   const { paymentSignature } = usePayment();
-  const { BLOCK_EXPLORER_URL } = useContext(WalletContext);
+  const { BLOCK_EXPLORER_URL, getSigner } = useContext(WalletContext);
   // UI States
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState('establishments'); // 'establishments', 'menu', 'cart', 'confirmation', 'activeOrders'
@@ -63,6 +64,8 @@ export default function StadiumOrdersPage() {
   const [selectedStablecoin, setSelectedStablecoin] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showStablecoinModal, setShowStablecoinModal] = useState(false);
+  const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
+  const [stablecoinBalance, setStablecoinBalance] = useState(null);
 
   // Check if user is authenticated and load data
   useEffect(() => {
@@ -349,7 +352,47 @@ export default function StadiumOrdersPage() {
     setShowStablecoinModal(true);
   };
 
-  // Função para processar pagamento
+  // Função para verificar o saldo de BRZ
+  const checkBrzBalance = async (orderTotal) => {
+    try {
+      
+      // Obter o signer usando getSigner
+      const signer = await getSigner();
+
+      // Verificar se o signer está disponível
+      if (!signer) {
+        throw new Error("Carteira bloqueada ou não disponível");
+      }
+      
+      let userAddress;
+      try {
+        userAddress = await signer.getAddress();
+      } catch {
+        throw new Error("Por favor, desbloqueie sua carteira.");
+      }
+
+      if (!userAddress) return false;
+      
+      // BRZ sempre é ID 3
+      const brzeBalance = await contractApi.getStablecoinBalance(userAddress, 3);
+      setStablecoinBalance(brzeBalance);
+
+      console.log('brzeBalance', brzeBalance);
+      
+      // Verifica se o usuário tem saldo suficiente
+      if (brzeBalance) {
+        const balance = parseFloat(brzeBalance.balance);
+        return balance >= orderTotal;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Erro ao verificar saldo de BRZ:', error);
+      return false;
+    }
+  };
+
+  // Modificar a função de pagamento para verificar o saldo
   const handlePayment = async (order) => {
     try {
       if (!showPaymentModal && !showStablecoinModal) {
@@ -370,6 +413,20 @@ export default function StadiumOrdersPage() {
       setProcessingPayment(true);
       
       if (selectedStablecoin) {
+        // Verificar saldo antes de prosseguir com o pagamento
+        console.log('selectedStablecoin', selectedStablecoin);
+        const hasSufficientBalance = await checkBrzBalance(order.total_real);
+
+        console.log('hasSufficientBalance', hasSufficientBalance);
+
+        
+        if (!hasSufficientBalance) {
+          setProcessingPayment(false);
+          setShowStablecoinModal(false);
+          setShowInsufficientFundsModal(true);
+          return;
+        }
+        
         try {
           // Usando a função paymentSignature para gerar a assinatura
           const signatureData = await paymentSignature(
@@ -1245,6 +1302,74 @@ export default function StadiumOrdersPage() {
               >
                 Cancelar
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de saldo insuficiente */}
+      {showInsufficientFundsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-[#000000] rounded-lg w-full max-w-md overflow-hidden shadow-xl">
+            <div className="p-5">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-primary dark:text-white">
+                  Saldo Insuficiente
+                </h3>
+                <Button variant="ghost" size="icon" onClick={() => setShowInsufficientFundsModal(false)}>
+                  <X size={18} />
+                </Button>
+              </div>
+              
+              <div className="mb-6">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <AlertCircle size={32} className="text-red-600 dark:text-red-400" />
+                  </div>
+                </div>
+                
+                <p className="text-center text-primary dark:text-white mb-2">
+                  Você não possui saldo suficiente de BRZ para completar este pagamento.
+                </p>
+                
+                <div className="bg-background-overlay rounded-lg p-4 my-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-primary/70 dark:text-white/70">Saldo atual:</span>
+                    <span className="font-medium text-primary dark:text-white">
+                      {stablecoinBalance?.balance || '0.0'} {stablecoinBalance?.symbol || 'BRZ'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="text-primary/70 dark:text-white/70">Valor necessário:</span>
+                    <span className="font-medium text-primary dark:text-white">
+                      R$ {order?.total_real?.toFixed(2) || '0.00'}
+                    </span>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-primary/70 dark:text-white/70 text-center">
+                  Adquira mais BRZ para continuar com sua compra.
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowInsufficientFundsModal(false)}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowInsufficientFundsModal(false);
+                    navigate('/tokens?type=stablecoin');
+                  }}
+                  className="flex-1"
+                >
+                  Comprar BRZ
+                </Button>
+              </div>
             </div>
           </div>
         </div>

@@ -150,6 +150,44 @@ class ContractController extends Controller {
 	}
 
 	/**
+	 * Obtém o saldo de uma stablecoin específica para um endereço de carteira
+	 * @param req Objeto Request com o endereço da carteira e o ID da stablecoin nos parâmetros
+	 * @param res Objeto Response para retornar o saldo
+	 */
+	async getStablecoinBalance(req: Request, res: Response): Promise<void> {
+		try {
+			// Se o endereço não for fornecido, usar o do usuário logado
+			let walletAddress = req.params.wallet_address as string;
+			const stablecoinId = Number(req.params.stablecoin_id);
+			
+			if (!stablecoinId) {
+				throw Error(getErrorMessage('missingField', 'ID da stablecoin'));
+			}
+			
+			if (!walletAddress) {
+				// Obter o endereço da carteira do usuário logado
+				const userId = Number(res.locals.jwt.user_id);
+				const userService = this.service['userService']; // Acesso ao userService
+				const user = await userService.fetch(userId);
+				
+				if (!user) {
+					throw Error(getErrorMessage('registryNotFound', 'Usuário'));
+				}
+				walletAddress = user.wallet_address;
+			}
+			
+			const balance = await this.service.getStablecoinBalance(walletAddress, stablecoinId);
+			
+			return this.sendSuccessResponse(res, { 
+				content: balance,
+				message: getSuccessMessage('fetch', 'Saldo da stablecoin') 
+			});
+		} catch (err) {
+			return await this.sendErrorMessage(res, err);
+		}
+	}
+
+	/**
 	 * Realiza um pagamento usando uma stablecoin específica
 	 * @param req Objeto Request com os dados do pagamento
 	 * @param res Objeto Response para retornar o resultado da transação

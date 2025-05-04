@@ -59,6 +59,15 @@ router.get('/stablecoin-balances/:wallet_address', [
 	}
 ]);
 
+router.get('/stablecoin-balance/:wallet_address/stablecoin/:stablecoin_id', [
+	jwtMiddleware.validJWTNeeded,
+	async (req: Request, res: Response): Promise<void> => {
+		const controller = new Controller();
+
+		controller.getStablecoinBalance(req, res);
+	}
+]);
+
 router.post('/pay-with-stablecoin', [
 	jwtMiddleware.validJWTNeeded,
 	async (req: Request, res: Response): Promise<void> => {

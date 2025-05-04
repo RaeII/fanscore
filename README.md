@@ -2,7 +2,7 @@
 
 <div align="center">
   <img src="./fanatique-frontend/public/logo-header.png" alt="Fanatique Logo" width="200"/>
-  <h3>Consuma sem filas, ganhe recompensas e transforme sua experiência no estádio com a <b><span style="color:green">F</span>anatique</b></h3>
+  <h3>Consuma sem filas, ganhe recompensas e transforme sua experiência no estádio com a Fanatique</h3>
 </div>
 
 ## 📱 Sobre

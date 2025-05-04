@@ -9,11 +9,7 @@ import "scripts/verify-contract.ts"
 
 import env from './src/config/index.ts'
 
-console.log(process.env.CHILIZ_APIKEY)
-
-const accounts = ["04322e0b71e7886588e7cada5efbaa18257e630ff717cd2112d5200edb4dcc1b"];
-
-console.log(accounts)
+const accounts = env.PRIVATE_KEY !== undefined ? [ env.PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {
   solidity: {
