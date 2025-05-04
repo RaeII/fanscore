@@ -14,7 +14,7 @@ Fanatique é uma aplicação descentralizada (dApp) construída na rede Chiliz, 
 - **Pedidos pelo app**: Compre alimentos e bebidas sem sair do seu assento
 - **Sistema de coleta rápida**: Retire seus itens em pontos estratégicos do estádio
 - **Programa de fidelidade**: Complete tarefas e ganhe pontos por suas compras
-- **Integração Web3**: Utilize Fan Tokens e moedas digitais para pagamentos
+- **Integração Web3**: Utilize Fan Tokens para stake e ganhar beneficios e pagamentos on-chain
 
 ## 🔧 Tecnologia
 
