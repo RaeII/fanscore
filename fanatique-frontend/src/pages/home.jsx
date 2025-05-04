@@ -59,7 +59,7 @@ export default function HomePage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background overflow-hidden">
       {/* Hero Section */}
-      <section className="bg-backg text-white py-16 md:py-24">
+      <section className="bg-backg text-white py-16 md:py-24 imageBackground">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 mb-8 md:mb-0">
