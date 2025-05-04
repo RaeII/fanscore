@@ -176,9 +176,9 @@ export default function HomePage() {
             <div className="absolute left-1/2 top-0 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
             <div className="absolute left-1/2 top-1/6 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{top: '16.6%'}}></div>
             <div className="absolute left-1/2 top-1/3 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{top: '33.3%'}}></div>
-            <div className="absolute left-1/2 top-1/2 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
-            <div className="absolute left-1/2 top-2/3 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{top: '66.6%'}}></div>
-            <div className="absolute left-1/2 top-5/6 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{top: '83.3%'}}></div>
+            <div className="absolute left-1/2 top-1/2 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{top: '50%'}}></div>
+            <div className="absolute left-1/2 top-2/3 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{top: '67.7%'}}></div>
+            <div className="absolute left-1/2 top-5/6 w-4 h-4 bg-secondary rounded-full transform -translate-x-1/2 -translate-y-1/2 animate-pulse" style={{top: '84.6%'}}></div>
             
             {/* Features in staggered layout */}
             <div className="space-y-27">
@@ -350,14 +350,14 @@ export default function HomePage() {
 
 function FeatureRow({ icon, title, description, details, position, delay, number }) {
   return (
-    <div className="relative grid grid-cols-5">
-      {/* Connector to center line */}
-      <div className="absolute left-1/2 top-1/2 w-10 h-1 bg-secondary transform -translate-x-1/2 -translate-y-1/2"></div>
+    <div className="relative grid grid-cols-5 md:grid-cols-5 mb-16 md:mb-0">
+      {/* Connector to center line - visível apenas em desktop */}
+      <div className="absolute left-1/2 top-1/2 w-10 h-1 bg-secondary transform -translate-x-1/2 -translate-y-1/2 hidden md:block"></div>
       
       {/* Card content based on position */}
       {position === 'left' ? (
         <>
-          <div className="col-span-2 animate-fadeInLeft" style={{ animationDelay: `${delay}s` }}>
+          <div className="col-span-5 md:col-span-2 animate-fadeInLeft" style={{ animationDelay: `${delay}s` }}>
             <div className="bg-black p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
               {/* Background decoration */}
               <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-secondary/10 group-hover:bg-secondary/10 transition-all duration-500"></div>
@@ -377,21 +377,21 @@ function FeatureRow({ icon, title, description, details, position, delay, number
               <ul className="space-y-2 relative z-10">
                 {details.map((detail, index) => (
                   <li key={index} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-tertiary"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
                     <span className="text-sm">{detail}</span>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
-          <div className="col-span-1"></div>
-          <div className="col-span-2"></div>
+          <div className="hidden md:block md:col-span-1"></div>
+          <div className="hidden md:block md:col-span-2"></div>
         </>
       ) : (
         <>
-          <div className="col-span-2"></div>
-          <div className="col-span-1"></div>
-          <div className="col-span-2 animate-fadeInRight" style={{ animationDelay: `${delay}s` }}>
+          <div className="hidden md:block md:col-span-2"></div>
+          <div className="hidden md:block md:col-span-1"></div>
+          <div className="col-span-5 md:col-span-2 animate-fadeInRight" style={{ animationDelay: `${delay}s` }}>
             <div className="bg-black p-6 rounded-xl shadow-md hover:shadow-xl transition-all duration-500 border border-primary/5 dark:border-white/5 transform hover:-translate-y-2 group relative overflow-hidden">
               {/* Background decoration */}
               <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-secondary/10 group-hover:bg-secondary/10 transition-all duration-500"></div>
@@ -401,8 +401,7 @@ function FeatureRow({ icon, title, description, details, position, delay, number
                 {number}
               </div>
               
-              <div className="p-3 rounded-full icon text-primary w-fit mb-4 relative z-10"
-              >
+              <div className="p-3 rounded-full icon text-primary w-fit mb-4 relative z-10">
                 {icon}
               </div>
               <h3 className="text-xl font-bold dark:text-white mb-3 relative z-10">{title}</h3>
@@ -412,7 +411,7 @@ function FeatureRow({ icon, title, description, details, position, delay, number
               <ul className="space-y-2 relative z-10">
                 {details.map((detail, index) => (
                   <li key={index} className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-tertiary"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
                     <span className="text-sm">{detail}</span>
                   </li>
                 ))}

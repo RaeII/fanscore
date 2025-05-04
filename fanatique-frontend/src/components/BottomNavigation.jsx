@@ -154,12 +154,7 @@ export default function Navigation() {
       )}
 
       {/* Botão hamburguer para mobile */}
-      <button
-        className="fixed top-4 left-4 z-50 rounded-full bg-white dark:bg-[#150924] p-2 shadow-md md:hidden"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      >
-        <Menu size={24} className="text-primary dark:text-white" />
-      </button>
+
 
       {/* Mobile slide-in menu */}
       <div 
@@ -236,7 +231,7 @@ export default function Navigation() {
       </div>
 
       {/* Bottom mobile navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#0d0117] shadow-lg border-t border-gray-200 dark:border-gray-800 z-40 md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black shadow-lg border-t border-gray-200 dark:border-gray-800 z-40 md:hidden">
         <nav className="flex justify-around items-center h-16">
           {mobileNavItems.map((item) => (
             <button

@@ -46,7 +46,7 @@ export default function TeamsDirectoryPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-[#0d0117]">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#fafafa] dark:bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center mb-6">
           <Button 
@@ -72,7 +72,7 @@ export default function TeamsDirectoryPage() {
           <input
             type="text"
             placeholder="Buscar clube..."
-            className="w-full pl-10 pr-4 py-2 border border-primary/20 dark:border-white/20 rounded-lg bg-white dark:bg-[#150924] text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary"
+            className="w-full pl-10 pr-4 py-2 border border-primary/20 dark:border-white/20 rounded-lg bg-white dark:bg-black text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -83,10 +83,10 @@ export default function TeamsDirectoryPage() {
             <div 
               key={club.id}
               onClick={() => handleViewClub(club.id)}
-              className="bg-white dark:bg-[#150924] p-4 rounded-lg shadow-sm cursor-pointer transition-all hover:shadow-md hover:translate-y-[-2px]"
+              className=" dark:bg-black p-4 rounded-lg shadow-sm cursor-pointer transition-all hover:shadow-md hover:translate-y-[-2px]"
             >
               <div className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full bg-white dark:bg-[#1c0c2e] overflow-hidden mb-3">
+                <div className="w-16 h-16 rounded-full bg-white dark:bg-black overflow-hidden mb-3">
                   {club.image ? (
                     <img 
                       src={club.image} 
