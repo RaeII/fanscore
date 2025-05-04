@@ -63,7 +63,7 @@ class OrderController extends Controller {
 				stablecoin_id: req.body.stablecoin_id
 			};
 
-			if (userAddress !== body.userAddress) {
+			if (userAddress.toLowerCase() !== body.userAddress.toLowerCase()) {
 				throw Error('Endereço de carteira não corresponde a carteira de login');
 			}
 
