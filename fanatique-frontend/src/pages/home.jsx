@@ -5,31 +5,54 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEffect } from 'react';
 import { useWalletContext } from '../hooks/useWalletContext';
-import { showError } from '../lib/toast'
 
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { t } = useTranslation(['home', 'common']);
-  const { isAuthenticated } = useWalletContext();
+
   const handleGetStarted = () => {
     navigate('/app');
   };
 
+  const { 
+    isAuthenticated, 
+    isInitialized, 
+    account, 
+    checkWalletExists, 
+    requestSignature,
+    connecting,
+    signing
+  } = useWalletContext();
+
+  // Verificar se o usuário já está autenticado e redirecionar para dashboard
   useEffect(() => {
-    const checkAuthAndLoadData = async () => {
-      try {
-        if (!isAuthenticated) {
-          navigate('/dashboard'); 
+    if (isInitialized && isAuthenticated) {
+      console.log('Home: Usuário já autenticado, redirecionando para dashboard');
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, isInitialized, navigate]);
+
+  // Efeito para verificar se o usuário já tem carteira conectada, está cadastrado, 
+  // mas não está autenticado (não tem token)
+  useEffect(() => {
+    const checkAndRequestSignature = async () => {
+      // Se temos conta conectada mas não estamos autenticados
+      if (isInitialized && account && !isAuthenticated && !connecting && !signing) {
+        // Verificar se a carteira já está cadastrada
+        const walletCheck = await checkWalletExists();
+        
+        if (walletCheck?.success && walletCheck?.exists) {
+          console.log('Home: Carteira conectada e cadastrada, solicitando assinatura');
+          // Solicitar assinatura automaticamente
+          await requestSignature();
         }
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        showError('Erro ao verificar autenticação');
       }
     };
+    
+    checkAndRequestSignature();
+  }, [isInitialized, account, isAuthenticated, connecting, signing, checkWalletExists, requestSignature]);
 
-    checkAuthAndLoadData();
-  }, [isAuthenticated, navigate]);
   
 
 
