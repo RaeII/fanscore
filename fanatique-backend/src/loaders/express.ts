@@ -17,7 +17,7 @@ export default (app: Application) => {
   const options: cors.CorsOptions = {
     credentials: true,
     methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
-    origin: ['*'],
+    origin: '*',
     preflightContinue: false,
     optionsSuccessStatus: 200
   }
