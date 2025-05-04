@@ -3,10 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Volleyball as Football, ArrowLeft, Search } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import clubApi from '../api/club';
+import { useTranslation } from 'react-i18next';
 
 export default function TeamsDirectoryPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation(['clubs', 'common']);
   const [loading, setLoading] = useState(false);
   const [clubs, setClubs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,13 +57,13 @@ export default function TeamsDirectoryPage() {
             onClick={() => navigate('/dashboard')}
             className="mr-2"
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={18} className='text-primary' />
           </Button>
-          <h1 className="text-2xl font-bold text-primary dark:text-white">Diretório de Clubes</h1>
+          <h1 className="text-2xl font-bold text-primary dark:text-white">{t('clubs:directory.title')}</h1>
         </div>
 
         <p className="text-primary/70 dark:text-white/70 mb-5">
-          Explore todos os clubes disponíveis na plataforma.
+          {t('clubs:directory.description')}
         </p>
 
         {/* Search input */}
@@ -71,7 +73,7 @@ export default function TeamsDirectoryPage() {
           </div>
           <input
             type="text"
-            placeholder="Buscar clube..."
+            placeholder={t('clubs:directory.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border border-primary/20 dark:border-white/20 rounded-lg bg-white dark:bg-black text-primary dark:text-white focus:outline-none focus:ring-2 focus:ring-secondary"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -105,7 +107,7 @@ export default function TeamsDirectoryPage() {
                 <div className="flex items-center gap-1 mt-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-secondary"></span>
                   <span className="text-xs text-primary/60 dark:text-white/60">
-                    {club.fanCount || Math.floor(Math.random() * 1000)} fãs
+                    {club.fanCount || Math.floor(Math.random() * 1000)} {t('clubs:directory.fans')}
                   </span>
                 </div>
               </div>
@@ -117,7 +119,7 @@ export default function TeamsDirectoryPage() {
           <div className="text-center py-10">
             <Football size={36} className="mx-auto text-primary/30 dark:text-white/30 mb-2" />
             <p className="text-primary/70 dark:text-white/70">
-              Nenhum clube encontrado com esse nome.
+              {t('clubs:directory.noClubFound')}
             </p>
           </div>
         )}

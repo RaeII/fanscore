@@ -2,6 +2,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useWalletContext } from '../hooks/useWalletContext';
+import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
   ShoppingBag, 
@@ -42,6 +43,7 @@ export default function StadiumOrdersPage() {
   const { state } = useLocation();
   const { paymentSignature } = usePayment();
   const { BLOCK_EXPLORER_URL, getSigner } = useContext(WalletContext);
+  const { t } = useTranslation();
   // UI States
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState('establishments'); // 'establishments', 'menu', 'cart', 'confirmation', 'activeOrders'
@@ -312,13 +314,13 @@ export default function StadiumOrdersPage() {
   const getStatusName = (statusId) => {
     switch (statusId) {
       case 1:
-        return 'Aguardando Pagamento';
+        return t('stadium-orders:status.awaiting_payment');
       case 2:
-        return 'Pronto para Retirar';
+        return t('stadium-orders:status.ready_for_pickup');
       case 3:
-        return 'Processando';
+        return t('stadium-orders:status.processing');
       default:
-        return 'Status Desconhecido';
+        return t('stadium-orders:status.unknown');
     }
   };
 
@@ -495,7 +497,7 @@ export default function StadiumOrdersPage() {
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <div className="flex flex-col items-center">
           <Loader2 className="h-12 w-12 animate-spin text-secondary" />
-          <p className="mt-4 text-primary/70 dark:text-white/70">Carregando...</p>
+          <p className="mt-4 text-primary/70 dark:text-white/70">{t('stadium-orders:loading')}</p>
         </div>
       </div>
     );
@@ -511,16 +513,16 @@ export default function StadiumOrdersPage() {
             className="flex items-center text-white/80 hover:text-white mb-2"
           >
             <ArrowLeft size={18} className="mr-1" />
-            <span>Voltar</span>
+            <span>{t('stadium-orders:button.back')}</span>
           </button>
           
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">
-              {currentView === 'establishments' && 'Comidas & Bebidas do Estádio'}
+              {currentView === 'establishments' && t('stadium-orders:title.establishments')}
               {currentView === 'menu' && selectedEstablishment?.name}
-              {currentView === 'cart' && 'Seu Pedido'}
-              {currentView === 'confirmation' && 'Pedido Confirmado'}
-              {currentView === 'activeOrders' && 'Meus Pedidos Ativos'}
+              {currentView === 'cart' && t('stadium-orders:title.cart')}
+              {currentView === 'confirmation' && t('stadium-orders:title.confirmation')}
+              {currentView === 'activeOrders' && t('stadium-orders:title.activeOrders')}
             </h1>
             
             {/* Header actions */}
@@ -575,8 +577,10 @@ export default function StadiumOrdersPage() {
                 <div className="flex items-center">
                   <Clock size={20} className="text-secondary mr-2" />
                   <div>
-                    <h3 className="font-medium text-primary dark:text-white">Você tem {activeOrders.length} pedido{activeOrders.length > 1 ? 's' : ''} ativo{activeOrders.length > 1 ? 's' : ''}</h3>
-                    <p className="text-sm text-primary/70 dark:text-white/70">Toque para acompanhar seus pedidos</p>
+                    <h3 className="font-medium text-primary dark:text-white">
+                      {t('stadium-orders:activeOrdersCount', { count: activeOrders.length })}
+                    </h3>
+                    <p className="text-sm text-primary/70 dark:text-white/70">{t('stadium-orders:tapToTrackOrders')}</p>
                   </div>
                 </div>
                 <ChevronRight size={20} className="text-primary/50 dark:text-white/50" />
@@ -586,7 +590,7 @@ export default function StadiumOrdersPage() {
             {/* Game Information Card */}
             {gameInfo && (
               <div className="bg-background-overlay rounded-lg p-4 mb-4 shadow-sm">
-                <h2 className="text-lg font-bold text-primary dark:text-white">Informações do Jogo</h2>
+                <h2 className="text-lg font-bold text-primary dark:text-white">{t('stadium-orders:gameInfo.title')}</h2>
                 <div className="flex items-center mt-2">
                   <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse mr-2"></div>
                   <span className="text-sm font-medium text-primary dark:text-white">
@@ -594,31 +598,23 @@ export default function StadiumOrdersPage() {
                   </span>
                 </div>
                 <p className="text-sm text-primary/70 dark:text-white/70 mt-1">
-                  Estádio: {gameInfo.stadium_name}
+                  {t('stadium-orders:gameInfo.stadium')}: {gameInfo.stadium_name}
                 </p>
                 <p className="text-sm text-primary/70 dark:text-white/70 mt-1">
-                  Placar Atual: 0 - 0
+                  {t('stadium-orders:gameInfo.currentScore')}: 0 - 0
                 </p>
                 <p className="text-xs text-primary/60 dark:text-white/60 mt-1">
-                  {gameInfo.is_home_team ? "Seu time está jogando em casa" : "Seu time é o visitante"}
+                  {gameInfo.is_home_team ? t('stadium-orders:gameInfo.homeTeam') : t('stadium-orders:gameInfo.awayTeam')}
                 </p>
               </div>
             )}
             
             <h2 className="text-lg font-medium text-primary dark:text-white mb-4">
-              Selecione um estabelecimento
+              {t('stadium-orders:selectEstablishment')}
             </h2>
             
             {establishments.length > 0 ? (
               <>
-                {/* {gameInfo.is_home_team === false && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg mb-4">
-                    <p className="text-amber-700 dark:text-amber-300 font-medium">
-                      You're placing an order for an away game. Food and drinks will be available at {gameInfo?.stadium}.
-                    </p>
-                  </div>
-                )} */}
-                
                 {establishments.map((establishment) => (
                   <div 
                     key={establishment.id}
@@ -647,7 +643,7 @@ export default function StadiumOrdersPage() {
               }</>
             ) : (
               <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
-                <p className="text-primary/70 dark:text-white/70">Nenhum estabelecimento disponível</p>
+                <p className="text-primary/70 dark:text-white/70">{t('stadium-orders:noEstablishments')}</p>
               </div>
             )}
           </div>
@@ -657,7 +653,7 @@ export default function StadiumOrdersPage() {
         {currentView === 'menu' && (
           <div className="space-y-4">
             <h2 className="text-lg font-medium text-primary dark:text-white mb-4">
-              Menu de Itens
+              {t('stadium-orders:title.menu')}
             </h2>
             
             {menuItems.length > 0 ? (
@@ -717,7 +713,7 @@ export default function StadiumOrdersPage() {
                           size="sm"
                           onClick={() => handleAddToCart(item)}
                         >
-                          Adicionar
+                          {t('stadium-orders:button.addToCart')}
                         </Button>
                       )}
                     </div>
@@ -726,7 +722,7 @@ export default function StadiumOrdersPage() {
               })
             ) : (
               <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
-                <p className="text-primary/70 dark:text-white/70">Nenhum item de menu disponível</p>
+                <p className="text-primary/70 dark:text-white/70">{t('stadium-orders:noMenuItems')}</p>
               </div>
             )}
           </div>
@@ -736,7 +732,7 @@ export default function StadiumOrdersPage() {
         {currentView === 'cart' && (
           <div className="space-y-4">
             <h2 className="text-lg font-medium text-primary dark:text-white mb-4">
-              Seu Pedido
+              {t('stadium-orders:title.cart')}
             </h2>
             
             {cart.length > 0 ? (
@@ -792,7 +788,7 @@ export default function StadiumOrdersPage() {
                   
                   <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                     <div className="flex justify-between items-center">
-                      <span className="text-primary dark:text-white font-bold">Total</span>
+                      <span className="text-primary dark:text-white font-bold">{t('stadium-orders:total')}</span>
                       <div className="text-right">
                         <p className="font-bold text-lg text-primary dark:text-white">
                           R$ {calculateTotal().toFixed(2)}
@@ -811,22 +807,22 @@ export default function StadiumOrdersPage() {
                   {placingOrder ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processando...
+                      {t('stadium-orders:processing')}
                     </>
                   ) : (
-                    'Fazer Pedido'
+                    t('stadium-orders:button.placeOrder')
                   )}
                 </Button>
               </>
             ) : (
               <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
-                <p className="text-primary/70 dark:text-white/70">Seu carrinho está vazio</p>
+                <p className="text-primary/70 dark:text-white/70">{t('stadium-orders:cartEmpty')}</p>
                 <Button 
                   variant="secondary" 
                   className="mt-4" 
                   onClick={() => setCurrentView('menu')}
                 >
-                  Voltar ao menu
+                  {t('stadium-orders:button.backToMenu')}
                 </Button>
               </div>
             )}
@@ -837,7 +833,7 @@ export default function StadiumOrdersPage() {
         {currentView === 'activeOrders' && (
           <div className="space-y-4">
             <h2 className="text-lg font-medium text-primary dark:text-white mb-4">
-              Meus Pedidos Ativos
+              {t('stadium-orders:title.activeOrders')}
             </h2>
             
             {/* Filter tabs */}
@@ -854,7 +850,7 @@ export default function StadiumOrdersPage() {
                 `}
               >
                 <ListTodo size={16} className="mr-1.5" />
-                Todos
+                {t('stadium-orders:filter.all')}
               </Button>
               <Button 
                 variant={orderStatusFilter === '1' ? 'default' : 'outline'}
@@ -868,7 +864,7 @@ export default function StadiumOrdersPage() {
                 `}
               >
                 <CreditCard size={16} className="mr-1.5" />
-                Aguardando Pagamento
+                {t('stadium-orders:filter.awaiting_payment')}
               </Button>
               <Button 
                 variant={orderStatusFilter === '2' ? 'default' : 'outline'}
@@ -882,7 +878,7 @@ export default function StadiumOrdersPage() {
                 `}
               >
                 <Check size={16} className="mr-1.5" />
-                Pronto para Retirar
+                {t('stadium-orders:filter.ready_for_pickup')}
               </Button>
             </div>
             
@@ -921,14 +917,14 @@ export default function StadiumOrdersPage() {
                     <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="text-primary/70 dark:text-white/70 text-sm">Total</p>
+                          <p className="text-primary/70 dark:text-white/70 text-sm">{t('stadium-orders:total')}</p>
                           <p className="font-bold text-lg text-primary dark:text-white">
                             R$ {order.total_real.toFixed(2)}
                           </p>
                         </div>
                         
                         <div className="text-right">
-                          <p className="text-primary/70 dark:text-white/70 text-sm">Local de Retirada</p>
+                          <p className="text-primary/70 dark:text-white/70 text-sm">{t('stadium-orders:pickupLocation')}</p>
                           <p className="font-medium text-primary dark:text-white">{order?.establishment_name || 'sem local de retirada'}</p>
                         </div>
                       </div>
@@ -943,12 +939,12 @@ export default function StadiumOrdersPage() {
                           {processingPayment ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Processando pagamento...
+                              {t('stadium-orders:payment.processingPayment')}
                             </>
                           ) : (
                             <>
                               <CreditCard className="mr-2 h-4 w-4" />
-                              Pagar Agora
+                              {t('stadium-orders:button.payNow')}
                             </>
                           )}
                         </Button>
@@ -975,7 +971,7 @@ export default function StadiumOrdersPage() {
                                     onClick={(e) => e.stopPropagation()}
                                   >
                                     <ExternalLink size={17} className="mr-1" />
-                                    Explorar
+                                    {t('stadium-orders:button.explore')}
                                   </a>
                                 </div>
                             
@@ -993,7 +989,7 @@ export default function StadiumOrdersPage() {
                       {order.status === 'PROCESSING' && (
                         <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md text-sm">
                           <p className="text-blue-700 dark:text-blue-300">
-                            Estimativa de preparo: {order?.estimated_time || 'sem tempo estimado'}
+                            {t('stadium-orders:counter.estimatedTime')}: {order?.estimated_time || t('stadium-orders:counter.noEstimatedTime')}
                           </p>
                         </div>
                       )}
@@ -1002,7 +998,7 @@ export default function StadiumOrdersPage() {
                       {order.status === 'READY' && (
                         <div className="mt-3 bg-green-50 dark:bg-green-900/20 p-3 rounded-md text-sm">
                           <p className="text-green-700 dark:text-green-300 font-medium">
-                            Seu pedido está pronto para retirada!
+                            {t('stadium-orders:counter.readyForPickup')}
                           </p>
                         </div>
                       )}
@@ -1011,18 +1007,18 @@ export default function StadiumOrdersPage() {
                 ))
               ) : (
                 <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
-                  <p className="text-primary/70 dark:text-white/70">Nenhum pedido encontrado com este status</p>
+                  <p className="text-primary/70 dark:text-white/70">{t('stadium-orders:noOrdersWithStatus')}</p>
                 </div>
               )
             ) : (
               <div className="bg-background-overlay rounded-lg p-6 text-center shadow-sm">
-                <p className="text-primary/70 dark:text-white/70">Você não tem pedidos ativos</p>
+                <p className="text-primary/70 dark:text-white/70">{t('stadium-orders:noActiveOrders')}</p>
                 <Button 
                   variant="secondary" 
                   className="mt-4" 
                   onClick={() => setCurrentView('establishments')}
                 >
-                  Fazer um pedido
+                  {t('stadium-orders:button.makeOrder')}
                 </Button>
               </div>
             )}
@@ -1038,41 +1034,41 @@ export default function StadiumOrdersPage() {
               </div>
               
               <h2 className="text-xl font-bold text-primary dark:text-white mb-2">
-                Pedido Confirmado!
+                {t('stadium-orders:orderConfirmed')}
               </h2>
               
               <p className="text-primary/70 dark:text-white/70 text-center mb-4">
-                Seu pedido #{order.id} foi realizado com sucesso e estará pronto para retirada em breve.
+                {t('stadium-orders:orderSuccessMessage', { id: order.id })}
               </p>
               
               <div className="bg-background-overlay rounded-lg p-4 shadow-sm w-full max-w-md">
                 <h3 className="font-medium text-primary dark:text-white mb-3">
-                  Detalhes do Pedido
+                  {t('stadium-orders:orderDetails')}
                 </h3>
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-primary/70 dark:text-white/70">Número do Pedido:</span>
+                    <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:orderNumber')}:</span>
                     <span className="font-medium text-primary dark:text-white">{order.id}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-primary/70 dark:text-white/70">Estabelecimento:</span>
+                    <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:establishment')}:</span>
                     <span className="font-medium text-primary dark:text-white">{order.establishment_name}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-primary/70 dark:text-white/70">Status:</span>
-                    <span className="font-medium text-green-600 dark:text-green-400">Aguardando pagamento</span>
+                    <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:statusLabel')}:</span>
+                    <span className="font-medium text-green-600 dark:text-green-400">{t('stadium-orders:status.awaiting_payment')}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-primary/70 dark:text-white/70">Valor Total:</span>
+                    <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:totalValue')}:</span>
                     <span className="font-bold text-primary dark:text-white">R$ {order.total_real?.toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-primary/70 dark:text-white/70">Local de Retirada:</span>
+                    <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:pickupLocation')}:</span>
                     <span className="font-medium text-primary dark:text-white">{order.establishment_name || 'Balcão #' + order.id}</span>
                   </div>
                 </div>
@@ -1086,12 +1082,12 @@ export default function StadiumOrdersPage() {
                   {processingPayment ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processando pagamento...
+                      {t('stadium-orders:payment.processingPayment')}
                     </>
                   ) : (
                     <>
                       <CreditCard className="mr-2 h-4 w-4" />
-                      Pagar Agora
+                      {t('stadium-orders:button.payNow')}
                     </>
                   )}
                 </Button>
@@ -1104,7 +1100,7 @@ export default function StadiumOrdersPage() {
                   onClick={() => navigate(`/clubs/${clubId}`)}
                 >
                   <ArrowLeft size={16} className="mr-2 dark:text-white" />
-                  <span className="dark:text-white">Voltar o jogo</span>
+                  <span className="dark:text-white">{t('stadium-orders:button.returnToGame')}</span>
                 </Button>
                 
                 <Button 
@@ -1112,7 +1108,7 @@ export default function StadiumOrdersPage() {
                   onClick={() => handleViewActiveOrders()}
                 >
                   <Clock size={16} className="mr-2" />
-                  Ver Meus Pedidos
+                  {t('stadium-orders:button.viewOrders')}
                 </Button>
               </div>
             </div>
@@ -1127,7 +1123,7 @@ export default function StadiumOrdersPage() {
             <div className="p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-primary dark:text-white">
-                  Selecione o método de pagamento
+                  {t('stadium-orders:payment.selectMethod')}
                 </h3>
                 <Button variant="ghost" size="icon" onClick={() => setShowPaymentModal(false)}>
                   <X size={18} />
@@ -1144,7 +1140,7 @@ export default function StadiumOrdersPage() {
                   </div>
                   <div>
                     <p className="font-medium text-primary dark:text-white">Pix</p>
-                    <p className="text-sm text-primary/70 dark:text-white/70">Pagamento instantâneo</p>
+                    <p className="text-sm text-primary/70 dark:text-white/70">{t('stadium-orders:payment.instantPayment')}</p>
                   </div>
                 </div>
                 
@@ -1156,8 +1152,8 @@ export default function StadiumOrdersPage() {
                     <CreditCard size={20} className="text-blue-600 dark:text-blue-500" />
                   </div>
                   <div>
-                    <p className="font-medium text-primary dark:text-white">Cartão de Crédito</p>
-                    <p className="text-sm text-primary/70 dark:text-white/70">Visa, Mastercard, etc.</p>
+                    <p className="font-medium text-primary dark:text-white">{t('stadium-orders:payment.creditCard')}</p>
+                    <p className="text-sm text-primary/70 dark:text-white/70">{t('stadium-orders:payment.availableCards')}</p>
                   </div>
                 </div>
                 
@@ -1183,15 +1179,15 @@ export default function StadiumOrdersPage() {
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-primary dark:text-white">Stablecoin</p>
-                    <p className="text-sm text-primary/70 dark:text-white/70">Pague com criptomoedas estáveis</p>
+                    <p className="font-medium text-primary dark:text-white">{t('stadium-orders:payment.stablecoin')}</p>
+                    <p className="text-sm text-primary/70 dark:text-white/70">{t('stadium-orders:payment.stablecoinDesc')}</p>
                   </div>
                 </div>
               </div>
               
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
                 <div className="flex justify-between items-center">
-                  <span className="text-primary/70 dark:text-white/70">Total a pagar:</span>
+                  <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:totalToPay')}:</span>
                   <span className="font-bold text-lg text-primary dark:text-white">
                     R$ {order?.total_real?.toFixed(2) || '0.00'}
                   </span>
@@ -1202,7 +1198,7 @@ export default function StadiumOrdersPage() {
                 variant="outline"
                 onClick={() => setShowPaymentModal(false)}
               >
-                Cancelar
+                {t('stadium-orders:button.cancel')}
               </Button>
             </div>
           </div>
@@ -1216,7 +1212,7 @@ export default function StadiumOrdersPage() {
             <div className="p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-primary dark:text-white">
-                  Selecione a Stablecoin
+                  {t('stadium-orders:payment.selectStablecoin')}
                 </h3>
                 <Button variant="ghost" size="icon" onClick={() => setShowStablecoinModal(false)}>
                   <X size={18} />
@@ -1224,7 +1220,7 @@ export default function StadiumOrdersPage() {
               </div>
               
               <div className="mt-4 mb-4">
-                <h4 className="font-medium text-primary dark:text-white mb-3">Stablecoins disponíveis</h4>
+                <h4 className="font-medium text-primary dark:text-white mb-3">{t('stadium-orders:payment.availableStablecoins')}</h4>
                 
                 {stablecoins.length > 0 ? (
                   <div className="space-y-2">
@@ -1267,12 +1263,12 @@ export default function StadiumOrdersPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-primary/70 dark:text-white/70">Nenhuma stablecoin disponível</p>
+                  <p className="text-primary/70 dark:text-white/70">{t('stadium-orders:noEstablishments')}</p>
                 )}
                 
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
                   <div className="flex justify-between items-center">
-                    <span className="text-primary/70 dark:text-white/70">Total a pagar:</span>
+                    <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:totalToPay')}:</span>
                     <span className="font-bold text-lg text-primary dark:text-white">
                       R$ {order?.total_real?.toFixed(2) || '0.00'}
                     </span>
@@ -1288,10 +1284,10 @@ export default function StadiumOrdersPage() {
                 {processingPayment ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando pagamento...
+                    {t('stadium-orders:payment.processingPayment')}
                   </>
                 ) : (
-                  'Confirmar Pagamento'
+                  t('stadium-orders:button.confirmPayment')
                 )}
               </Button>
               
@@ -1300,7 +1296,7 @@ export default function StadiumOrdersPage() {
                 variant="outline"
                 onClick={() => setShowStablecoinModal(false)}
               >
-                Cancelar
+                {t('stadium-orders:button.cancel')}
               </Button>
             </div>
           </div>
@@ -1314,7 +1310,7 @@ export default function StadiumOrdersPage() {
             <div className="p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-primary dark:text-white">
-                  Saldo Insuficiente
+                  {t('stadium-orders:payment.insufficient.title')}
                 </h3>
                 <Button variant="ghost" size="icon" onClick={() => setShowInsufficientFundsModal(false)}>
                   <X size={18} />
@@ -1329,18 +1325,18 @@ export default function StadiumOrdersPage() {
                 </div>
                 
                 <p className="text-center text-primary dark:text-white mb-2">
-                  Você não possui saldo suficiente de BRZ para completar este pagamento.
+                  {t('stadium-orders:payment.insufficient.message')}
                 </p>
                 
                 <div className="bg-background-overlay rounded-lg p-4 my-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-primary/70 dark:text-white/70">Saldo atual:</span>
+                    <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:payment.insufficient.currentBalance')}:</span>
                     <span className="font-medium text-primary dark:text-white">
                       {stablecoinBalance?.balance || '0.0'} {stablecoinBalance?.symbol || 'BRZ'}
                     </span>
                   </div>
                   <div className="flex justify-between items-center mt-2">
-                    <span className="text-primary/70 dark:text-white/70">Valor necessário:</span>
+                    <span className="text-primary/70 dark:text-white/70">{t('stadium-orders:payment.insufficient.requiredAmount')}:</span>
                     <span className="font-medium text-primary dark:text-white">
                       R$ {order?.total_real?.toFixed(2) || '0.00'}
                     </span>
@@ -1348,7 +1344,7 @@ export default function StadiumOrdersPage() {
                 </div>
                 
                 <p className="text-sm text-primary/70 dark:text-white/70 text-center">
-                  Adquira mais BRZ para continuar com sua compra.
+                  {t('stadium-orders:payment.insufficient.advice')}
                 </p>
               </div>
               
@@ -1358,7 +1354,7 @@ export default function StadiumOrdersPage() {
                   onClick={() => setShowInsufficientFundsModal(false)}
                   className="flex-1"
                 >
-                  Cancelar
+                  {t('stadium-orders:button.cancel')}
                 </Button>
                 <Button 
                   onClick={() => {
@@ -1367,7 +1363,7 @@ export default function StadiumOrdersPage() {
                   }}
                   className="flex-1"
                 >
-                  Comprar BRZ
+                  {t('stadium-orders:button.buyBRZ')}
                 </Button>
               </div>
             </div>
@@ -1385,7 +1381,10 @@ export default function StadiumOrdersPage() {
               onClick={handleViewCart}
             >
               <ShoppingCart size={18} className="mr-2" />
-              Ver Carrinho ({cart.reduce((total, item) => total + item.quantity, 0)} itens) - R$ {calculateTotal().toFixed(2)}
+              {t('stadium-orders:button.viewCart_items', { 
+                count: cart.reduce((total, item) => total + item.quantity, 0),
+                total: calculateTotal().toFixed(2)
+              })}
             </Button>
           </div>
         </div>

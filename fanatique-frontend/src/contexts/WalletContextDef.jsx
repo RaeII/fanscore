@@ -21,5 +21,6 @@ export const WalletContext = createContext({
   clearAuthCredentials: () => false,
   connectAndCheckRegistration: async () => ({}),
   getSigner: async () => null,
-  initializeProvider: async () => null
+  initializeProvider: async () => null,
+  verifyAndSwitchNetwork: async () => ({ success: false }),
 }); 

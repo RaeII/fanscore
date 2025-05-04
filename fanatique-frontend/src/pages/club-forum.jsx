@@ -13,6 +13,7 @@ import { useUserContext } from '../hooks/useUserContext';
 import { showError, showSuccess } from '../lib/toast';
 import forumApi from '../api/forum';
 import clubApi from '../api/club';
+import { useTranslation } from 'react-i18next';
 
 // Tab navigation item for Twitter-like header
 const NavItem = ({ icon, label, active, onClick }) => (
@@ -31,6 +32,8 @@ const NavItem = ({ icon, label, active, onClick }) => (
 
 // Category badges for forum posts
 const CategoryBadge = ({ category, active, onClick }) => {
+  const { t } = useTranslation(['forum']);
+  
   const getIcon = (cat) => {
     switch (cat) {
       case 'all': return <Users size={16} />;
@@ -52,7 +55,7 @@ const CategoryBadge = ({ category, active, onClick }) => {
       onClick={() => onClick(category)}
     >
       {getIcon(category)}
-      <span>{category.charAt(0).toUpperCase() + category.slice(1)}</span>
+      <span>{t(`forum:categories.${category}`)}</span>
     </button>
   );
 };
@@ -62,6 +65,7 @@ export default function ClubForumPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isInitialized } = useWalletContext();
   const { isFollowingClub, isUserHeartClub } = useUserContext();
+  const { t } = useTranslation(['forum', 'common']);
   
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
@@ -74,7 +78,7 @@ export default function ClubForumPage() {
   const [searchQuery, setSearchQuery] = useState('');
   
   // For Twitter-like tabs
-  const [activeTab, setActiveTab] = useState('latest');
+  const [activeTab, _setActiveTab] = useState('latest');
   
   // User is viewing the create post form in expanded mode
   const [expandedCreatePost, setExpandedCreatePost] = useState(false);
@@ -92,7 +96,7 @@ export default function ClubForumPage() {
         // Check if user is following this club or has it as heart club
         const hasAccess = await isFollowingClub(clubId) || await isUserHeartClub(clubId);
         if (!hasAccess) {
-          showError("You need to follow this club to access the forum");
+          showError(t('forum:forum.noAccess'));
           navigate(`/clubs/${clubId}`);
           return;
         }
@@ -107,14 +111,14 @@ export default function ClubForumPage() {
         await loadPosts();
       } catch (error) {
         console.error('Error loading forum data:', error);
-        showError('Failed to load forum data');
+        showError(t('forum:forum.error'));
       } finally {
         setLoading(false);
       }
     };
     
     checkAccessAndLoadData();
-  }, [clubId, isAuthenticated, navigate, isFollowingClub, isUserHeartClub]);
+  }, [clubId, isAuthenticated, navigate, isFollowingClub, isUserHeartClub, t]);
   
   // Filter posts when category or search changes
   useEffect(() => {
@@ -154,7 +158,7 @@ export default function ClubForumPage() {
       setFilteredPosts(forumPosts);
     } catch (error) {
       console.error('Error loading posts:', error);
-      showError('Failed to load posts');
+      showError(t('forum:forum.loadPostsError'));
     }
   };
   
@@ -183,13 +187,13 @@ export default function ClubForumPage() {
       setNewPostTitle('');
       setNewPostContent('');
       setExpandedCreatePost(false);
-      showSuccess('Post created successfully');
+      showSuccess(t('forum:forum.createSuccess'));
       
       // Reload posts to show the new one
       await loadPosts();
     } catch (error) {
       console.error('Error creating post:', error);
-      showError('Failed to create post');
+      showError(t('forum:forum.createPostError'));
     } finally {
       setSubmitLoading(false);
     }
@@ -212,7 +216,7 @@ export default function ClubForumPage() {
       }));
     } catch (error) {
       console.error('Error liking post:', error);
-      showError('Failed to like post');
+      showError(t('forum:forum.likePostError'));
     }
   };
   
@@ -233,7 +237,7 @@ export default function ClubForumPage() {
           <div className="relative">
             <div className="animate-spin w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full"></div>
           </div>
-          <p className="ml-3 text-primary/60 dark:text-white/60">Loading forum...</p>
+          <p className="ml-3 text-primary/60 dark:text-white/60">{t('forum:forum.loading')}</p>
         </div>
       </div>
     );
@@ -245,19 +249,19 @@ export default function ClubForumPage() {
         <div className="flex overflow-x-auto border-b-2 border-gray-200 dark:border-gray-700">
           <NavItem 
             icon={<Home size={18} className={activeTab === 'latest' ? 'text-tertiary dark:text-blue-400' : ''} />} 
-            label="Latest" 
+            label={t('forum:tabs.latest')}
             active={activeTab === 'latest'} 
             onClick={() => setActiveTab('latest')}
           />
           <NavItem 
             icon={<TrendingUp size={18} className={activeTab === 'trending' ? 'text-tertiary dark:text-blue-400' : ''} />} 
-            label="Trending" 
+            label={t('forum:tabs.trending')}
             active={activeTab === 'trending'} 
             onClick={() => setActiveTab('trending')}
           />
           <NavItem 
             icon={<MessageCircle size={18} className={activeTab === 'mine' ? 'text-tertiary dark:text-blue-400' : ''} />} 
-            label="My Discussions" 
+            label={t('forum:tabs.mine')}
             active={activeTab === 'mine'} 
             onClick={() => setActiveTab('mine')}
           />
@@ -275,19 +279,19 @@ export default function ClubForumPage() {
                   className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-tertiary"
                 >
                   <Bell size={20} className="mr-4" />
-                  <span>Notifications</span>
+                  <span>{t('forum:sidebar.notifications')}</span>
                 </Button>
                 <Button 
                   variant="normal" 
                   className="justify-start text-lg font-semibold py-3 px-4 rounded-full text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-tertiary"
                 >
                   <Bookmark size={20} className="mr-4" />
-                  <span>Bookmarks</span>
+                  <span>{t('forum:sidebar.bookmarks')}</span>
                 </Button>
               </div>
               
               <Button className="w-full rounded-full py-6 bg-secondary hover:bg-secondary/90 text-text-adaptive">
-                New Post
+                {t('forum:sidebar.newPost')}
               </Button>
               
               {/* <div className="mt-auto">
@@ -321,19 +325,19 @@ export default function ClubForumPage() {
                         onClick={() => setExpandedCreatePost(true)}
                         className="text-left text-gray-600 dark:text-gray-300 hover:text-tertiary font-medium"
                       >
-                        What's happening?
+                        {t('forum:createPost.prompt')}
                       </button>
                     </div>
                   ) : (
                     <>
                       <Input
-                        placeholder="Title"
+                        placeholder={t('forum:createPost.title')}
                         value={newPostTitle}
                         onChange={(e) => setNewPostTitle(e.target.value)}
                         className="border-0 border-b border-gray-200 dark:border-gray-800 rounded-none px-0 text-lg font-bold focus-visible:ring-0 w-full"
                       />
                       <Textarea
-                        placeholder="What's happening?"
+                        placeholder={t('forum:createPost.prompt')}
                         className="min-h-[100px] border-0 resize-none focus-visible:ring-0 px-0 w-full"
                         value={newPostContent}
                         onChange={(e) => setNewPostContent(e.target.value)}
@@ -347,7 +351,7 @@ export default function ClubForumPage() {
                               size="sm" 
                               className="rounded-full text-xs text-text-adaptive dark:text-gray-200 hover:text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
                             >
-                              {category !== 'all' ? category.charAt(0).toUpperCase() + category.slice(1) : 'General'}
+                              {category !== 'all' ? t(`forum:categories.${category}`) : t('forum:createPost.categories.general')}
                             </Button>
                           ))}
                         </div>
@@ -362,7 +366,7 @@ export default function ClubForumPage() {
                             }}
                             className="rounded-full border-gray-400 dark:border-gray-500 text-text-adaptive dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
                           >
-                            Cancel
+                            {t('forum:createPost.cancel')}
                           </Button>
                           <Button 
                             size="sm"
@@ -373,9 +377,9 @@ export default function ClubForumPage() {
                             {submitLoading ? (
                               <span className="flex items-center gap-2">
                                 <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                                <span>Posting...</span>
+                                <span>{t('forum:createPost.posting')}</span>
                               </span>
-                            ) : 'Post'}
+                            ) : t('forum:createPost.post')}
                           </Button>
                         </div>
                       </div>
@@ -404,35 +408,35 @@ export default function ClubForumPage() {
                 <MessageCircle size={48} className="text-gray-400 mb-4" />
                 {searchQuery.trim() !== '' ? (
                   <>
-                    <h3 className="text-xl font-medium mb-2">No posts match your search</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6">Try different keywords or clear your search</p>
+                    <h3 className="text-xl font-medium mb-2">{t('forum:emptyState.noResults.title')}</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">{t('forum:emptyState.noResults.description')}</p>
                     <Button 
                       onClick={() => setSearchQuery('')}
                       className="rounded-full"
                     >
-                      Clear Search
+                      {t('forum:emptyState.noResults.button')}
                     </Button>
                   </>
                 ) : activeCategory !== 'all' ? (
                   <>
-                    <h3 className="text-xl font-medium mb-2">No posts in this category</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6">Try a different category or create the first post</p>
+                    <h3 className="text-xl font-medium mb-2">{t('forum:emptyState.noCategory.title')}</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">{t('forum:emptyState.noCategory.description')}</p>
                     <Button 
                       onClick={() => setActiveCategory('all')}
                       className="rounded-full bg-tertiary hover:bg-tertiary/90"
                     >
-                      Show All Posts
+                      {t('forum:emptyState.noCategory.button')}
                     </Button>
                   </>
                 ) : (
                   <>
-                    <h3 className="text-xl font-medium mb-2">No discussions yet</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-6">Be the first to start a discussion!</p>
+                    <h3 className="text-xl font-medium mb-2">{t('forum:emptyState.noPosts.title')}</h3>
+                    <p className="text-gray-500 dark:text-gray-400 mb-6">{t('forum:emptyState.noPosts.description')}</p>
                     <Button 
                       onClick={() => setExpandedCreatePost(true)}
                       className="rounded-full"
                     >
-                      Create First Post
+                      {t('forum:emptyState.noPosts.button')}
                     </Button>
                   </>
                 )}
@@ -466,7 +470,7 @@ export default function ClubForumPage() {
                 </div>
                 <Input
                   type="search"
-                  placeholder="Search discussions..."
+                  placeholder={t('forum:rightSidebar.search')}
                   className="pl-10 w-full rounded-full bg-gray-100 dark:bg-gray-800 border-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -489,16 +493,16 @@ export default function ClubForumPage() {
                       <h2 className="text-xl font-bold">{clubData.name}</h2>
                       <p className="text-gray-500 dark:text-gray-400 text-sm">@{clubData.name.toLowerCase().replace(/\s/g, '')}</p>
                       
-                      <p className="my-3 text-sm">Official club forum. Join the conversation with fellow fans!</p>
+                      <p className="my-3 text-sm">{t('forum:rightSidebar.clubInfo.officialForum')}</p>
                       
                       <div className="flex items-center gap-4 text-sm">
                         <div className="flex items-center gap-1">
                           <span className="font-bold">{Math.floor(Math.random() * 500) + 1000}</span>
-                          <span className="text-gray-500 dark:text-gray-400">Followers</span>
+                          <span className="text-gray-500 dark:text-gray-400">{t('forum:rightSidebar.clubInfo.followers')}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="font-bold">{Math.floor(Math.random() * 100) + 50}</span>
-                          <span className="text-gray-500 dark:text-gray-400">Following</span>
+                          <span className="text-gray-500 dark:text-gray-400">{t('forum:rightSidebar.clubInfo.following')}</span>
                         </div>
                       </div>
                     </div>
@@ -509,23 +513,16 @@ export default function ClubForumPage() {
               {/* Trending section */}
               <Card className="overflow-hidden rounded-xl">
                 <div className="p-4">
-                  <h3 className="font-bold text-xl mb-4">Trending in the club</h3>
+                  <h3 className="font-bold text-xl mb-4">{t('forum:rightSidebar.trending')}</h3>
                   
                   <div className="space-y-4">
                     {Array.from({ length: 4 }).map((_, index) => (
                       <div key={index} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Trending topic {index + 1}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{t('forum:rightSidebar.trendingTopic')} {index + 1}</p>
                         <p className="font-bold">
-                          {index === 0 
-                            ? "Latest match result" 
-                            : index === 1 
-                              ? "Transfer rumors"
-                              : index === 2
-                                ? "New stadium plans"
-                                : "Fan meetup event"
-                          }
+                          {t(`forum:rightSidebar.trendingTopics.${index}`)}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{Math.floor(Math.random() * 1000) + 100} posts</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{Math.floor(Math.random() * 1000) + 100} {t('forum:rightSidebar.posts')}</p>
                       </div>
                     ))}
                   </div>
@@ -535,7 +532,7 @@ export default function ClubForumPage() {
               {/* Who to follow */}
               <Card className="overflow-hidden rounded-xl">
                 <div className="p-4">
-                  <h3 className="font-bold text-xl mb-4">Who to follow</h3>
+                  <h3 className="font-bold text-xl mb-4">{t('forum:rightSidebar.whoToFollow')}</h3>
                   
                   <div className="space-y-4">
                     {Array.from({ length: 3 }).map((_, index) => (
@@ -553,7 +550,7 @@ export default function ClubForumPage() {
                           </div>
                         </div>
                         <Button size="sm" className="rounded-full bg-secondary hover:bg-secondary/90 text-text-adaptive">
-                          Follow
+                          {t('forum:rightSidebar.follow')}
                         </Button>
                       </div>
                     ))}
@@ -565,18 +562,18 @@ export default function ClubForumPage() {
               <div className="text-sm text-gray-500 dark:text-gray-400 space-y-2">
                 <div className="flex items-center gap-1">
                   <Users size={14} />
-                  <span>Active users: {Math.round(posts.length * 1.5)}</span>
+                  <span>{t('forum:rightSidebar.stats.activeUsers')}: {Math.round(posts.length * 1.5)}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar size={14} />
-                  <span>Community since: Sep 2023</span>
+                  <span>{t('forum:rightSidebar.stats.communitySince')}: Sep 2023</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <MessageCircle size={14} />
-                  <span>Total posts: {posts.length}</span>
+                  <span>{t('forum:rightSidebar.stats.totalPosts')}: {posts.length}</span>
                 </div>
                 
-                <p className="text-xs mt-3">&copy; 2023 Fanatique. All rights reserved.</p>
+                <p className="text-xs mt-3">{t('forum:rightSidebar.stats.copyright')}</p>
               </div>
             </div>
           </aside>

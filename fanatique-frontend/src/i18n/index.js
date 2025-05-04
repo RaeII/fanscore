@@ -32,7 +32,7 @@ i18n
     },
     
     // List all namespaces for convenient reference
-    ns: ['common', 'quests', 'matches', 'home'],
+    ns: ['common', 'quests', 'matches', 'home', 'achievements', 'club', 'stadium-orders', 'game', 'tokens', 'app', 'clubs', 'forum'],
     defaultNS: 'common',
     
     react: {

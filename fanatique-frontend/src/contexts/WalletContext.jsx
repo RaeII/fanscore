@@ -18,6 +18,52 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const NETWORK_CHECK_COOLDOWN = 2000; // 2 segundos entre verificações de rede
 let lastNetworkCheck = 0;
 
+// Função auxiliar para verificar e trocar para a rede Chiliz
+const verifyAndSwitchNetwork = async () => {
+  try {
+    if (!window.ethereum) return { success: false, message: 'MetaMask não encontrada' };
+    
+    // Verifica a rede atual
+    const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+    const formattedChilizChainId = formatChainId(NETWORK_ID_CHILIZ);
+    
+    if (currentChainId === formattedChilizChainId) {
+      return { success: true, message: 'Já está na rede Chiliz' };
+    }
+    
+    // Tenta trocar para a rede Chiliz
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: formattedChilizChainId }],
+      });
+      return { success: true, message: 'Rede trocada com sucesso' };
+    } catch (switchError) {
+      // Rede não adicionada, tenta adicionar
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [networkData]
+          });
+          return { success: true, message: 'Rede Chiliz adicionada com sucesso' };
+        } catch (addError) {
+          if (addError.code === 4001) {
+            return { success: false, message: 'Usuário rejeitou a adição da rede Chiliz' };
+          }
+          return { success: false, message: 'Erro ao adicionar rede Chiliz', error: addError };
+        }
+      } else if (switchError.code === 4001) {
+        return { success: false, message: 'Usuário rejeitou a troca de rede' };
+      }
+      return { success: false, message: 'Erro ao trocar para rede Chiliz', error: switchError };
+    }
+  } catch (error) {
+    console.error('Erro ao verificar/trocar rede:', error);
+    return { success: false, message: 'Erro ao verificar/trocar rede', error };
+  }
+};
+
 // Garantir que o chainId está no formato correto (0x prefixado)
 const formatChainId = (chainId) => {
   // Se já é uma string hexadecimal com prefixo 0x, retorna como está
@@ -84,9 +130,7 @@ export function WalletProvider({ children }) {
       
       const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
       const formattedChilizChainId = formatChainId(NETWORK_ID_CHILIZ);
-      
-      console.log("Rede atual:", currentChainId, "Rede Chiliz:", formattedChilizChainId);
-      
+            
       if (currentChainId !== formattedChilizChainId) {
         setIsChilizNetwork(false);
         return false;
@@ -290,19 +334,25 @@ export function WalletProvider({ children }) {
       showError("Troque para a rede Chiliz Spicy para continuar usando o aplicativo");
       
       // Adiciona um pequeno delay antes de solicitar a troca de rede
-      setTimeout(() => {
-        // Tenta trocar para a rede Chiliz automaticamente
-        switchNetwork().catch(error => {
-          console.error('Erro ao solicitar troca de rede:', error);
-          if (error.code !== 4001) { // Se não for erro de usuário cancelou
-            addNetwork().catch(console.error);
+      setTimeout(async () => {
+        // Utiliza a função auxiliar para verificar e trocar de rede
+        const result = await verifyAndSwitchNetwork();
+        
+        if (!result.success) {
+          console.error('Falha ao trocar para rede Chiliz:', result.message);
+          // Se a troca falhou por um motivo que não seja usuário recusou, tenta adicionar a rede
+          if (result.error && result.error.code !== 4001) {
+            showInfo('Tente adicionar a rede Chiliz manualmente em sua carteira');
           }
-        });
+        } else {
+          setIsChilizNetwork(true);
+          showSuccess("Rede Chiliz conectada com sucesso!");
+        }
       }, 1500);
     } else {
       setIsChilizNetwork(true);
     }
-  }, [switchNetwork, addNetwork]);
+  }, []);
   
   // Verifica o estado de autenticação e restaura se necessário
   useEffect(() => {
@@ -458,19 +508,19 @@ export function WalletProvider({ children }) {
       await getSigner();
       console.log("Signer obtido com sucesso");
       
-      // Agora aguarda mais um momento antes de verificar a rede
+      // Verifica e troca para a rede Chiliz automaticamente
       await delay(1000);
       
-      // Apenas verifica se a rede está correta, sem tentar trocar
-      // Isso evita o erro de spam filter
-      const isCorrectNetwork = await checkNetwork();
-      if (!isCorrectNetwork) {
-        // Não tenta trocar a rede automaticamente aqui
-        // Apenas informa ao usuário 
-        showError("Você não está na rede Chiliz. Por favor, troque de rede manualmente.");
-        setIsChilizNetwork(false);
-      } else {
+      // Verifica se está na rede Chiliz
+      const networkResult = await verifyAndSwitchNetwork();
+      if (networkResult.success) {
         setIsChilizNetwork(true);
+        if (networkResult.message !== 'Já está na rede Chiliz') {
+          showSuccess("Rede Chiliz conectada com sucesso!");
+        }
+      } else {
+        setIsChilizNetwork(false);
+        showError(networkResult.message || "Falha ao conectar à rede Chiliz. Tente trocar manualmente.");
       }
       
       return true;
@@ -489,7 +539,7 @@ export function WalletProvider({ children }) {
       setConnecting(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, getSigner, checkNetwork]);
+  }, [provider, getSigner]);
   
   // Função para desconectar a carteira
   const disconnectWallet = useCallback(async () => {
@@ -553,18 +603,16 @@ export function WalletProvider({ children }) {
       setSigning(true);
       
       // Verifica se a rede está correta ANTES de solicitar a assinatura
-      // Isso evita ter que trocar a rede e depois solicitar assinatura novamente
-      if (!isChilizNetwork) {
-        // Verifica a rede atual sem tentar trocar automaticamente
-        const isCorrect = await checkNetwork();
-        
-        if (!isCorrect) {
-          // Informa ao usuário que precisa trocar de rede manualmente
-          showError("Para continuar, você precisa trocar para a rede Chiliz manualmente.");
-          setSigning(false);
-          return false;
-        }
+      // Verifica e troca para a rede Chiliz automaticamente
+      const networkResult = await verifyAndSwitchNetwork();
+      if (!networkResult.success) {
+        showError(networkResult.message || 'Não foi possível conectar à rede Chiliz. Tente trocar manualmente.');
+        setSigning(false);
+        return false;
       }
+      
+      // Atualiza o estado da rede
+      setIsChilizNetwork(true);
       
       // Adiciona um pequeno delay antes de solicitar assinatura
       await delay(1000);
@@ -735,14 +783,20 @@ export function WalletProvider({ children }) {
         return { success: true, needsRegistration: false, isAuthenticated: true };
       }
       
-      // Verifica se a rede está correta antes de verificar o registro
-      if (!isChilizNetwork) {
+      // Verifica e troca para a rede Chiliz automaticamente
+      await delay(1000);
+      const networkResult = await verifyAndSwitchNetwork();
+      
+      if (!networkResult.success) {
         return { 
-          success: true, 
+          success: false, 
           needsNetworkChange: true,
-          message: 'É necessário trocar para a rede Chiliz'
+          message: networkResult.message || 'Falha ao conectar à rede Chiliz'
         };
       }
+      
+      // Atualiza o estado da rede
+      setIsChilizNetwork(true);
       
       // Verifica se a carteira já está cadastrada
       const walletCheck = await checkWalletExists();
@@ -802,7 +856,7 @@ export function WalletProvider({ children }) {
     switchNetwork,
     addNetwork,
     ensureChilizNetwork,
-  
+    verifyAndSwitchNetwork,
   };
   
   return (

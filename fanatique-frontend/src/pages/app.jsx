@@ -7,9 +7,11 @@ import { Loader2, Wallet } from 'lucide-react';
 import { showError, showSuccess } from '../lib/toast';
 import { Cta11 } from '../components/ui/cta11';
 import { MetaMaskDebug } from '../components/MetaMaskDebug';
+import { useTranslation } from 'react-i18next';
 
 export default function AppPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation(['app', 'common']);
   const {
     account,
     signing,
@@ -21,7 +23,7 @@ export default function AppPage() {
     isAuthenticated,
     isConnected,
     isChilizNetwork,
-    ensureChilizNetwork
+    verifyAndSwitchNetwork
   } = useWalletContext();
 
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function AppPage() {
       console.log("1- walletCheck", walletCheck);
       
       if (!walletCheck.success) {
-        showError(walletCheck.message || 'Erro ao verificar cadastro');
+        showError(walletCheck.message || t('app:errors.checkRegistrationError'));
         setLoading(false);
         return;
       }
@@ -78,15 +80,14 @@ export default function AppPage() {
         return;
       }
       
-      // Só verifica a rede se o usuário já estiver cadastrado
-      // Isso evita solicitações duplicadas
+      // Verificar e trocar para a rede Chiliz se necessário
       if (!isChilizNetwork) {
         setNetworkLoading(true);
-        const networkCorrect = await ensureChilizNetwork();
+        const networkResult = await verifyAndSwitchNetwork();
         setNetworkLoading(false);
         
-        if (!networkCorrect) {
-          showError("Você precisa estar na rede Chiliz para continuar");
+        if (!networkResult.success) {
+          showError(networkResult.message || "Você precisa estar na rede Chiliz para continuar");
           setLoginCancelled(true);
           setLoading(false);
           return;
@@ -128,10 +129,10 @@ export default function AppPage() {
       setLoading(false);
     } catch (error) {
       console.error("Erro ao verificar cadastro:", error);
-      showError('Erro ao verificar se o usuário está cadastrado');
+      showError(t('app:errors.checkRegistrationError'));
       setLoading(false);
     }
-  }, [account, checkWalletExists, requestSignature, navigate, signAttempts, isChilizNetwork, ensureChilizNetwork]);
+  }, [account, checkWalletExists, requestSignature, navigate, signAttempts, isChilizNetwork, verifyAndSwitchNetwork, t]);
 
   // Verificar se o usuário já está autenticado e redirecionar para o dashboard
   useEffect(() => {
@@ -189,7 +190,7 @@ export default function AppPage() {
       await checkIfUserRegistered();
     } catch (error) {
       console.error("Erro ao conectar carteira:", error);
-      showError('Erro ao conectar carteira');
+      showError(t('app:errors.walletError'));
       setLoading(false);
     }
   };
@@ -198,12 +199,12 @@ export default function AppPage() {
     e.preventDefault();
     
     if (!userName.trim()) {
-      showError('Por favor, informe seu nome de usuário');
+      showError(t('app:errors.usernameRequired'));
       return;
     }
     
     if (!validCharsRegex.test(userName)) {
-      showError('Nome de usuário deve conter apenas letras, números e underscore (_)');
+      showError(t('app:errors.usernameInvalid'));
       return;
     }
     
@@ -218,7 +219,7 @@ export default function AppPage() {
       
       // Verifica se o resultado foi sucesso (true) ou objeto de erro
       if (result === true) {
-        showSuccess('Cadastro realizado com sucesso!');
+        showSuccess(t('app:success.registered'));
         
         // Aguarda um pouco para garantir persistência
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -241,7 +242,7 @@ export default function AppPage() {
       }
     } catch (error) {
       console.error("Erro ao cadastrar:", error);
-      showError(error.response?.data?.message || 'Erro ao cadastrar usuário');
+      showError(error.response?.data?.message || t('app:errors.registerError'));
     } finally {
       setSubmitting(false);
     }
@@ -254,7 +255,7 @@ export default function AppPage() {
     if (!value.trim()) {
       setUserNameError('');
     } else if (!validCharsRegex.test(value)) {
-      setUserNameError('Nome de usuário deve conter apenas letras, números e underscore (_)');
+      setUserNameError(t('app:register.usernameError'));
     } else {
       setUserNameError('');
     }
@@ -266,7 +267,7 @@ export default function AppPage() {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-secondary" />
         <p className="mt-4 text-xl text-primary/70 dark:text-white/70">
-          {loading ? 'Carregando...' : signing ? 'Validando assinatura...' : networkLoading ? 'Verificando rede Chiliz...' : ''}
+          {loading ? t('app:loading.general') : signing ? t('app:loading.signature') : networkLoading ? t('app:loading.network') : ''}
         </p>
       </div>
     );
@@ -278,11 +279,11 @@ export default function AppPage() {
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] "
       >
         <Cta11 
-          heading={loginCancelled ? "Login Cancelado" : "Bem-vindo ao Fanatique"}
-          description="Conecte sua carteira Chiliz para entrar na plataforma e aproveitar uma experiência única nos estádios."
+          heading={loginCancelled ? t('app:welcome.loginCancelled') : t('app:welcome.title')}
+          description={t('app:welcome.description')}
           buttons={{
             primary: {
-              text: "Login MetaMask",
+              text: t('app:welcome.connectButton'),
               onClick: handleConnectWallet,
               icon: <Wallet size={18} />
             }
@@ -301,22 +302,22 @@ export default function AppPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
         <div className="w-full max-w-md p-8 bg-black rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">Cadastre-se no Fanatique</h1>
+          <h1 className="text-2xl font-bold text-primary dark:text-white mb-6">{t('app:register.title')}</h1>
           
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Você está conectado com uma carteira nova! Para continuar, digite seu nome de usuário e assine a mensagem de verificação.
+            {t('app:register.description')}
           </p>
           
           <form onSubmit={handleRegister} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="username" className="text-sm font-medium text-primary/80 dark:text-white/80">
-                Nome de usuário
+                {t('app:register.username')}
               </label>
               <Input
                 id="username"
                 value={userName}
                 onChange={handleUserNameChange}
-                placeholder="Digite seu nome de usuário"
+                placeholder={t('app:register.usernamePlaceholder')}
                 required
                 className="w-ful"
                 autoFocus
@@ -336,13 +337,13 @@ export default function AppPage() {
                 }}
                 disabled={submitting}
                 className="flex-1 bg-secondary text-white"
-                text="Cancelar"
+                text={t('app:register.cancelButton')}
               />
               <Button
                 type="submit"
                 disabled={submitting || !!userNameError || !userName.trim()}
                 className="flex-1 bg-primary text-white"
-                text={submitting ? "Processando" : "Cadastrar"}
+                text={submitting ? t('app:register.processingButton') : t('app:register.registerButton')}
                 icon={submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               />
             </div>
@@ -356,11 +357,11 @@ export default function AppPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] bg-background">
       <div className="w-full max-w-md p-8 bg-secondary rounded-lg shadow-md text-center">
-        <h1 className="text-2xl font-bold mb-6">Verificando cadastro...</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('app:verification.title')}</h1>
 
         <Button
           onClick={checkIfUserRegistered}
-          text="Continuar"
+          text={t('app:verification.continueButton')}
         />
       </div>
     </div>

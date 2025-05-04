@@ -19,35 +19,38 @@ import clubApi from '../api/club';
 import matchApi from '../api/match';
 import Quests from '../components/quests';
 import QuestScope from '../enum/QuestScope';
+import { useTranslation } from 'react-i18next';
 
 // QuestStatusChip component
 const QuestStatusChip = ({ status }) => {
+  const { t } = useTranslation(['game']);
+  
   switch (status) {
     case 'AVAILABLE':
       return (
         <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/80 text-white">
-          Available
+          {t('game:questStatus.available')}
         </div>
       );
     case 'IN_PROGRESS':
       return (
         <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/80 text-white">
           <Clock size={12} className="mr-1" />
-          In Progress
+          {t('game:questStatus.inProgress')}
         </div>
       );
     case 'COMPLETED':
       return (
         <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-500/80 text-white">
           <CheckCircle size={12} className="mr-1" />
-          Completed
+          {t('game:questStatus.completed')}
         </div>
       );
     case 'LOCKED':
       return (
         <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/80 text-white">
           <Lock size={12} className="mr-1" />
-          Locked
+          {t('game:questStatus.locked')}
         </div>
       );
     default:
@@ -62,6 +65,7 @@ export default function GamePage() {
   const [loading, setLoading] = useState(true);
   const [gameInfo, setGameInfo] = useState(null);
   const [club, setClub] = useState(null);
+  const { t } = useTranslation(['game', 'common']);
   
   // Mock game stats for UI display
   const gameStats = {
@@ -176,7 +180,7 @@ export default function GamePage() {
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <div className="flex flex-col items-center">
           <Loader2 className="h-12 w-12 animate-spin text-secondary" />
-          <p className="mt-4 text-primary/70 dark:text-white/70">Loading game data...</p>
+          <p className="mt-4 text-primary/70 dark:text-white/70">{t('game:game.loading')}</p>
         </div>
       </div>
     );
@@ -204,7 +208,7 @@ export default function GamePage() {
             className="flex items-center text-white/80 hover:text-white mb-6"
           >
             <ArrowLeft size={18} className="mr-1" />
-            <span>Back to Club</span>
+            <span>{t('game:game.back')}</span>
           </button>
 
           {/* Game Info */}
@@ -242,22 +246,22 @@ export default function GamePage() {
                 </div>
                 <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center animate-pulse shadow-md">
                   <div className="h-2 w-2 rounded-full bg-white mr-1"></div>
-                  LIVE
+                  {t('game:game.live')}
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold">{gameInfo.home_club_name} vs {gameInfo.away_club_name}</h1>
+                <h1 className="text-2xl font-bold">{gameInfo.home_club_name} {t('game:game.vs')} {gameInfo.away_club_name}</h1>
                 <div className="flex items-center justify-center mt-2">
                   <MapPin size={18} className="text-white/70 mr-1" />
                   <span>{gameInfo.stadium_name}</span>
                 </div>
                 <div className="flex items-center justify-center mt-1">
                   <Timer size={18} className="text-white/70 mr-1" />
-                  <span>58' - Second Half</span>
+                  <span>58' - {t('game:game.secondHalf')}</span>
                 </div>
               </div>
               <p className="mt-4 text-white/80 max-w-2xl mx-auto">
-                {gameInfo.description || 'Live match in progress'}
+                {gameInfo.description || t('game:game.liveMatch')}
               </p>
               
               <div className="flex flex-wrap gap-3 justify-center mt-4">
@@ -268,7 +272,7 @@ export default function GamePage() {
                   onClick={() => navigate(`/stadium-orders/${clubId}/${gameId}`, { state: { club } })}
                 >
                   <ShoppingBag size={16} className="mr-2" />
-                  Order Food & Drinks
+                  {t('game:game.orderFood')}
                 </Button>
               </div>
             </div>
@@ -280,14 +284,14 @@ export default function GamePage() {
       <div className="container mx-auto px-4 py-6">
         {/* Match Stats Section */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Match Statistics</h2>
+          <h2 className="text-xl font-bold text-primary dark:text-white mb-4">{t('game:game.matchStats')}</h2>
           
           <div className="bg-background-overlay rounded-lg p-6 shadow-sm">
             {/* Possession */}
             <div className="mb-6">
               <div className="flex justify-between text-sm text-primary/70 dark:text-white/70 mb-1">
                 <span>{gameStats.possession.home}%</span>
-                <span>Possession</span>
+                <span>{t('game:game.possession')}</span>
                 <span>{gameStats.possession.away}%</span>
               </div>
               <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -302,7 +306,7 @@ export default function GamePage() {
             <div className="mb-6">
               <div className="flex justify-between text-sm text-primary/70 dark:text-white/70 mb-1">
                 <span>{gameStats.shots.home}</span>
-                <span>Shots</span>
+                <span>{t('game:game.shots')}</span>
                 <span>{gameStats.shots.away}</span>
               </div>
               <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -317,7 +321,7 @@ export default function GamePage() {
             <div className="mb-6">
               <div className="flex justify-between text-sm text-primary/70 dark:text-white/70 mb-1">
                 <span>{gameStats.shotsOnTarget.home}</span>
-                <span>Shots on Target</span>
+                <span>{t('game:game.shotsOnTarget')}</span>
                 <span>{gameStats.shotsOnTarget.away}</span>
               </div>
               <div className="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -331,7 +335,7 @@ export default function GamePage() {
             {/* Additional Stats in Grid */}
             <div className="grid grid-cols-2 gap-4 mt-6">
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <span className="text-sm font-medium text-primary dark:text-white">Corners</span>
+                <span className="text-sm font-medium text-primary dark:text-white">{t('game:game.corners')}</span>
                 <div className="flex space-x-3">
                   <span className="font-bold text-primary dark:text-white">{gameStats.corners.home}</span>
                   <span className="text-primary/50 dark:text-white/50">|</span>
@@ -340,7 +344,7 @@ export default function GamePage() {
               </div>
               
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-                <span className="text-sm font-medium text-primary dark:text-white">Fouls</span>
+                <span className="text-sm font-medium text-primary dark:text-white">{t('game:game.fouls')}</span>
                 <div className="flex space-x-3">
                   <span className="font-bold text-primary dark:text-white">{gameStats.fouls.home}</span>
                   <span className="text-primary/50 dark:text-white/50">|</span>
@@ -353,7 +357,7 @@ export default function GamePage() {
         
         {/* Match Timeline */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-primary dark:text-white mb-4">Match Timeline</h2>
+          <h2 className="text-xl font-bold text-primary dark:text-white mb-4">{t('game:game.matchTimeline')}</h2>
           
           <div className="bg-background-overlay rounded-lg p-6 shadow-sm">
             <div className="space-y-4">

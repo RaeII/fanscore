@@ -7,6 +7,7 @@ import contractApi from '../api/contract';
 import transactionApi from '../api/transaction';
 import toast from 'react-hot-toast';
 import { WalletContext } from '../contexts/WalletContextDef';
+import { useTranslation } from 'react-i18next';
 
 // Estilos personalizados
 const cardInnerShadow = {
@@ -19,6 +20,7 @@ export default function BuyFantokensPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { account, isConnected, connectWallet, BLOCK_EXPLORER_URL } = useContext(WalletContext);
+  const { t } = useTranslation(['tokens', 'common']);
   const [loading, setLoading] = useState(false);
   const [clubs, setClubs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -335,7 +337,7 @@ export default function BuyFantokensPage() {
           >
             <ArrowLeft className="text-primary" size={18} />
           </Button>
-          <h1 className="text-2xl font-bold text-primary dark:text-white">Tokens</h1>
+          <h1 className="text-2xl font-bold text-primary dark:text-white">{t('tokens:buyTokens.title')}</h1>
         </div>
 
         {/* Nova Navegação com Ícones Conforme Imagem */}
@@ -347,7 +349,7 @@ export default function BuyFantokensPage() {
             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'comprar' ? 'bg-primary' : 'bg-primary/50'}`}>
               <HandCoins size={24} className="text-black" />
             </div>
-            <span className="mt-1 text-sm font-medium">Comprar</span>
+            <span className="mt-1 text-sm font-medium">{t('tokens:tabs.buy')}</span>
           </div>
           
           <div 
@@ -357,7 +359,7 @@ export default function BuyFantokensPage() {
             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'historico' ? 'bg-primary' : 'bg-primary/50'}`}>
               <History size={24} className="text-black" />
             </div>
-            <span className="mt-1 text-sm font-medium">Histórico</span>
+            <span className="mt-1 text-sm font-medium">{t('tokens:tabs.history')}</span>
           </div>
           
           <div 
@@ -367,7 +369,7 @@ export default function BuyFantokensPage() {
             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${activeTab === 'stake' ? 'bg-primary' : 'bg-primary/50'}`}>
               <BanknoteArrowUp size={24} className="text-black" />
             </div>
-            <span className="mt-1 text-sm font-medium">Stake</span>
+            <span className="mt-1 text-sm font-medium">{t('tokens:tabs.stake')}</span>
           </div>
         </div>
 
@@ -384,7 +386,7 @@ export default function BuyFantokensPage() {
               }`}
               onClick={() => handleTokenTypeChange('fantoken')}
             >
-              FanTokens
+              {t('tokens:tokenTypes.fantoken')}
             </Button>
             <Button 
               variant="ghost" 
@@ -396,7 +398,7 @@ export default function BuyFantokensPage() {
               }`}
               onClick={() => handleTokenTypeChange('stablecoin')}
             >
-              Stablecoin
+              {t('tokens:tokenTypes.stablecoin')}
             </Button>
           </div>
         )}
