@@ -77,7 +77,7 @@ input[type="number"] {
   background-color: #1a1a1a; /* tom escuro de fundo */
   background-image: linear-gradient(rgb(0 0 0 / 69%), rgb(14 14 14 / var(--tw-bg-opacity, 1))), url(pstadium.jpeg);
   background-repeat: round;
-  background-size: auto;
+  background-size: cover;
   position: relative;
 }
 
